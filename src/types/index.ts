@@ -1,0 +1,319 @@
+export type UserRole = 'admin' | 'employee' | 'customer';
+
+export interface AdminUser {
+  id: number;
+  username: string;
+  email: string;
+  is_staff: boolean;
+  is_superuser: boolean;
+}
+
+export interface EmployeeUser {
+  id: number;
+  username: string;
+  full_name: string;
+  email: string;
+  role: 'ADMIN' | 'STAFF';
+  mobile_number?: string;
+  is_active?: boolean;
+  created_at?: string;
+}
+
+export interface CustomerUser {
+  id: number;
+  family_id: string;
+  head_of_family: string;
+  mobile_number: string;
+  current_points: number;
+  wallet_balance: string;
+  village_city?: string;
+}
+
+export interface AuthTokens {
+  access: string;
+  refresh: string;
+}
+
+export interface LoginResponse {
+  message: string;
+  user_type: UserRole;
+  tokens: AuthTokens;
+  user?: AdminUser;
+  employee?: EmployeeUser;
+  customer?: CustomerUser;
+}
+
+export type RelationshipType = 
+  | 'HEAD'
+  | 'SELF'
+  | 'WIFE'
+  | 'HUSBAND'
+  | 'SON'
+  | 'DAUGHTER'
+  | 'FATHER'
+  | 'MOTHER'
+  | 'BROTHER'
+  | 'SISTER'
+  | 'OTHER';
+
+export interface Customer {
+  id: number;
+  family_id: string;
+  registration_date: string;
+  head_of_family: string;
+  mobile_number: string;
+  whatsapp_number: string;
+  family_member_count: number;
+  village_city: string;
+  birth_date: string;
+  referral_family_id?: string | null;
+  document_consent: boolean;
+  current_points: number;
+  wallet_balance: string;
+  total_visits: number;
+  last_visit?: string | null;
+  is_active: boolean;
+  notes?: string;
+  digital_card_sent: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FamilyMember {
+  id: number;
+  family_id: string;
+  name: string;
+  relationship: RelationshipType;
+  mobile_number: string;
+  birth_date: string;
+  is_active: boolean;
+  created_at: string;
+  customer: number;
+}
+
+export type DocumentType = 
+  | 'AADHAR'
+  | 'VOTER_ID'
+  | 'PAN'
+  | 'RATION_CARD'
+  | 'BIRTH_CERTIFICATE'
+  | 'CASTE_CERTIFICATE'
+  | 'INCOME_CERTIFICATE'
+  | 'DRIVING_LICENSE'
+  | 'PHOTO'
+  | 'OTHER';
+
+export interface CustomerDocument {
+  id: number;
+  family_id: string;
+  member_name?: string;
+  document_type: DocumentType;
+  document_type_display?: string;
+  document_name: string;
+  document_file: string;
+  description?: string;
+  is_verified: boolean;
+  created_at: string;
+  updated_at?: string;
+  family_member?: number;
+}
+
+export interface RequiredDocument {
+  id: number;
+  SubService: number;
+  DocumentName: string;
+  document_type: DocumentType;
+  IsRequired: boolean;
+  CreatedAt: string;
+}
+
+export interface SubService {
+  id: number;
+  Service: number;
+  SubServiceName: string;
+  Description?: string | null;
+  IsActive: boolean;
+  CreatedAt: string;
+  UpdatedAt: string;
+  RequiredDocuments: RequiredDocument[];
+}
+
+export interface BaseService {
+  id: number;
+  ServiceName: string;
+  Description?: string | null;
+  IsActive: boolean;
+  CreatedAt: string;
+  UpdatedAt: string;
+  SubServices: SubService[];
+}
+
+export type VisitDocumentStatus = 'AVAILABLE' | 'NOT_AVAILABLE';
+
+export interface VisitDocument {
+  id: number;
+  document_type: DocumentType;
+  document_name: string;
+  status: VisitDocumentStatus;
+  document_file?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ServiceVisit {
+  id: number;
+  visit_no: string;
+  customer: number;
+  customer_family_id: string;
+  customer_name: string;
+  customer_mobile: string;
+  family_member?: number | null;
+  family_member_name?: string | null;
+  service: number;
+  service_name: string;
+  sub_service: number;
+  sub_service_name: string;
+  checked_by: number;
+  checked_by_name: string;
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  visit_date: string;
+  remarks?: string;
+  documents: VisitDocument[];
+  total_documents?: number;
+  available_documents?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export type PaymentMode = 'CASH' | 'ONLINE/UPI' | 'CARD';
+
+export interface Transaction {
+  id: number;
+  transaction_no: string;
+  transaction_date: string;
+  customer: number;
+  service: number;
+  sub_service: number;
+  staff: number;
+  family_id: string;
+  customer_name: string;
+  service_name: string;
+  sub_service_name: string;
+  staff_name: string;
+  bill_amount: string;
+  points_earned: number;
+  points_redeemed: number;
+  wallet_credit: string;
+  wallet_used: string;
+  net_wallet_change: number;
+  payment_mode: PaymentMode;
+  remarks?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ReminderPriority = 'HIGH' | 'MEDIUM' | 'LOW';
+export type FollowUpStatus = 'PENDING' | 'IN_PROGRESS' | 'DONE';
+
+export interface FollowUp {
+  id: number;
+  reminder: number;
+  contact_date: string;
+  customer_response: string;
+  next_follow_up?: string | null;
+  notes?: string;
+  contacted_by: number;
+  contacted_by_name?: string;
+  created_at: string;
+}
+
+export interface Reminder {
+  id: number;
+  reminder_no: string;
+  customer: number;
+  customer_family_id: string;
+  customer_name: string;
+  customer_mobile: string;
+  service: number;
+  service_name: string;
+  reminder_type: string;
+  subject: string;
+  due_date: string;
+  reminder_date: string;
+  priority: ReminderPriority;
+  message_template: string;
+  follow_up_status: FollowUpStatus;
+  notes?: string;
+  last_contact_date?: string | null;
+  customer_response?: string | null;
+  next_follow_up?: string | null;
+  created_by?: number | null;
+  created_by_name?: string | null;
+  follow_ups?: FollowUp[];
+  follow_up_count?: number;
+  created_at: string;
+  updated_at?: string;
+}
+
+export type WorkStatus = 'PENDING' | 'IN_PROGRESS' | 'BLOCKED' | 'COMPLETED';
+
+export interface PendingWork {
+  id: number;
+  pending_no: string;
+  service_visit?: number;
+  customer: number;
+  customer_family_id: string;
+  customer_name: string;
+  customer_mobile: string;
+  service: number;
+  service_name: string;
+  pending_since: string;
+  expected_date: string;
+  priority: 'HIGH' | 'MEDIUM' | 'LOW';
+  pending_reason: string;
+  documents_pending?: string;
+  assigned_staff: number;
+  assigned_staff_name?: string;
+  next_action: string;
+  work_status: WorkStatus;
+  follow_up_date: string;
+  notes?: string;
+  created_by?: number;
+  created_by_name?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface PendingWorkSummary {
+  total: number;
+  pending: number;
+  in_progress: number;
+  blocked: number;
+  completed: number;
+  high_priority: number;
+  overdue: number;
+}
+
+export interface DashboardData {
+  today_summary: {
+    total_customers: number;
+    total_service_entries: number;
+    open_pending_work: number;
+    ready_for_delivery: number;
+    pending_reminders: number;
+  };
+  business_summary: {
+    total_billing: number;
+    advance_received: number;
+    outstanding_balance: number;
+    completed_services: number;
+    delivered_services: number;
+  };
+  customer_summary: {
+    active_members: number;
+    vip_members: number;
+    repeat_customers: number;
+    urgent_tasks: number;
+    documents_pending: number;
+  };
+}
