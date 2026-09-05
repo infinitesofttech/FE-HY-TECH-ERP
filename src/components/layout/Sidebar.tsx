@@ -19,6 +19,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ShieldCheck,
+  UserCheck,
   X,
 } from 'lucide-react';
 
@@ -41,29 +42,31 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const getAdminNavigation = () => [
     {
-      group: 'COMMAND & ANALYTICS',
+      group: t('group_command'),
       items: [
         { name: t('nav_dashboard'), href: '/admin/dashboard', icon: LayoutDashboard, badge: 'Live' },
       ],
     },
     {
-      group: 'CITIZEN OPERATIONS',
+      group: t('group_citizen_ops'),
       items: [
         { name: t('nav_customers'), href: '/admin/customers', icon: Users },
+        { name: t('nav_family_members'), href: '/admin/family-members', icon: UserCheck },
+        { name: t('nav_digital_vault'), href: '/admin/documents', icon: ShieldCheck },
         { name: t('nav_visits'), href: '/admin/visits', icon: CalendarCheck, badge: 'Hot' },
         { name: t('nav_pending_work'), href: '/admin/pending-work', icon: KanbanSquare, badge: '4' },
         { name: t('nav_reminders'), href: '/admin/reminders', icon: BellRing },
       ],
     },
     {
-      group: 'FINANCE & CATALOG',
+      group: t('group_finance_catalog'),
       items: [
         { name: t('nav_transactions'), href: '/admin/transactions', icon: Receipt },
         { name: t('nav_services'), href: '/admin/services', icon: FolderTree },
       ],
     },
     {
-      group: 'PLATFORM ADMIN',
+      group: t('group_platform_admin'),
       items: [
         { name: t('nav_employees'), href: '/admin/employees', icon: UserCog },
         { name: t('nav_settings'), href: '/admin/settings', icon: Settings },
@@ -73,10 +76,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const getStaffNavigation = () => [
     {
-      group: 'FRONT DESK',
+      group: t('group_front_desk'),
       items: [
         { name: t('nav_dashboard'), href: '/staff/dashboard', icon: LayoutDashboard },
         { name: t('nav_customers'), href: '/staff/customers', icon: Users },
+        { name: t('nav_family_members'), href: '/staff/family-members', icon: UserCheck },
+        { name: t('nav_digital_vault'), href: '/staff/documents', icon: ShieldCheck },
         { name: t('nav_visits'), href: '/staff/visits', icon: CalendarCheck, badge: 'Desk' },
         { name: t('nav_pending_work'), href: '/staff/pending-work', icon: KanbanSquare },
         { name: t('nav_transactions'), href: '/staff/transactions', icon: Receipt },
@@ -88,13 +93,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const getCustomerNavigation = () => [
     {
-      group: 'CITIZEN PORTAL',
+      group: t('group_citizen_portal'),
       items: [
-        { name: 'My Dashboard', href: '/customer/dashboard', icon: LayoutDashboard },
-        { name: 'Family Members', href: '/customer/members', icon: Users },
-        { name: 'Digital Vault', href: '/customer/documents', icon: ShieldCheck, badge: 'Vault' },
-        { name: 'My Visits', href: '/customer/visits', icon: CalendarCheck },
-        { name: 'Alerts & Reminders', href: '/customer/reminders', icon: BellRing },
+        { name: t('nav_my_dashboard'), href: '/customer/dashboard', icon: LayoutDashboard },
+        { name: t('nav_family_members'), href: '/customer/members', icon: Users },
+        { name: t('nav_digital_vault'), href: '/customer/documents', icon: ShieldCheck, badge: 'Vault' },
+        { name: t('nav_my_visits'), href: '/customer/visits', icon: CalendarCheck },
+        { name: t('nav_alerts_reminders'), href: '/customer/reminders', icon: BellRing },
       ],
     },
   ];

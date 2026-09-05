@@ -109,7 +109,7 @@ export const Topbar: React.FC<TopbarProps> = ({
           <div className="flex items-center gap-2.5 truncate">
             <Search className="w-4 h-4 text-slate-400 group-hover:text-brand-500 transition-colors flex-shrink-0" />
             <span className="truncate group-hover:text-slate-600 dark:group-hover:text-slate-300">
-              Quick search citizen records, visit tokens...
+              {t('quick_search_placeholder')}
             </span>
           </div>
 
@@ -128,14 +128,14 @@ export const Topbar: React.FC<TopbarProps> = ({
             className="hidden md:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-black shadow-sm shadow-brand-600/30 hover:scale-105 transition-all"
           >
             <PlusCircle className="w-3.5 h-3.5" />
-            <span>Visit Wizard</span>
+            <span>{t('visit_wizard')}</span>
           </button>
         )}
 
         {/* Sync Engine Indicator */}
         <div className="hidden xl:inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-[11px] font-bold">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-          <span>Sync Active</span>
+          <span>{t('sync_active')}</span>
         </div>
 
         {/* Language Switcher */}

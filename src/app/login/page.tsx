@@ -115,7 +115,7 @@ export default function LoginPage() {
             }`}
           >
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Admin Desk</span>
+            <span>{t('tab_admin')}</span>
           </button>
           <button
             type="button"
@@ -127,7 +127,7 @@ export default function LoginPage() {
             }`}
           >
             <UserCheck className="w-3.5 h-3.5" />
-            <span>Staff Operator</span>
+            <span>{t('tab_staff')}</span>
           </button>
           <button
             type="button"
@@ -139,7 +139,7 @@ export default function LoginPage() {
             }`}
           >
             <Users className="w-3.5 h-3.5" />
-            <span>Citizen Portal</span>
+            <span>{t('tab_citizen')}</span>
           </button>
         </div>
 
@@ -234,7 +234,7 @@ export default function LoginPage() {
               <span className="inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
             ) : (
               <>
-                <span>Sign in to Secure Console</span>
+                <span>{t('sign_in_btn')}</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
@@ -253,21 +253,21 @@ export default function LoginPage() {
               onClick={() => handleQuickFill('admin')}
               className="py-2 px-2 rounded-xl bg-slate-800/80 hover:bg-brand-600/20 text-slate-300 hover:text-brand-300 text-[11px] font-bold border border-slate-700/60 hover:border-brand-500/40 transition-all text-center"
             >
-              Auto-Fill Admin
+              {t('auto_fill_admin')}
             </button>
             <button
               type="button"
               onClick={() => handleQuickFill('employee')}
               className="py-2 px-2 rounded-xl bg-slate-800/80 hover:bg-brand-600/20 text-slate-300 hover:text-brand-300 text-[11px] font-bold border border-slate-700/60 hover:border-brand-500/40 transition-all text-center"
             >
-              Auto-Fill Staff
+              {t('auto_fill_staff')}
             </button>
             <button
               type="button"
               onClick={() => handleQuickFill('customer')}
               className="py-2 px-2 rounded-xl bg-slate-800/80 hover:bg-brand-600/20 text-slate-300 hover:text-brand-300 text-[11px] font-bold border border-slate-700/60 hover:border-brand-500/40 transition-all text-center"
             >
-              Auto-Fill Citizen
+              {t('auto_fill_citizen')}
             </button>
           </div>
         </div>

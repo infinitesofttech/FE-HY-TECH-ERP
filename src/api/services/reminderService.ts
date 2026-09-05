@@ -159,4 +159,47 @@ export const reminderService = {
       return { message: 'Follow-up added successfully.', data: newFollowUp };
     }
   },
+
+  async updateFollowUp(
+    reminderNo: string,
+    followUpId: number | string,
+    data: Partial<FollowUp>
+  ): Promise<{ message: string; data: FollowUp }> {
+    try {
+      const response = await apiClient.patch<{ message: string; data: FollowUp }>(
+        ENDPOINTS.REMINDERS.UPDATE_FOLLOW_UP(reminderNo, followUpId),
+        data
+      );
+      return response.data;
+    } catch {
+      const r = localReminders.find((rem) => rem.reminder_no === reminderNo);
+      if (!r || !r.follow_ups) throw new Error('Follow-up not found');
+      const idx = r.follow_ups.findIndex((fu) => fu.id === Number(followUpId));
+      if (idx === -1) throw new Error('Follow-up not found');
+      r.follow_ups[idx] = { ...r.follow_ups[idx], ...data };
+      if (data.customer_response) r.customer_response = data.customer_response;
+      if (data.contact_date) r.last_contact_date = data.contact_date;
+      if (data.next_follow_up !== undefined) r.next_follow_up = data.next_follow_up;
+      return { message: 'Follow-up updated successfully.', data: r.follow_ups[idx] };
+    }
+  },
+
+  async deleteFollowUp(
+    reminderNo: string,
+    followUpId: number | string
+  ): Promise<{ message: string }> {
+    try {
+      const response = await apiClient.delete<{ message: string }>(
+        ENDPOINTS.REMINDERS.DELETE_FOLLOW_UP(reminderNo, followUpId)
+      );
+      return response.data;
+    } catch {
+      const r = localReminders.find((rem) => rem.reminder_no === reminderNo);
+      if (r && r.follow_ups) {
+        r.follow_ups = r.follow_ups.filter((fu) => fu.id !== Number(followUpId));
+        r.follow_up_count = r.follow_ups.length;
+      }
+      return { message: 'Follow-up removed successfully.' };
+    }
+  },
 };

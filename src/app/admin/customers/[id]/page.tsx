@@ -26,6 +26,7 @@ import { documentService } from '@/api/services/documentService';
 import { serviceVisitService } from '@/api/services/serviceVisitService';
 import { transactionService } from '@/api/services/transactionService';
 import { reminderService } from '@/api/services/reminderService';
+import { useLanguage } from '@/context/LanguageContext';
 import { CustomerDocument, FamilyMember, RelationshipType, DocumentType } from '@/types';
 import { toast } from 'sonner';
 import {
@@ -41,6 +42,7 @@ import {
   MapPin,
   Coins,
   Wallet,
+  Edit2,
   CheckCircle2,
   XCircle,
   Eye,
@@ -82,18 +84,44 @@ export default function CustomerDetailPage() {
   const params = useParams();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
   const familyId = params?.id as string;
 
   const [activeTab, setActiveTab] = useState<string>('profile');
 
   // Modals state
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [isUploadDocOpen, setIsUploadDocOpen] = useState(false);
   const [viewingDoc, setViewingDoc] = useState<CustomerDocument | null>(null);
+  const [memberToEdit, setMemberToEdit] = useState<FamilyMember | null>(null);
   const [memberToDelete, setMemberToDelete] = useState<FamilyMember | null>(null);
+  const [docToEdit, setDocToEdit] = useState<CustomerDocument | null>(null);
+
+  // Edit Profile Form
+  const [profileForm, setProfileForm] = useState({
+    head_of_family: '',
+    mobile_number: '',
+    whatsapp_number: '',
+    village_city: '',
+    birth_date: '',
+    referral_family_id: '',
+    document_consent: true,
+    is_active: true,
+    notes: '',
+  });
 
   // New Member Form
   const [memberForm, setMemberForm] = useState({
+    name: '',
+    relationship: 'SON' as RelationshipType,
+    mobile_number: '',
+    birth_date: '2005-01-01',
+    is_active: true,
+  });
+
+  // Edit Member Form
+  const [editMemberForm, setEditMemberForm] = useState({
     name: '',
     relationship: 'SON' as RelationshipType,
     mobile_number: '',
@@ -106,6 +134,14 @@ export default function CustomerDetailPage() {
     memberId: 3,
     document_type: 'AADHAR' as DocumentType,
     document_name: '',
+    description: '',
+    is_verified: true,
+  });
+
+  // Edit Doc Form
+  const [editDocForm, setEditDocForm] = useState({
+    document_name: '',
+    document_type: 'AADHAR' as DocumentType,
     description: '',
     is_verified: true,
   });
@@ -190,6 +226,47 @@ export default function CustomerDetailPage() {
     },
   });
 
+  const updateProfileMutation = useMutation({
+    mutationFn: () => customerService.updateCustomer(familyId, profileForm),
+    onSuccess: () => {
+      toast.success('Household profile updated successfully!');
+      queryClient.invalidateQueries({ queryKey: ['customer', familyId] });
+      setIsEditProfileOpen(false);
+    },
+    onError: () => toast.error('Failed to update profile'),
+  });
+
+  const updateMemberMutation = useMutation({
+    mutationFn: () => {
+      if (!memberToEdit) throw new Error('No member selected');
+      return familyMemberService.updateMember(familyId, memberToEdit.id, editMemberForm);
+    },
+    onSuccess: () => {
+      toast.success('Family member updated!');
+      queryClient.invalidateQueries({ queryKey: ['family-members', familyId] });
+      setMemberToEdit(null);
+    },
+    onError: () => toast.error('Failed to update member'),
+  });
+
+  const updateDocMutation = useMutation({
+    mutationFn: () => {
+      if (!docToEdit) throw new Error('No document selected');
+      return documentService.updateDocument(
+        familyId,
+        docToEdit.family_member,
+        docToEdit.id,
+        editDocForm
+      );
+    },
+    onSuccess: () => {
+      toast.success('Document updated successfully!');
+      queryClient.invalidateQueries({ queryKey: ['customer-documents', familyId] });
+      setDocToEdit(null);
+    },
+    onError: () => toast.error('Failed to update document'),
+  });
+
   const uploadDocMutation = useMutation({
     mutationFn: async (data: typeof docForm) => {
       const fd = new FormData();
@@ -250,12 +327,12 @@ export default function CustomerDetailPage() {
   }
 
   const tabItems = [
-    { id: 'profile', label: 'Household Profile', icon: User },
-    { id: 'members', label: 'Members', icon: Users, count: members.length },
-    { id: 'documents', label: 'Document Vault', icon: FileCheck2, count: documents.length },
-    { id: 'visits', label: 'Visits', icon: CalendarCheck, count: visits.length },
-    { id: 'transactions', label: 'Invoices', icon: Receipt, count: transactions.length },
-    { id: 'reminders', label: 'Alerts', icon: BellRing, count: reminders.length },
+    { id: 'profile', label: t('household_profile'), icon: User },
+    { id: 'members', label: t('family_members'), icon: Users, count: members.length },
+    { id: 'documents', label: t('document_vault'), icon: FileCheck2, count: documents.length },
+    { id: 'visits', label: t('visits'), icon: CalendarCheck, count: visits.length },
+    { id: 'transactions', label: t('invoices'), icon: Receipt, count: transactions.length },
+    { id: 'reminders', label: t('alerts'), icon: BellRing, count: reminders.length },
   ];
 
   return (
@@ -276,7 +353,7 @@ export default function CustomerDetailPage() {
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
               {customer.head_of_family}
             </h1>
-            <Badge variant="gold">Verified Citizen</Badge>
+            <Badge variant="gold">{t('verified')}</Badge>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
             Registered on {customer.registration_date} &bull; {customer.village_city} &bull; Mobile: {customer.mobile_number}
@@ -291,7 +368,7 @@ export default function CustomerDetailPage() {
             <Coins className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Citizen Points</span>
+            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{t('loyalty_points')}</span>
             <p className="text-xl font-black text-slate-900 dark:text-white">{customer.current_points} Pts</p>
           </div>
         </div>
@@ -301,7 +378,7 @@ export default function CustomerDetailPage() {
             <Wallet className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Wallet Balance</span>
+            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{t('wallet_balance')}</span>
             <p className="text-xl font-black text-slate-900 dark:text-white">₹{customer.wallet_balance}</p>
           </div>
         </div>
@@ -311,18 +388,18 @@ export default function CustomerDetailPage() {
             <Users className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Dependents</span>
+            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{t('family_members')}</span>
             <p className="text-xl font-black text-slate-900 dark:text-white">{members.length || customer.family_member_count}</p>
           </div>
         </div>
 
         <div className="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-sm flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-sky-500/15 text-sky-500 flex items-center justify-center font-bold">
+          <div className="w-11 h-11 rounded-2xl bg-purple-500/15 text-purple-500 flex items-center justify-center font-bold">
             <CalendarCheck className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Total Visits</span>
-            <p className="text-xl font-black text-slate-900 dark:text-white">{customer.total_visits}</p>
+            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{t('visits')}</span>
+            <p className="text-xl font-black text-slate-900 dark:text-white">{visits.length}</p>
           </div>
         </div>
       </div>
@@ -338,9 +415,32 @@ export default function CustomerDetailPage() {
               <CardTitle>Citizen Household Master Record</CardTitle>
               <CardDescription>Primary profile and registration information</CardDescription>
             </div>
-            <Badge variant={customer.is_active ? 'success' : 'default'}>
-              {customer.is_active ? 'Active Household' : 'Inactive'}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant={customer.is_active ? 'success' : 'default'}>
+                {customer.is_active ? 'Active Household' : 'Inactive'}
+              </Badge>
+              <Button
+                onClick={() => {
+                  setProfileForm({
+                    head_of_family: customer.head_of_family,
+                    mobile_number: customer.mobile_number,
+                    whatsapp_number: customer.whatsapp_number,
+                    village_city: customer.village_city,
+                    birth_date: customer.birth_date,
+                    referral_family_id: customer.referral_family_id || '',
+                    document_consent: customer.document_consent,
+                    is_active: customer.is_active,
+                    notes: customer.notes || '',
+                  });
+                  setIsEditProfileOpen(true);
+                }}
+                variant="outline"
+                size="sm"
+                leftIcon={<Edit2 className="w-3.5 h-3.5" />}
+              >
+                {t('edit_profile')}
+              </Button>
+            </div>
           </CardHeader>
 
           <CardContent>
@@ -394,7 +494,7 @@ export default function CustomerDetailPage() {
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <div>
-              <h3 className="text-base font-black text-slate-900 dark:text-white">Family Tree & Dependents</h3>
+              <h3 className="text-base font-black text-slate-900 dark:text-white">Family Tree &amp; Dependents</h3>
               <p className="text-xs text-slate-400">Enrolled beneficiaries for government applications.</p>
             </div>
             <Button
@@ -435,13 +535,31 @@ export default function CustomerDetailPage() {
                         {m.birth_date}
                       </td>
                       <td className="py-4 px-4 text-right">
-                        <button
-                          onClick={() => setMemberToDelete(m)}
-                          className="p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-colors"
-                          title="Remove Member"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => {
+                              setMemberToEdit(m);
+                              setEditMemberForm({
+                                name: m.name,
+                                relationship: m.relationship,
+                                mobile_number: m.mobile_number,
+                                birth_date: m.birth_date,
+                                is_active: m.is_active,
+                              });
+                            }}
+                            className="p-1.5 text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/40 rounded-xl transition-colors"
+                            title={t('edit_member')}
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => setMemberToDelete(m)}
+                            className="p-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-colors"
+                            title="Remove Member"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -498,14 +616,31 @@ export default function CustomerDetailPage() {
                   <span className="text-[11px] text-slate-400 font-mono">
                     {doc.created_at?.split('T')[0]}
                   </span>
-                  <Button
-                    onClick={() => setViewingDoc(doc)}
-                    variant="ghost"
-                    size="xs"
-                    leftIcon={<Eye className="w-3.5 h-3.5" />}
-                  >
-                    Preview & Verify
-                  </Button>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => {
+                        setDocToEdit(doc);
+                        setEditDocForm({
+                          document_name: doc.document_name,
+                          document_type: doc.document_type,
+                          description: doc.description || '',
+                          is_verified: doc.is_verified,
+                        });
+                      }}
+                      className="p-1.5 rounded-xl text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors"
+                      title={t('edit_document')}
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                    <Button
+                      onClick={() => setViewingDoc(doc)}
+                      variant="ghost"
+                      size="xs"
+                      leftIcon={<Eye className="w-3.5 h-3.5" />}
+                    >
+                      Preview &amp; Verify
+                    </Button>
+                  </div>
                 </div>
               </Card>
             ))}
@@ -765,6 +900,259 @@ export default function CustomerDetailPage() {
         document={viewingDoc}
         onToggleVerify={handleToggleVerify}
       />
+
+      {/* Edit Household Profile Modal */}
+      <Modal
+        isOpen={isEditProfileOpen}
+        onClose={() => setIsEditProfileOpen(false)}
+        title={t('edit_profile')}
+        description="Update citizen household profile details and contact information."
+        maxWidth="md"
+      >
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            updateProfileMutation.mutate();
+          }}
+          className="space-y-4"
+        >
+          <Input
+            label="Head of Family Name *"
+            required
+            value={profileForm.head_of_family}
+            onChange={(e) => setProfileForm({ ...profileForm, head_of_family: e.target.value })}
+          />
+
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              label="Primary Mobile *"
+              required
+              type="tel"
+              value={profileForm.mobile_number}
+              onChange={(e) => setProfileForm({ ...profileForm, mobile_number: e.target.value })}
+            />
+            <Input
+              label="WhatsApp Number"
+              type="tel"
+              value={profileForm.whatsapp_number}
+              onChange={(e) => setProfileForm({ ...profileForm, whatsapp_number: e.target.value })}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              label="Village / City *"
+              required
+              value={profileForm.village_city}
+              onChange={(e) => setProfileForm({ ...profileForm, village_city: e.target.value })}
+            />
+            <Input
+              label="Birth Date *"
+              type="date"
+              required
+              value={profileForm.birth_date}
+              onChange={(e) => setProfileForm({ ...profileForm, birth_date: e.target.value })}
+            />
+          </div>
+
+          <Input
+            label="Referral Family ID"
+            value={profileForm.referral_family_id}
+            onChange={(e) => setProfileForm({ ...profileForm, referral_family_id: e.target.value })}
+            placeholder="e.g. HTF-000001"
+          />
+
+          <Input
+            label="Desk Notes"
+            value={profileForm.notes}
+            onChange={(e) => setProfileForm({ ...profileForm, notes: e.target.value })}
+            placeholder="Operational notes on citizen file"
+          />
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+              Household Status
+            </label>
+            <button
+              type="button"
+              onClick={() => setProfileForm({ ...profileForm, is_active: !profileForm.is_active })}
+              className={`w-full py-2.5 px-4 rounded-xl text-xs font-black border transition-all ${
+                profileForm.is_active
+                  ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 border-emerald-300 dark:border-emerald-800'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-300 dark:border-slate-700'
+              }`}
+            >
+              {profileForm.is_active ? '✓ Active Citizen Household' : 'Inactive / Archived Household'}
+            </button>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <Button type="button" variant="secondary" onClick={() => setIsEditProfileOpen(false)}>
+              {t('cancel')}
+            </Button>
+            <Button type="submit" variant="primary" isLoading={updateProfileMutation.isPending}>
+              Save Changes
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Edit Member Modal */}
+      <Modal
+        isOpen={!!memberToEdit}
+        onClose={() => setMemberToEdit(null)}
+        title={`${t('edit_member')} — ${memberToEdit?.name}`}
+        description="Update family relation, contact details, or active status."
+        maxWidth="md"
+      >
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            updateMemberMutation.mutate();
+          }}
+          className="space-y-4"
+        >
+          <Input
+            label="Member Full Name *"
+            required
+            value={editMemberForm.name}
+            onChange={(e) => setEditMemberForm({ ...editMemberForm, name: e.target.value })}
+          />
+
+          <div className="grid grid-cols-2 gap-3">
+            <Select
+              label="Relationship to Head *"
+              value={editMemberForm.relationship}
+              onChange={(e) =>
+                setEditMemberForm({ ...editMemberForm, relationship: e.target.value as RelationshipType })
+              }
+            >
+              {RELATIONSHIP_OPTIONS.map((rel) => (
+                <option key={rel} value={rel}>
+                  {rel}
+                </option>
+              ))}
+            </Select>
+
+            <Input
+              label="Mobile Contact"
+              type="tel"
+              value={editMemberForm.mobile_number}
+              onChange={(e) => setEditMemberForm({ ...editMemberForm, mobile_number: e.target.value })}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              label="Date of Birth *"
+              type="date"
+              required
+              value={editMemberForm.birth_date}
+              onChange={(e) => setEditMemberForm({ ...editMemberForm, birth_date: e.target.value })}
+            />
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                Active Member
+              </label>
+              <button
+                type="button"
+                onClick={() =>
+                  setEditMemberForm({ ...editMemberForm, is_active: !editMemberForm.is_active })
+                }
+                className={`w-full py-2.5 px-4 rounded-xl text-xs font-black border transition-all ${
+                  editMemberForm.is_active
+                    ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 border-emerald-300 dark:border-emerald-800'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-300 dark:border-slate-700'
+                }`}
+              >
+                {editMemberForm.is_active ? '✓ Active Dependent' : 'Inactive Dependent'}
+              </button>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <Button type="button" variant="secondary" onClick={() => setMemberToEdit(null)}>
+              {t('cancel')}
+            </Button>
+            <Button type="submit" variant="primary" isLoading={updateMemberMutation.isPending}>
+              Save Member
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Edit Document Details Modal */}
+      <Modal
+        isOpen={!!docToEdit}
+        onClose={() => setDocToEdit(null)}
+        title={`${t('edit_document')} — ${docToEdit?.document_name}`}
+        description="Update document category, metadata, or verification state."
+        maxWidth="md"
+      >
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            updateDocMutation.mutate();
+          }}
+          className="space-y-4"
+        >
+          <Input
+            label="Document Title *"
+            required
+            value={editDocForm.document_name}
+            onChange={(e) => setEditDocForm({ ...editDocForm, document_name: e.target.value })}
+          />
+
+          <Select
+            label="Document Type *"
+            value={editDocForm.document_type}
+            onChange={(e) =>
+              setEditDocForm({ ...editDocForm, document_type: e.target.value as DocumentType })
+            }
+          >
+            {DOC_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </Select>
+
+          <Input
+            label="Description / Notes"
+            value={editDocForm.description}
+            onChange={(e) => setEditDocForm({ ...editDocForm, description: e.target.value })}
+          />
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+              Verification Status
+            </label>
+            <button
+              type="button"
+              onClick={() =>
+                setEditDocForm({ ...editDocForm, is_verified: !editDocForm.is_verified })
+              }
+              className={`w-full py-2.5 px-4 rounded-xl text-xs font-black border transition-all ${
+                editDocForm.is_verified
+                  ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 border-emerald-300 dark:border-emerald-800'
+                  : 'bg-amber-50 dark:bg-amber-950/50 text-amber-600 border-amber-300 dark:border-amber-800'
+              }`}
+            >
+              {editDocForm.is_verified ? '✓ Verified Original' : 'Unverified (Awaiting Desk Review)'}
+            </button>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <Button type="button" variant="secondary" onClick={() => setDocToEdit(null)}>
+              {t('cancel')}
+            </Button>
+            <Button type="submit" variant="primary" isLoading={updateDocMutation.isPending}>
+              Save Changes
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </AppShell>
   );
 }

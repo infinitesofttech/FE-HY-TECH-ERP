@@ -21,6 +21,7 @@ import {
 import { baseServiceService } from '@/api/services/baseServiceService';
 import { subServiceService } from '@/api/services/subServiceService';
 import { requiredDocumentService } from '@/api/services/requiredDocumentService';
+import { useLanguage } from '@/context/LanguageContext';
 import { BaseService, SubService, RequiredDocument, DocumentType } from '@/types';
 import { toast } from 'sonner';
 import {
@@ -51,6 +52,7 @@ const DOC_TYPES: DocumentType[] = [
 
 export default function ServiceCatalogPage() {
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
   const [expandedServices, setExpandedServices] = useState<Record<number, boolean>>({ 3: true, 4: true });
 
   // Modals state
@@ -179,10 +181,10 @@ export default function ServiceCatalogPage() {
             <span>SERVICE ARCHITECTURE & RULES</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-            Service Catalog & Document Rules
+            {t('catalog_title')}
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Configure base services, nested operations, and required checklist documents that auto-populate in visit intake.
+            {t('catalog_sub')}
           </p>
         </div>
 
@@ -191,7 +193,7 @@ export default function ServiceCatalogPage() {
           variant="primary"
           leftIcon={<Plus className="w-4 h-4" />}
         >
-          Add Base Service
+          {t('add_base_service')}
         </Button>
       </div>
 

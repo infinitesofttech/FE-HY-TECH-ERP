@@ -14,12 +14,13 @@ import {
   StatCard,
 } from '@/components/ui';
 import { employeeService } from '@/api/services/employeeService';
+import { useLanguage } from '@/context/LanguageContext';
 import { EmployeeUser } from '@/types';
 import { toast } from 'sonner';
 import {
   UserCog,
   UserPlus,
-  Mail,
+  Mail, 
   Phone,
   Shield,
   Trash2,
@@ -30,6 +31,7 @@ import {
 
 export default function EmployeesPage() {
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [empToDelete, setEmpToDelete] = useState<EmployeeUser | null>(null);
 
@@ -88,10 +90,10 @@ export default function EmployeesPage() {
             <span>OPERATOR CREDENTIALS & DESKS</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-            Employee & Operator Management
+            {t('employees_title')}
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Admin desk: Provision staff credentials, set operator desk roles, and oversee staff activities.
+            {t('employees_sub')}
           </p>
         </div>
 
@@ -100,7 +102,7 @@ export default function EmployeesPage() {
           variant="primary"
           leftIcon={<UserPlus className="w-4 h-4" />}
         >
-          Add Employee
+          {t('add_employee')}
         </Button>
       </div>
 

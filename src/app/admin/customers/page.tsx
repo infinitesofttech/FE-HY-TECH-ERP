@@ -17,6 +17,7 @@ import {
   StatCard,
 } from '@/components/ui';
 import { customerService } from '@/api/services/customerService';
+import { useLanguage } from '@/context/LanguageContext';
 import { Customer } from '@/types';
 import { toast } from 'sonner';
 import {
@@ -38,6 +39,7 @@ import {
 export default function CustomersPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
 
   const [selectedCity, setSelectedCity] = useState('ALL');
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
@@ -118,11 +120,12 @@ export default function CustomersPage() {
 
   const totalMembersCount = customers.reduce((sum, c) => sum + (c.family_member_count || 1), 0);
   const totalPointsCount = customers.reduce((sum, c) => sum + (c.current_points || 0), 0);
+  const totalWalletSum = customers.reduce((sum, c) => sum + parseFloat(c.wallet_balance || '0'), 0);
 
   const columns: Column<Customer>[] = [
     {
       key: 'family_id',
-      header: 'Family Token',
+      header: t('family_id'),
       sortable: true,
       cell: (cust) => (
         <span className="px-2.5 py-1 rounded-xl bg-brand-50 dark:bg-brand-950/60 font-mono font-black text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800 text-xs">
@@ -132,7 +135,7 @@ export default function CustomersPage() {
     },
     {
       key: 'head_of_family',
-      header: 'Head of Family',
+      header: t('head_of_family'),
       sortable: true,
       cell: (cust) => (
         <div className="flex items-center gap-3">
@@ -153,7 +156,7 @@ export default function CustomersPage() {
     },
     {
       key: 'village_city',
-      header: 'Village / City',
+      header: t('village_city'),
       sortable: true,
       cell: (cust) => (
         <span className="inline-flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-300">
@@ -164,17 +167,17 @@ export default function CustomersPage() {
     },
     {
       key: 'family_member_count',
-      header: 'Dependents',
+      header: t('member_count'),
       sortable: true,
       cell: (cust) => (
         <span className="font-bold px-2.5 py-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs">
-          {cust.family_member_count} Members
+          {cust.family_member_count} {t('active_members')}
         </span>
       ),
     },
     {
       key: 'current_points',
-      header: 'Points & Wallet',
+      header: `${t('points')} & ${t('wallet')}`,
       sortable: true,
       cell: (cust) => (
         <div className="flex flex-col gap-0.5">
@@ -191,41 +194,41 @@ export default function CustomersPage() {
     },
     {
       key: 'total_visits',
-      header: 'Visits',
+      header: t('visits'),
       sortable: true,
       cell: (cust) => (
         <span className="font-semibold text-slate-700 dark:text-slate-300">
-          {cust.total_visits} Visits
+          {cust.total_visits} {t('visits')}
         </span>
       ),
     },
     {
       key: 'is_active',
-      header: 'Status',
+      header: t('status'),
       sortable: true,
       cell: (cust) => (
         <Badge variant={cust.is_active ? 'success' : 'default'}>
-          {cust.is_active ? 'Active' : 'Inactive'}
+          {cust.is_active ? t('active') : t('inactive')}
         </Badge>
       ),
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('actions'),
       align: 'right',
       cell: (cust) => (
         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => router.push(`/admin/customers/${cust.family_id}`)}
             className="p-1.5 rounded-xl text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/60 transition-colors"
-            title="Inspect Citizen 6-Tab Profile"
+            title={t('inspect_profile')}
           >
             <ArrowUpRight className="w-4 h-4" />
           </button>
           <button
             onClick={() => setCustomerToDelete(cust)}
             className="p-1.5 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-            title="Delete Family"
+            title={t('delete')}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -244,10 +247,10 @@ export default function CustomersPage() {
             <span>CITIZEN CRM & HOUSEHOLDS</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-            Household Directory & Citizen Vaults
+            {t('customers_title')}
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Registered families, digital identity cards, loyalty wallets, and family tree profiles.
+            {t('customers_sub')}
           </p>
         </div>
 
@@ -256,28 +259,28 @@ export default function CustomersPage() {
           variant="primary"
           leftIcon={<UserPlus className="w-4 h-4" />}
         >
-          Register New Family
+          {t('register_new_family')}
         </Button>
       </div>
 
       {/* KPI Overview Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title="Total Households"
+          title={t('total_customers')}
           value={customers.length}
           subtitle="Registered families"
           icon={Users}
           colorScheme="brand"
         />
         <StatCard
-          title="Enrolled Dependents"
+          title={t('active_members')}
           value={totalMembersCount}
           subtitle="Verified family members"
           icon={ShieldCheck}
           colorScheme="emerald"
         />
         <StatCard
-          title="Citizen Points Ledger"
+          title={t('loyalty_points')}
           value={`${totalPointsCount} Pts`}
           subtitle="Loyalty credit pool"
           icon={Coins}

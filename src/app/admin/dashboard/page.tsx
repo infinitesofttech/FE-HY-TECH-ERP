@@ -101,11 +101,11 @@ export default function AdminDashboardPage() {
             </div>
 
             <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-white">
-              Executive Command & Analytics Hub
+              {t('exec_overview')}
             </h1>
 
             <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
-              Unified citizen services management: Aadhar, Election Card, PAN, Ayushman, and Ration card operations with automated document verification and loyalty ledger.
+              {t('exec_sub')}
             </p>
           </div>
 
@@ -117,7 +117,7 @@ export default function AdminDashboardPage() {
               size="sm"
               leftIcon={<PlusCircle className="w-4 h-4" />}
             >
-              New Service Visit Wizard
+              {t('new_service_visit')}
             </Button>
             <Button
               onClick={() => router.push('/admin/customers')}
@@ -125,7 +125,7 @@ export default function AdminDashboardPage() {
               size="sm"
               leftIcon={<Users className="w-4 h-4" />}
             >
-              Register Household
+              {t('register_new_family')}
             </Button>
             <Button
               onClick={() => router.push('/admin/transactions')}
@@ -133,7 +133,7 @@ export default function AdminDashboardPage() {
               size="sm"
               leftIcon={<Receipt className="w-4 h-4" />}
             >
-              Issue Billing
+              {t('record_transaction')}
             </Button>
           </div>
         </div>

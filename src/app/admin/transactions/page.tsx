@@ -20,6 +20,7 @@ import {
 import { transactionService } from '@/api/services/transactionService';
 import { customerService } from '@/api/services/customerService';
 import { baseServiceService } from '@/api/services/baseServiceService';
+import { useLanguage } from '@/context/LanguageContext';
 import { Transaction, PaymentMode } from '@/types';
 import { toast } from 'sonner';
 import {
@@ -42,6 +43,7 @@ import {
 
 export default function TransactionsPage() {
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
   const [search, setSearch] = useState('');
   const [paymentFilter, setPaymentFilter] = useState('ALL');
   const [isBillingModalOpen, setIsBillingModalOpen] = useState(false);
@@ -143,10 +145,10 @@ export default function TransactionsPage() {
             <span>FINANCIAL LEDGER & LOYALTY</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-            Billing, Invoices & Citizen Wallet
+            {t('transactions_title')}
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Service invoicing, wallet credits/debits, loyalty points issuance, and digital receipts.
+            {t('transactions_sub')}
           </p>
         </div>
 
@@ -155,28 +157,28 @@ export default function TransactionsPage() {
           variant="primary"
           leftIcon={<Plus className="w-4 h-4" />}
         >
-          Create New Billing
+          {t('record_transaction')}
         </Button>
       </div>
 
       {/* Summary Highlights Row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard
-          title="Gross Billed"
+          title={t('total_billing')}
           value={`₹${totalBilled.toFixed(2)}`}
           subtitle="Total services processed"
           icon={IndianRupee}
           colorScheme="emerald"
         />
         <StatCard
-          title="Loyalty Points Issued"
+          title={t('points_issued')}
           value={`${totalPoints} Pts`}
           subtitle="Circulating wallet currency"
           icon={Coins}
           colorScheme="amber"
         />
         <StatCard
-          title="Invoices Dispatched"
+          title={t('invoices')}
           value={`${transactions.length} Receipts`}
           subtitle="Customer receipts recorded"
           icon={Receipt}

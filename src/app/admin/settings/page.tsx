@@ -48,13 +48,13 @@ export default function SettingsPage() {
       <div>
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-500/10 dark:bg-slate-500/20 text-slate-600 dark:text-slate-300 border border-slate-500/30 text-xs font-black tracking-wide mb-2">
           <Settings className="w-3.5 h-3.5" />
-          <span>SYSTEM & ENVIRONMENT CONTROLS</span>
+          <span>SYSTEM &amp; ENVIRONMENT CONTROLS</span>
         </div>
         <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-          System Settings & Environment Diagnostics
+          {t('settings_title')}
         </h1>
         <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Review central API target configuration, interface localization, and visual appearance preferences.
+          {t('settings_sub')}
         </p>
       </div>
 
@@ -67,7 +67,7 @@ export default function SettingsPage() {
             </div>
             <div>
               <h3 className="text-base font-black text-slate-900 dark:text-white">
-                API Environment (Rule #1)
+                {t('api_environment')}
               </h3>
               <p className="text-xs text-slate-500">Centralized, swap-safe configuration</p>
             </div>
@@ -75,7 +75,7 @@ export default function SettingsPage() {
 
           <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500">Active API Base URL:</span>
+              <span className="text-xs font-semibold text-slate-500">{t('active_api_base')}:</span>
               <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 text-[10px] font-bold">
                 <Radio className="w-2.5 h-2.5 animate-pulse text-emerald-500" />
                 Read-Only (Configured via .env)
@@ -97,7 +97,7 @@ export default function SettingsPage() {
             className="w-full"
             leftIcon={<RefreshCw className="w-4 h-4" />}
           >
-            Test API Reachability
+            {t('test_api_connection')}
           </Button>
         </Card>
 

@@ -93,6 +93,10 @@ export const ENDPOINTS = {
     DELETE: (reminderNo: string) => `/reminders/${reminderNo}/`,
     FOLLOW_UPS: (reminderNo: string) => `/reminders/${reminderNo}/follow-ups/`,
     ADD_FOLLOW_UP: (reminderNo: string) => `/reminders/${reminderNo}/follow-ups/`,
+    UPDATE_FOLLOW_UP: (reminderNo: string, followUpId: number | string) =>
+      `/reminders/${reminderNo}/follow-ups/${followUpId}/`,
+    DELETE_FOLLOW_UP: (reminderNo: string, followUpId: number | string) =>
+      `/reminders/${reminderNo}/follow-ups/${followUpId}/`,
   },
 
   // Pending Work
