@@ -28,7 +28,7 @@ export const baseServiceService = {
     }
   },
 
-  async createService(data: { ServiceName: string; Description?: string; IsActive?: boolean }): Promise<BaseService> {
+  async createService(data: Partial<BaseService> & { ServiceName: string }): Promise<BaseService> {
     try {
       const response = await apiClient.post<BaseService>(
         ENDPOINTS.SERVICES.CREATE,
@@ -37,13 +37,27 @@ export const baseServiceService = {
       return response.data;
     } catch {
       const newService: BaseService = {
-        id: Math.floor(Math.random() * 1000) + 20,
+        id: Math.floor(Math.random() * 1000) + 700,
         ServiceName: data.ServiceName,
+        ServiceNameGu: data.ServiceNameGu,
+        Category: data.Category || 'GOVT_FORMS',
+        SubCategory: data.SubCategory,
+        Department: data.Department,
+        ServiceType: data.ServiceType || 'NEW',
+        GovernmentFee: data.GovernmentFee || 0,
+        ServiceCharge: data.ServiceCharge || 50,
+        TotalFee: (data.GovernmentFee || 0) + (data.ServiceCharge || 50),
+        SlaDays: data.SlaDays || 7,
+        Priority: data.Priority || 'MEDIUM',
+        SmsTemplateGu: data.SmsTemplateGu,
+        SmsTemplateEn: data.SmsTemplateEn,
+        StaffInstructions: data.StaffInstructions,
+        FormFields: data.FormFields || [],
         Description: data.Description || null,
         IsActive: data.IsActive ?? true,
         CreatedAt: new Date().toISOString(),
         UpdatedAt: new Date().toISOString(),
-        SubServices: [],
+        SubServices: data.SubServices || [],
       };
       localServices = [newService, ...localServices];
       return newService;
@@ -52,7 +66,7 @@ export const baseServiceService = {
 
   async updateService(
     id: number | string,
-    data: { ServiceName?: string; Description?: string; IsActive?: boolean }
+    data: Partial<BaseService>
   ): Promise<BaseService> {
     try {
       const response = await apiClient.patch<BaseService>(

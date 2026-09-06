@@ -141,11 +141,29 @@ export interface SubService {
 export interface BaseService {
   id: number;
   ServiceName: string;
+  ServiceNameGu?: string;
+  Category?: ServiceCategory;
+  SubCategory?: string;
+  Department?: string;
+  ServiceType?: ServiceType;
   Description?: string | null;
+  GovernmentFee?: number;
+  ServiceCharge?: number;
+  TotalFee?: number;
+  SlaDays?: number;
+  Priority?: 'HIGH' | 'MEDIUM' | 'LOW';
+  SmsTemplateGu?: string;
+  SmsTemplateEn?: string;
+  StaffInstructions?: string;
+  FormFields?: ServiceFormField[];
+  PortalUrl?: string;
+  IsOfficial?: boolean;
   IsActive: boolean;
   CreatedAt: string;
   UpdatedAt: string;
-  SubServices: SubService[];
+  SubServices?: SubService[];
+  sub_services?: SubService[];
+  required_documents?: RequiredDocument[];
 }
 
 export type VisitDocumentStatus = 'AVAILABLE' | 'NOT_AVAILABLE';
@@ -167,8 +185,8 @@ export interface ServiceVisit {
   customer_family_id: string;
   customer_name: string;
   customer_mobile: string;
-  family_member?: number | null;
-  family_member_name?: string | null;
+  family_member?: number;
+  family_member_name?: string;
   service: number;
   service_name: string;
   sub_service: number;
@@ -185,7 +203,14 @@ export interface ServiceVisit {
   updated_at: string;
 }
 
-export type PaymentMode = 'CASH' | 'ONLINE/UPI' | 'CARD';
+export type PaymentMode =
+  | 'CASH'
+  | 'ONLINE/UPI'
+  | 'CARD'
+  | 'UPI'
+  | 'WALLET'
+  | 'BANK_TRANSFER'
+  | 'ONLINE';
 
 export interface Transaction {
   id: number;
@@ -317,3 +342,138 @@ export interface DashboardData {
     documents_pending: number;
   };
 }
+
+// ----------------------------------------------------
+// HY-TECH GOVERNMENT SERVICE CENTER OS EXPANSIONS
+// ----------------------------------------------------
+
+export type ServiceCategory =
+  | 'GOVT_FORMS'
+  | 'CARD_SERVICES'
+  | 'NEW_SERVICES'
+  | 'OTHER_SERVICES'
+  | 'COMPUTER_COURSES'
+  | 'ADDITIONAL_SERVICES';
+
+export type ServiceType = 'NEW' | 'UPDATE' | 'RENEWAL' | 'KYC' | 'OTHER';
+
+export type ServiceFieldType =
+  | 'text'
+  | 'number'
+  | 'date'
+  | 'select'
+  | 'radio'
+  | 'checkbox'
+  | 'file'
+  | 'mobile'
+  | 'email'
+  | 'address'
+  | 'aadhar'
+  | 'pan'
+  | 'bank_account'
+  | 'ifsc';
+
+export interface ServiceFormField {
+  id: string;
+  label_en: string;
+  label_gu: string;
+  type: ServiceFieldType;
+  required: boolean;
+  placeholder?: string;
+  options?: string[];
+  condition?: {
+    field: string;
+    value: any;
+  };
+}
+
+export type ApplicationStatus =
+  | 'DRAFT'
+  | 'DOCUMENT_CHECK'
+  | 'READY_TO_SUBMIT'
+  | 'SUBMITTED'
+  | 'GOVERNMENT_PROCESSING'
+  | 'PENDING'
+  | 'ACTION_REQUIRED'
+  | 'APPROVED'
+  | 'COMPLETED'
+  | 'REJECTED'
+  | 'CANCELLED'
+  | 'SCRUTINY'
+  | 'DOCS_PENDING';
+
+export interface ApplicationDocument {
+  id: number;
+  document_name: string;
+  document_type: DocumentType;
+  status: 'AVAILABLE' | 'NOT_AVAILABLE' | 'VERIFIED' | 'PENDING_VERIFICATION' | 'OPTIONAL';
+  file_url?: string | null;
+  verified_at?: string;
+  notes?: string;
+}
+
+export interface ApplicationTimelineEvent {
+  id: string | number;
+  timestamp: string;
+  actor_name: string;
+  actor_role: string;
+  action: string;
+  old_status?: ApplicationStatus;
+  new_status?: ApplicationStatus;
+  notes?: string;
+}
+
+export interface Application {
+  id: number;
+  application_no: string;
+  customer?: number;
+  customer_name: string;
+  customer_mobile: string;
+  customer_family_id: string;
+  applicant_name?: string;
+  applicant_mobile?: string;
+  applicant_member_id?: number | null;
+  family_member?: number | null;
+  family_member_name?: string | null;
+  service: number;
+  service_name: string;
+  service_name_gu?: string;
+  sub_service?: number | null;
+  sub_service_name?: string | null;
+  category?: ServiceCategory;
+  status: ApplicationStatus;
+  priority: 'HIGH' | 'MEDIUM' | 'LOW' | 'NORMAL' | 'URGENT';
+  government_app_no?: string;
+  government_portal_url?: string;
+  govt_fee: number;
+  service_charge: number;
+  total_fee: number;
+  payment_status: 'PAID' | 'UNPAID' | 'PARTIAL';
+  payment_mode?: PaymentMode;
+  receipt_no?: string;
+  assigned_staff?: number;
+  assigned_staff_name?: string;
+  created_by?: number;
+  created_by_name?: string;
+  expected_date: string;
+  sla_days?: number;
+  documents: ApplicationDocument[];
+  form_data: Record<string, any>;
+  timeline: ApplicationTimelineEvent[];
+  notes?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface AuditLog {
+  id: number;
+  timestamp: string;
+  user_name: string;
+  user_role: string;
+  action: string;
+  entity_type: string;
+  entity_id: string;
+  details: string;
+  ip_address?: string;
+}
+

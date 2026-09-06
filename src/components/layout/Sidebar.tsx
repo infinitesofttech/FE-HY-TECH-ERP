@@ -20,6 +20,7 @@ import {
   ChevronRight,
   ShieldCheck,
   UserCheck,
+  FileText,
   X,
 } from 'lucide-react';
 
@@ -53,6 +54,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         { name: t('nav_customers'), href: '/admin/customers', icon: Users },
         { name: t('nav_family_members'), href: '/admin/family-members', icon: UserCheck },
         { name: t('nav_digital_vault'), href: '/admin/documents', icon: ShieldCheck },
+        { name: t('nav_applications'), href: '/admin/applications', icon: FileText, badge: 'Gov' },
         { name: t('nav_visits'), href: '/admin/visits', icon: CalendarCheck, badge: 'Hot' },
         { name: t('nav_pending_work'), href: '/admin/pending-work', icon: KanbanSquare, badge: '4' },
         { name: t('nav_reminders'), href: '/admin/reminders', icon: BellRing },
@@ -82,6 +84,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         { name: t('nav_customers'), href: '/staff/customers', icon: Users },
         { name: t('nav_family_members'), href: '/staff/family-members', icon: UserCheck },
         { name: t('nav_digital_vault'), href: '/staff/documents', icon: ShieldCheck },
+        { name: t('nav_applications'), href: '/staff/applications', icon: FileText, badge: 'Gov' },
         { name: t('nav_visits'), href: '/staff/visits', icon: CalendarCheck, badge: 'Desk' },
         { name: t('nav_pending_work'), href: '/staff/pending-work', icon: KanbanSquare },
         { name: t('nav_transactions'), href: '/staff/transactions', icon: Receipt },
@@ -98,6 +101,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         { name: t('nav_my_dashboard'), href: '/customer/dashboard', icon: LayoutDashboard },
         { name: t('nav_family_members'), href: '/customer/members', icon: Users },
         { name: t('nav_digital_vault'), href: '/customer/documents', icon: ShieldCheck, badge: 'Vault' },
+        { name: t('nav_applications'), href: '/customer/applications', icon: FileText },
         { name: t('nav_my_visits'), href: '/customer/visits', icon: CalendarCheck },
         { name: t('nav_alerts_reminders'), href: '/customer/reminders', icon: BellRing },
       ],

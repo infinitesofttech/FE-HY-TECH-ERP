@@ -17,6 +17,21 @@
     @apply antialiased text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 min-h-screen selection:bg-brand-500 selection:text-white;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
+
+  /* Universal pointer cursor for all interactive elements */
+  button,
+  select,
+  a,
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  input[type="checkbox"],
+  input[type="radio"],
+  [role="button"],
+  [role="tab"],
+  summary {
+    cursor: pointer !important;
+  }
 }
 
 /* Custom Luxury Glassmorphism & Visual Polish */
@@ -99,3 +114,38 @@
     opacity: 0;
   }
 }
+
+/* Completely block and hide Google Translate banner, top bars and iframes */
+.goog-te-banner-frame,
+.goog-te-banner-frame.skiptranslate,
+iframe.goog-te-banner-frame,
+iframe.skiptranslate,
+iframe[src*="translate.google"],
+iframe[id*=":1.container"],
+.goog-te-gadget,
+#goog-gt-tt,
+.goog-te-balloon-frame,
+.VIpgJd-ZVi9od-OR9Mb-Oxf5Fd,
+.VIpgJd-ZVi9od-aZ2wEe-wOHMyf,
+.VIpgJd-ZVi9od-xl07Ob-Oxf5Fd,
+.goog-tooltip,
+.goog-tooltip:hover {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0px !important;
+  width: 0px !important;
+  max-height: 0px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  border: none !important;
+  clip: rect(0 0 0 0) !important;
+}
+
+html,
+body {
+  top: 0px !important;
+  margin-top: 0px !important;
+  position: static !important;
+  transform: none !important;
+}
+

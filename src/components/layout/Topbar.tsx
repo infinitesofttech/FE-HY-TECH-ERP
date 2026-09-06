@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
+import { GoogleLanguageSelector } from './GoogleLanguageSelector';
 import {
   Menu,
   Search,
@@ -138,29 +139,8 @@ export const Topbar: React.FC<TopbarProps> = ({
           <span>{t('sync_active')}</span>
         </div>
 
-        {/* Language Switcher */}
-        <div className="flex p-0.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800">
-          <button
-            onClick={() => setLanguage('en')}
-            className={`px-2 py-1 rounded-lg text-xs font-bold transition-all ${
-              language === 'en'
-                ? 'bg-white dark:bg-slate-800 text-brand-600 dark:text-brand-400 shadow-xs'
-                : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-            }`}
-          >
-            EN
-          </button>
-          <button
-            onClick={() => setLanguage('gu')}
-            className={`px-2 py-1 rounded-lg text-xs font-bold transition-all ${
-              language === 'gu'
-                ? 'bg-white dark:bg-slate-800 text-brand-600 dark:text-brand-400 shadow-xs'
-                : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-            }`}
-          >
-            ગુજરાતી
-          </button>
-        </div>
+        {/* Google Translate & Multi-Language Selector */}
+        <GoogleLanguageSelector />
 
         {/* Dark/Light Mode Switcher */}
         <button

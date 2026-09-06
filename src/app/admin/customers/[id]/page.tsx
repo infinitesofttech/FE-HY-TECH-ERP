@@ -26,8 +26,12 @@ import { documentService } from '@/api/services/documentService';
 import { serviceVisitService } from '@/api/services/serviceVisitService';
 import { transactionService } from '@/api/services/transactionService';
 import { reminderService } from '@/api/services/reminderService';
+import { applicationService } from '@/api/services/applicationService';
 import { useLanguage } from '@/context/LanguageContext';
-import { CustomerDocument, FamilyMember, RelationshipType, DocumentType } from '@/types';
+import { CustomerDocument, FamilyMember, RelationshipType, DocumentType, Application } from '@/types';
+import { ServiceIntakeModal } from '@/components/applications/ServiceIntakeModal';
+import { ApplicationDetailDrawer } from '@/components/applications/ApplicationDetailDrawer';
+import { ReceiptModal } from '@/components/applications/ReceiptModal';
 import { toast } from 'sonner';
 import {
   ArrowLeft,
@@ -51,6 +55,7 @@ import {
   FileText,
   ShieldCheck,
   Sparkles,
+  Printer,
 } from 'lucide-react';
 
 const RELATIONSHIP_OPTIONS: RelationshipType[] = [
@@ -97,6 +102,9 @@ export default function CustomerDetailPage() {
   const [memberToEdit, setMemberToEdit] = useState<FamilyMember | null>(null);
   const [memberToDelete, setMemberToDelete] = useState<FamilyMember | null>(null);
   const [docToEdit, setDocToEdit] = useState<CustomerDocument | null>(null);
+  const [isIntakeModalOpen, setIsIntakeModalOpen] = useState(false);
+  const [selectedAppForDrawer, setSelectedAppForDrawer] = useState<Application | null>(null);
+  const [selectedAppForReceipt, setSelectedAppForReceipt] = useState<Application | null>(null);
 
   // Edit Profile Form
   const [profileForm, setProfileForm] = useState({
@@ -197,6 +205,15 @@ export default function CustomerDetailPage() {
       const all = await reminderService.getReminders();
       return all.filter((r: any) => r.customer_family_id === familyId);
     },
+  });
+
+  const { data: applications = [] } = useQuery({
+    queryKey: ['customer-applications', familyId],
+    queryFn: async () => {
+      const all = await applicationService.getApplications();
+      return all.filter((a) => a.customer_family_id === familyId);
+    },
+    enabled: !!familyId,
   });
 
   // Mutations
@@ -328,6 +345,7 @@ export default function CustomerDetailPage() {
 
   const tabItems = [
     { id: 'profile', label: t('household_profile'), icon: User },
+    { id: 'applications', label: t('nav_applications'), icon: FileText, count: applications.length },
     { id: 'members', label: t('family_members'), icon: Users, count: members.length },
     { id: 'documents', label: t('document_vault'), icon: FileCheck2, count: documents.length },
     { id: 'visits', label: t('visits'), icon: CalendarCheck, count: visits.length },
@@ -487,6 +505,118 @@ export default function CustomerDetailPage() {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Tab: Government Applications */}
+      {activeTab === 'applications' && (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-base font-black text-slate-900 dark:text-white">
+                Government Service Applications
+              </h3>
+              <p className="text-xs text-slate-400">
+                Official government scheme &amp; certificate applications filed for this household.
+              </p>
+            </div>
+            <Button
+              onClick={() => setIsIntakeModalOpen(true)}
+              variant="primary"
+              size="sm"
+              leftIcon={<Plus className="w-4 h-4" />}
+            >
+              + New Application for Family
+            </Button>
+          </div>
+
+          {applications.length === 0 ? (
+            <Card>
+              <CardContent className="p-8 text-center space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-brand-500/10 text-brand-600 flex items-center justify-center mx-auto">
+                  <FileText className="w-6 h-6" />
+                </div>
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white">No Applications Recorded</h4>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                  This family has not applied for any government services yet. Click above to start a 1-click intake.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card variant="elevated" className="overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase text-[10px] tracking-wider bg-slate-50/50 dark:bg-slate-950/40">
+                    <tr>
+                      <th className="py-3.5 px-4">App No &amp; Date</th>
+                      <th className="py-3.5 px-4">Applicant</th>
+                      <th className="py-3.5 px-4">Service Name</th>
+                      <th className="py-3.5 px-4">Category</th>
+                      <th className="py-3.5 px-4">Status</th>
+                      <th className="py-3.5 px-4">Fee</th>
+                      <th className="py-3.5 px-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
+                    {applications.map((app) => (
+                      <tr
+                        key={app.id}
+                        className="hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer"
+                        onClick={() => setSelectedAppForDrawer(app)}
+                      >
+                        <td className="py-4 px-4 font-mono font-bold text-brand-600 dark:text-brand-400">
+                          {app.application_no}
+                          <div className="text-[10px] text-slate-400 font-normal">
+                            {new Date(app.created_at).toLocaleDateString('gu-IN')}
+                          </div>
+                        </td>
+                        <td className="py-4 px-4 font-bold text-slate-900 dark:text-white">
+                          {app.applicant_name}
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="font-bold text-slate-900 dark:text-white">{app.service_name}</div>
+                          {app.service_name_gu && (
+                            <div className="text-[11px] text-brand-600 dark:text-brand-400">{app.service_name_gu}</div>
+                          )}
+                        </td>
+                        <td className="py-4 px-4 text-slate-500">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800">
+                            {app.category}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-brand-500/10 text-brand-600 dark:text-brand-400">
+                            {app.status}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4 font-mono font-bold text-slate-800 dark:text-slate-200">
+                          ₹{app.total_fee}
+                        </td>
+                        <td className="py-4 px-4 text-right" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              onClick={() => setSelectedAppForDrawer(app)}
+                              className="p-1.5 text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/40 rounded-xl"
+                              title="Inspect Details"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => setSelectedAppForReceipt(app)}
+                              className="p-1.5 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-xl"
+                              title="Print Receipt"
+                            >
+                              <Printer className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          )}
+        </div>
       )}
 
       {/* Tab 2: Family Members */}
@@ -1153,6 +1283,31 @@ export default function CustomerDetailPage() {
           </div>
         </form>
       </Modal>
+
+      {/* Universal Service Intake for this Customer */}
+      <ServiceIntakeModal
+        isOpen={isIntakeModalOpen}
+        onClose={() => setIsIntakeModalOpen(false)}
+        initialCustomer={customer}
+        onSuccess={(created) => {
+          setSelectedAppForReceipt(created);
+          queryClient.invalidateQueries({ queryKey: ['customer-applications', familyId] });
+        }}
+      />
+
+      {/* Inspection Drawer */}
+      <ApplicationDetailDrawer
+        isOpen={!!selectedAppForDrawer}
+        onClose={() => setSelectedAppForDrawer(null)}
+        application={selectedAppForDrawer}
+      />
+
+      {/* Receipt Modal */}
+      <ReceiptModal
+        isOpen={!!selectedAppForReceipt}
+        onClose={() => setSelectedAppForReceipt(null)}
+        application={selectedAppForReceipt}
+      />
     </AppShell>
   );
 }

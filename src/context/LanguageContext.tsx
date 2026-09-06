@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-export type Language = 'en' | 'gu';
+export type Language = 'en' | 'gu' | 'hi' | string;
 
 interface LanguageContextType {
   language: Language;
@@ -248,6 +248,40 @@ const translations: Record<Language, Record<string, string>> = {
     pending_since: 'Pending Since',
     documents_pending: 'Pending Documents',
     log_followup: 'Log New Follow-up',
+
+    // Applications & Service OS
+    nav_applications: 'Government Applications',
+    new_application: 'New Application',
+    applications_title: 'Government Service Applications',
+    applications_sub: 'End-to-end citizen application lifecycle, document verification, and status tracking.',
+    global_search_title: 'Unified Global Search (Ctrl+K)',
+    service_builder: 'Service Builder & Rules',
+    intake_step_citizen: '1. Citizen Lookup',
+    intake_step_applicant: '2. Select Applicant',
+    intake_step_service: '3. Select Service',
+    intake_step_docs: '4. Smart Checklist',
+    intake_step_form: '5. Dynamic Form',
+    intake_step_payment: '6. Payment & Receipt',
+    step_citizen: '1. Citizen Lookup',
+    step_applicant: '2. Select Applicant',
+    step_vault: '4. Smart Digital Vault',
+    step_payment: '5. Payment & Receipt',
+    status_draft: 'Draft',
+    status_document_check: 'Document Check',
+    status_ready_to_submit: 'Ready to Submit',
+    status_submitted: 'Submitted to Portal',
+    status_government_processing: 'Govt Processing',
+    status_pending: 'Pending',
+    status_action_required: 'Action Required',
+    status_approved: 'Approved',
+    status_completed: 'Completed & Delivered',
+    status_rejected: 'Rejected',
+    status_cancelled: 'Cancelled',
+    application_number: 'Application No.',
+    govt_reference: 'Govt Portal Ref',
+    total_fee: 'Total Fee',
+    service_charge: 'HY-TECH Charge',
+    govt_fee: 'Govt Fee',
   },
   gu: {
     // Navigation Groups
@@ -486,23 +520,128 @@ const translations: Record<Language, Record<string, string>> = {
     pending_since: 'આ તારીખથી પેન્ડિંગ',
     documents_pending: 'બાકી દસ્તાવેજો',
     log_followup: 'નવો ફોલો-અપ નોંધો',
+
+    // Applications & Service OS
+    nav_applications: 'સરકારી અરજીઓ',
+    new_application: 'નવી અરજી',
+    applications_title: 'સરકારી સેવા અરજીઓ',
+    applications_sub: 'નાગરિક સેવા અરજીઓ, દસ્તાવેજ ચકાસણી અને સ્થિતિ ટ્રેકિંગ.',
+    global_search_title: 'વૈશ્વિક શોધ (Ctrl+K)',
+    service_builder: 'સર્વિસ બિલ્ડર અને નિયમો',
+    intake_step_citizen: '૧. નાગરિક શોધો',
+    intake_step_applicant: '૨. અરજદાર પસંદગી',
+    intake_step_service: '૩. સેવા પસંદગી',
+    intake_step_docs: '૪. સ્માર્ટ દસ્તાવેજ ચકાસણી',
+    intake_step_form: '૫. અરજી ફોર્મ',
+    intake_step_payment: '૬. ચુકવણી અને રસીદ',
+    step_citizen: '૧. નાગરિક શોધો',
+    step_applicant: '૨. અરજદાર પસંદગી',
+    step_vault: '૪. સ્માર્ટ ડિજિટલ વૉલ્ટ',
+    step_payment: '૫. ચુકવણી અને રસીદ',
+    status_draft: 'ડ્રાફ્ટ',
+    status_document_check: 'દસ્તાવેજ ચકાસણી',
+    status_ready_to_submit: 'સબમિટ માટે તૈયાર',
+    status_submitted: 'પોર્ટલ પર સબમિટ થયેલ',
+    status_government_processing: 'સરકારી પ્રક્રિયા હેઠળ',
+    status_pending: 'બાકી (પેન્ડિંગ)',
+    status_action_required: 'પગલાં જરૂરી',
+    status_approved: 'મંજૂર થયેલ',
+    status_completed: 'પૂર્ણ અને વિતરિત',
+    status_rejected: 'નામંજૂર',
+    status_cancelled: 'રદ થયેલ',
+    application_number: 'અરજી નંબર',
+    govt_reference: 'સરકારી પોર્ટલ સંદર્ભ',
+    total_fee: 'કુલ ફી',
+    service_charge: 'HY-TECH ચાર્જ',
+    govt_fee: 'સરકારી ફી',
+  },
+  hi: {
+    group_command: 'कमांड और एनालिटिक्स',
+    group_citizen_ops: 'नागरिक सेवाएं',
+    group_finance_catalog: 'वित्त एवं कैटलॉग',
+    group_platform_admin: 'प्लेटफ़ॉर्म एडमिन',
+    group_front_desk: 'फ्रंट डेस्क',
+    group_citizen_portal: 'नागरिक पोर्टल',
+    nav_dashboard: 'डैशबोर्ड',
+    nav_customers: 'नागरिक / परिवार',
+    nav_visits: 'सेवा विज़िट्स',
+    nav_pending_work: 'लंबित कार्य',
+    nav_reminders: 'रिमाइंडर और फॉलो-अप',
+    nav_transactions: 'लेन-देन एवं बिलिंग',
+    nav_services: 'सेवा कैटलॉग',
+    nav_employees: 'कर्मचारी प्रबंधन',
+    nav_settings: 'सिस्टम सेटिंग्स',
+    nav_my_dashboard: 'मेरा डैशबोर्ड',
+    nav_family_members: 'परिवार के सदस्य',
+    nav_digital_vault: 'डिजिटल वॉल्ट',
+    nav_my_visits: 'मेरी विज़िट्स',
+    nav_alerts_reminders: 'अलर्ट एवं रिमाइंडर',
+    nav_applications: 'सरकारी आवेदन',
+    app_title: 'HY-TECH ERP',
+    app_tagline: 'नागरिक दस्तावेज़ सेवाएं एवं सरकारी पोर्टल केंद्र',
+    search: 'खोजें...',
+    quick_search_placeholder: 'नागरिक रिकॉर्ड या विज़िट टोकन खोजें (Ctrl+K)...',
+    notifications: 'सूचनाएं',
+    profile: 'प्रोफ़ाइल',
+    actions: 'कार्रवाई',
+    status: 'स्थिति',
+    date: 'दिनांक',
+    cancel: 'रद्द करें',
+    save: 'सहेजें',
+    create: 'बनाएं',
+    delete: 'हटाएं',
+    edit: 'संपादित करें',
+    back: 'वापस',
+    view: 'देखें',
+    total: 'कुल',
+    loading: 'लोड हो रहा है...',
+    logout: 'लॉग आउट',
+    active: 'सक्रिय',
+    inactive: 'निष्क्रिय',
+    applications_title: 'सरकारी सेवा आवेदन प्रबंधन',
+    applications_sub: 'नागरिकों के सभी 45 सरकारी सेवाओं के आवेदनों का रीयલ-टाइम स्टेटस, सत्यापन एवं रसीद',
+    new_application: 'नया आवेदन',
+    total_applications: 'कुल आवेदन',
+    scrutiny_docs: 'सत्यापन / दस्तावेज़',
+    govt_processing: 'सरकारी प्रक्रिया',
+    completed_ready: 'पूर्ण एवं तैयार',
+    sla_overdue: 'समय सीमा समाप्त',
+    inspect_details: 'विवरण देखें',
+    print_receipt: 'रसीद प्रिंट करें',
+    application_number: 'आवेदन संख्या',
+    govt_reference: 'सरकारी संदर्भ',
+    total_fee: 'कुल शुल्क',
+    service_charge: 'HY-TECH शुल्क',
+    govt_fee: 'सरकारी शुल्क',
   },
 };
 
 const defaultT = (key: string): string => translations['en']?.[key] || key;
 
 const LanguageContext = createContext<LanguageContextType>({
-  language: 'en',
+  language: 'gu',
   setLanguage: () => {},
   t: defaultT,
 });
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguageState] = useState<Language>('en');
+  const [language, setLanguageState] = useState<Language>('gu');
 
   useEffect(() => {
+    // Clear any unwanted Google Translate cookies, scripts or banners
+    try {
+      document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname};`;
+      const banner = document.querySelector('.goog-te-banner-frame');
+      if (banner) banner.remove();
+      const gadget = document.getElementById('google_translate_element');
+      if (gadget) gadget.remove();
+      document.body.style.top = '0px';
+      document.documentElement.style.top = '0px';
+    } catch {}
+
     const saved = localStorage.getItem('hytech_language') as Language;
-    if (saved && (saved === 'en' || saved === 'gu')) {
+    if (saved) {
       setLanguageState(saved);
     }
   }, []);
@@ -513,7 +652,12 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const t = (key: string): string => {
-    return translations[language]?.[key] || translations['en']?.[key] || key;
+    return (
+      (translations as any)[language]?.[key] ||
+      translations['gu']?.[key] ||
+      translations['en']?.[key] ||
+      key
+    );
   };
 
   return (

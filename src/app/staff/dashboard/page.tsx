@@ -1,13 +1,17 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/AppShell';
 import { StatCard, Badge, Button, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui';
 import { dashboardService } from '@/api/services/dashboardService';
 import { serviceVisitService } from '@/api/services/serviceVisitService';
+import { applicationService } from '@/api/services/applicationService';
+import { ServiceIntakeModal } from '@/components/applications/ServiceIntakeModal';
+import { ReceiptModal } from '@/components/applications/ReceiptModal';
 import { useLanguage } from '@/context/LanguageContext';
+import { Application } from '@/types';
 import {
   Users,
   CalendarCheck,
@@ -16,11 +20,16 @@ import {
   PlusCircle,
   ArrowUpRight,
   Sparkles,
+  FileCheck2,
+  FileText,
 } from 'lucide-react';
 
 export default function StaffDashboardPage() {
   const router = useRouter();
   const { t } = useLanguage();
+
+  const [isIntakeModalOpen, setIsIntakeModalOpen] = useState(false);
+  const [selectedAppForReceipt, setSelectedAppForReceipt] = useState<Application | null>(null);
 
   const { data: dashboard } = useQuery({
     queryKey: ['dashboard'],
@@ -30,6 +39,11 @@ export default function StaffDashboardPage() {
   const { data: recentVisits = [] } = useQuery({
     queryKey: ['service-visits'],
     queryFn: () => serviceVisitService.getVisits(),
+  });
+
+  const { data: applications = [] } = useQuery({
+    queryKey: ['applications'],
+    queryFn: () => applicationService.getApplications(),
   });
 
   return (
@@ -46,14 +60,30 @@ export default function StaffDashboardPage() {
               Front Desk Operations
             </h1>
             <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-xl leading-relaxed">
-              Process customer applications, record service visits, verify checklist documents, and manage billing.
+              Process customer applications, verify digital vault documents, and manage billing.
             </p>
           </div>
 
           <div className="flex flex-wrap gap-2.5">
             <Button
-              onClick={() => router.push('/staff/customers')}
+              onClick={() => setIsIntakeModalOpen(true)}
               variant="primary"
+              size="sm"
+              leftIcon={<Sparkles className="w-4 h-4" />}
+            >
+              + {t('new_application')}
+            </Button>
+            <Button
+              onClick={() => router.push('/staff/applications')}
+              variant="glass"
+              size="sm"
+              leftIcon={<FileCheck2 className="w-4 h-4" />}
+            >
+              {t('nav_applications')} ({applications.length})
+            </Button>
+            <Button
+              onClick={() => router.push('/staff/customers')}
+              variant="glass"
               size="sm"
               leftIcon={<PlusCircle className="w-4 h-4" />}
             >
@@ -177,6 +207,22 @@ export default function StaffDashboardPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Universal Service Intake Wizard Modal */}
+      <ServiceIntakeModal
+        isOpen={isIntakeModalOpen}
+        onClose={() => setIsIntakeModalOpen(false)}
+        onSuccess={(created) => {
+          setSelectedAppForReceipt(created);
+        }}
+      />
+
+      {/* Citizen Receipt Modal */}
+      <ReceiptModal
+        isOpen={!!selectedAppForReceipt}
+        onClose={() => setSelectedAppForReceipt(null)}
+        application={selectedAppForReceipt}
+      />
     </AppShell>
   );
 }

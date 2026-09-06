@@ -107,52 +107,88 @@ export default function CustomerDashboardPage() {
       </div>
 
       {/* Quick Action Tiles */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card
           variant="elevated"
-          onClick={() => router.push('/customer/members')}
-          className="p-5 hover:border-brand-500/50 cursor-pointer transition-all space-y-2 group"
+          onClick={() => router.push('/customer/applications')}
+          className="p-5 hover:border-brand-500/50 cursor-pointer transition-all space-y-2 group bg-gradient-to-br from-brand-500/5 to-indigo-500/5 hover:-translate-y-1 hover:shadow-lg"
         >
-          <div className="w-10 h-10 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <Users className="w-5 h-5" />
+          <div className="flex items-center justify-between">
+            <div className="w-10 h-10 rounded-2xl bg-brand-500/15 text-brand-600 dark:text-brand-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-500/10 text-brand-600 dark:text-brand-400">
+              Live Tracker
+            </span>
           </div>
           <h3 className="font-bold text-base text-slate-900 dark:text-white">
-            Family Members Directory
+            Govt Applications &bull; <span className="text-sm font-semibold text-brand-600 dark:text-brand-400">સરકારી અરજીઓ</span>
           </h3>
-          <p className="text-xs text-slate-500">
-            View enrolled members and verify personal government identity records.
+          <p className="text-xs text-slate-500 leading-relaxed">
+            તમામ ૪૫ સરકારી યોજનાઓ, પ્રમાણપત્રો અને દાખલાઓનું લાઈવ સ્ટેટસ જુઓ.
           </p>
         </Card>
 
         <Card
           variant="elevated"
           onClick={() => router.push('/customer/documents')}
-          className="p-5 hover:border-brand-500/50 cursor-pointer transition-all space-y-2 group"
+          className="p-5 hover:border-brand-500/50 cursor-pointer transition-all space-y-2 group hover:-translate-y-1 hover:shadow-lg"
         >
-          <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <FileCheck2 className="w-5 h-5" />
+          <div className="flex items-center justify-between">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <FileCheck2 className="w-5 h-5" />
+            </div>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+              Secure
+            </span>
           </div>
           <h3 className="font-bold text-base text-slate-900 dark:text-white">
-            Document Vault
+            Document Vault &bull; <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">ડિજિટલ તિજોરી</span>
           </h3>
-          <p className="text-xs text-slate-500">
-            Access digital copies of Aadhaar, PAN, Voter ID, and Ration cards.
+          <p className="text-xs text-slate-500 leading-relaxed">
+            Aadhaar, PAN, Voter ID, રેશન કાર્ડ અને આવકના દાખલાની ડિજિટલ કોપી.
+          </p>
+        </Card>
+
+        <Card
+          variant="elevated"
+          onClick={() => router.push('/customer/members')}
+          className="p-5 hover:border-brand-500/50 cursor-pointer transition-all space-y-2 group hover:-translate-y-1 hover:shadow-lg"
+        >
+          <div className="flex items-center justify-between">
+            <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Users className="w-5 h-5" />
+            </div>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+              Family
+            </span>
+          </div>
+          <h3 className="font-bold text-base text-slate-900 dark:text-white">
+            Family Members &bull; <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">કુટુંબ સભ્યો</span>
+          </h3>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            કુટુંબના નોંધાયેલા સભ્યો અને તેમના સરકારી ઓળખપત્રોની ચકાસણી.
           </p>
         </Card>
 
         <Card
           variant="elevated"
           onClick={() => router.push('/customer/reminders')}
-          className="p-5 hover:border-brand-500/50 cursor-pointer transition-all space-y-2 group"
+          className="p-5 hover:border-brand-500/50 cursor-pointer transition-all space-y-2 group hover:-translate-y-1 hover:shadow-lg"
         >
-          <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <BellRing className="w-5 h-5" />
+          <div className="flex items-center justify-between">
+            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <BellRing className="w-5 h-5" />
+            </div>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400">
+              Alerts
+            </span>
           </div>
           <h3 className="font-bold text-base text-slate-900 dark:text-white">
-            Service Alerts & Reminders
+            Service Alerts &bull; <span className="text-sm font-semibold text-amber-600 dark:text-amber-400">સૂચનાઓ</span>
           </h3>
-          <p className="text-xs text-slate-500">
-            Check appointment dates and ready-for-delivery pickup notifications.
+          <p className="text-xs text-slate-500 leading-relaxed">
+            તૈયાર થયેલા કાર્ડ/પ્રમાણપત્ર મેળવવાની તારીખ અને SMS સૂચનાઓ.
           </p>
         </Card>
       </div>

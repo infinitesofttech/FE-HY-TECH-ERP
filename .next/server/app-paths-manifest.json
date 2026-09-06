@@ -1,7 +1,15 @@
 {
-  "/page": "app/page.js",
   "/admin/dashboard/page": "app/admin/dashboard/page.js",
+  "/admin/customers/page": "app/admin/customers/page.js",
+  "/admin/visits/page": "app/admin/visits/page.js",
+  "/admin/reminders/page": "app/admin/reminders/page.js",
+  "/admin/pending-work/page": "app/admin/pending-work/page.js",
+  "/page": "app/page.js",
+  "/admin/applications/page": "app/admin/applications/page.js",
   "/admin/services/page": "app/admin/services/page.js",
-  "/admin/family-members/page": "app/admin/family-members/page.js",
-  "/admin/customers/page": "app/admin/customers/page.js"
+  "/admin/documents/page": "app/admin/documents/page.js",
+  "/admin/transactions/page": "app/admin/transactions/page.js",
+  "/staff/applications/page": "app/staff/applications/page.js",
+  "/customer/dashboard/page": "app/customer/dashboard/page.js",
+  "/customer/applications/page": "app/customer/applications/page.js"
 }

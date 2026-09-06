@@ -320,7 +320,7 @@ export default function CustomersPage() {
             >
               {cities.map((city) => (
                 <option key={city} value={city}>
-                  {city}
+                  {city === 'ALL' ? 'બધા ગામ / All Villages' : city}
                 </option>
               ))}
             </Select>

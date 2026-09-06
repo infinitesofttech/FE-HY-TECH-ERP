@@ -8,6 +8,8 @@ import { StatCard, Badge, Button, Card, CardHeader, CardTitle, CardDescription, 
 import { dashboardService } from '@/api/services/dashboardService';
 import { serviceVisitService } from '@/api/services/serviceVisitService';
 import { pendingWorkService } from '@/api/services/pendingWorkService';
+import { applicationService } from '@/api/services/applicationService';
+import { ServiceIntakeModal } from '@/components/applications/ServiceIntakeModal';
 import { useLanguage } from '@/context/LanguageContext';
 import {
   Users,
@@ -62,6 +64,13 @@ export default function AdminDashboardPage() {
     queryFn: () => pendingWorkService.getPendingWork(),
   });
 
+  const [isIntakeModalOpen, setIsIntakeModalOpen] = React.useState(false);
+
+  const { data: applications = [] } = useQuery({
+    queryKey: ['applications'],
+    queryFn: () => applicationService.getApplications(),
+  });
+
   const revenueData = dashboard?.revenue_chart?.labels?.map((label, idx) => ({
     day: label,
     revenue: dashboard?.revenue_chart?.datasets?.[0]?.data?.[idx] || 0,
@@ -112,8 +121,24 @@ export default function AdminDashboardPage() {
           {/* Quick Action Buttons */}
           <div className="flex flex-wrap items-center gap-2.5">
             <Button
-              onClick={() => router.push('/admin/visits')}
+              onClick={() => setIsIntakeModalOpen(true)}
               variant="primary"
+              size="sm"
+              leftIcon={<Sparkles className="w-4 h-4" />}
+            >
+              + {t('new_application')}
+            </Button>
+            <Button
+              onClick={() => router.push('/admin/applications')}
+              variant="glass"
+              size="sm"
+              leftIcon={<FileCheck2 className="w-4 h-4" />}
+            >
+              {t('nav_applications')} ({applications.length})
+            </Button>
+            <Button
+              onClick={() => router.push('/admin/visits')}
+              variant="glass"
               size="sm"
               leftIcon={<PlusCircle className="w-4 h-4" />}
             >
@@ -522,6 +547,12 @@ export default function AdminDashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      <ServiceIntakeModal
+        isOpen={isIntakeModalOpen}
+        onClose={() => setIsIntakeModalOpen(false)}
+        onSuccess={() => router.push('/admin/applications')}
+      />
     </AppShell>
   );
 }

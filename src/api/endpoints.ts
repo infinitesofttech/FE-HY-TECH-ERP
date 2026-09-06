@@ -113,4 +113,27 @@ export const ENDPOINTS = {
   DASHBOARD: {
     GET: '/dashboard/',
   },
+
+  // Applications (Govt Service Center OS)
+  APPLICATIONS: {
+    LIST: '/applications/',
+    CREATE: '/applications/',
+    DETAIL: (appNo: string) => `/applications/${appNo}/`,
+    UPDATE: (appNo: string) => `/applications/${appNo}/`,
+    DELETE: (appNo: string) => `/applications/${appNo}/`,
+    STATUS: (appNo: string) => `/applications/${appNo}/status/`,
+    TIMELINE: (appNo: string) => `/applications/${appNo}/timeline/`,
+  },
+
+  // Audit Logs
+  AUDIT_LOGS: {
+    LIST: '/audit-logs/',
+  },
+
+  // Notifications
+  NOTIFICATIONS: {
+    LIST: '/notifications/',
+    SEND: '/notifications/send/',
+    MARK_READ: (id: number | string) => `/notifications/${id}/read/`,
+  },
 };

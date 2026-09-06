@@ -35,6 +35,7 @@ import {
   Layers,
   Sparkles,
   FileText,
+  Search,
 } from 'lucide-react';
 
 const DOC_TYPES: DocumentType[] = [
@@ -59,6 +60,12 @@ export default function ServiceCatalogPage() {
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
   const [isSubServiceModalOpen, setIsSubServiceModalOpen] = useState(false);
   const [isDocModalOpen, setIsDocModalOpen] = useState(false);
+  const [isBuilderModalOpen, setIsBuilderModalOpen] = useState(false);
+  const [editingService, setEditingService] = useState<BaseService | null>(null);
+
+  // Filters
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
 
   // Active items for editing or parenting
   const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null);
@@ -75,11 +82,62 @@ export default function ServiceCatalogPage() {
   const [serviceForm, setServiceForm] = useState({ ServiceName: '', Description: '', IsActive: true });
   const [subServiceForm, setSubServiceForm] = useState({ SubServiceName: '', Description: '' });
   const [docForm, setDocForm] = useState({ DocumentName: '', document_type: 'AADHAR' as DocumentType, IsRequired: true });
+  const [builderForm, setBuilderForm] = useState<Partial<BaseService>>({
+    ServiceName: '',
+    ServiceNameGu: '',
+    Category: 'GOVT_FORMS',
+    GovernmentFee: 0,
+    ServiceCharge: 50,
+    SlaDays: 3,
+    PortalUrl: '',
+    StaffInstructions: '',
+    SmsTemplateGu: '',
+  });
 
   // Query
   const { data: services = [], isLoading } = useQuery({
     queryKey: ['base-services'],
     queryFn: () => baseServiceService.getServices(),
+  });
+
+  const updateServiceMutation = useMutation({
+    mutationFn: () => {
+      if (!editingService) throw new Error('No service selected');
+      return baseServiceService.updateService(editingService.id, builderForm);
+    },
+    onSuccess: () => {
+      toast.success('Service rules, fees & SLA updated successfully');
+      queryClient.invalidateQueries({ queryKey: ['base-services'] });
+      setIsBuilderModalOpen(false);
+    },
+    onError: () => toast.error('Failed to update service'),
+  });
+
+  const openBuilder = (s: BaseService) => {
+    setEditingService(s);
+    setBuilderForm({
+      ServiceName: s.ServiceName,
+      ServiceNameGu: s.ServiceNameGu || '',
+      Category: s.Category || 'GOVT_FORMS',
+      GovernmentFee: s.GovernmentFee ?? 0,
+      ServiceCharge: s.ServiceCharge ?? 50,
+      SlaDays: s.SlaDays ?? 3,
+      PortalUrl: s.PortalUrl || '',
+      StaffInstructions: s.StaffInstructions || '',
+      SmsTemplateGu: s.SmsTemplateGu || '',
+    });
+    setIsBuilderModalOpen(true);
+  };
+
+  const filteredServices = services.filter((s) => {
+    const matchesCat = selectedCategory === 'ALL' || s.Category === selectedCategory;
+    const q = searchQuery.toLowerCase();
+    const matchesSearch =
+      !q ||
+      s.ServiceName.toLowerCase().includes(q) ||
+      (s.ServiceNameGu && s.ServiceNameGu.toLowerCase().includes(q)) ||
+      (s.Description && s.Description.toLowerCase().includes(q));
+    return matchesCat && matchesSearch;
   });
 
   const toggleExpand = (id: number) => {
@@ -222,9 +280,47 @@ export default function ServiceCatalogPage() {
         />
       </div>
 
+      {/* Category Pills & Search Filter */}
+      <div className="space-y-3">
+        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          {[
+            { key: 'ALL', label: 'બધી સેવાઓ / All (45)' },
+            { key: 'GOVT_FORMS', label: 'મહેસૂલી & સરકારી યોજના (15)' },
+            { key: 'CARD_SERVICES', label: 'કાર્ડ સુધારા & KYC (7)' },
+            { key: 'NEW_SERVICES', label: 'નવા કાર્ડ & દાખલા (6)' },
+            { key: 'OTHER_SERVICES', label: 'કાનૂની & પ્રિન્ટિંગ (7)' },
+            { key: 'COMPUTER_COURSES', label: 'કોમ્પ્યુટર કોર્સ (6)' },
+            { key: 'ADDITIONAL_SERVICES', label: 'ઓનલાઇન & બેંકિંગ (4)' },
+          ].map((cat) => (
+            <button
+              key={cat.key}
+              onClick={() => setSelectedCategory(cat.key)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                selectedCategory === cat.key
+                  ? 'bg-brand-600 text-white shadow-xs'
+                  : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="relative">
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search service by English name, Gujarati name (દા.ત. 7/12, આવક, કિસાન), or description..."
+            className="w-full pl-10 pr-4 py-2 text-xs rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
+          />
+        </div>
+      </div>
+
       {/* Tree Accordion View */}
       <div className="space-y-4">
-        {services.map((service) => {
+        {filteredServices.map((service) => {
           const isExpanded = !!expandedServices[service.id];
 
           return (
@@ -236,33 +332,59 @@ export default function ServiceCatalogPage() {
               {/* Service Header Row */}
               <div
                 onClick={() => toggleExpand(service.id)}
-                className="flex items-center justify-between p-5 bg-slate-50/75 dark:bg-slate-800/40 hover:bg-slate-100/70 dark:hover:bg-slate-800/70 cursor-pointer transition-colors border-b border-slate-100 dark:border-slate-800/60"
+                className="flex flex-col lg:flex-row lg:items-center justify-between p-5 bg-slate-50/75 dark:bg-slate-800/40 hover:bg-slate-100/70 dark:hover:bg-slate-800/70 cursor-pointer transition-colors border-b border-slate-100 dark:border-slate-800/60 gap-3"
               >
-                <div className="flex items-center gap-3">
-                  <div className="p-1 rounded-lg text-slate-400">
+                <div className="flex items-start gap-3">
+                  <div className="p-1 rounded-lg text-slate-400 mt-1">
                     {isExpanded ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
                   </div>
                   <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-black text-base text-slate-900 dark:text-white">
                         {service.ServiceName}
                       </h3>
+                      {service.ServiceNameGu && (
+                        <span className="text-xs font-bold text-brand-600 dark:text-brand-400">
+                          ({service.ServiceNameGu})
+                        </span>
+                      )}
                       <Badge variant={service.IsActive ? 'success' : 'default'}>
-                        {service.IsActive ? 'Active Service' : 'Disabled'}
+                        {service.IsActive ? 'Active' : 'Disabled'}
                       </Badge>
+                      {service.Category && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                          {service.Category}
+                        </span>
+                      )}
                     </div>
+
+                    <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mt-1 font-mono">
+                      <span>Govt Fee: ₹{service.GovernmentFee ?? 0}</span>
+                      <span>&bull;</span>
+                      <span>Service Charge: ₹{service.ServiceCharge ?? 50}</span>
+                      <span>&bull;</span>
+                      <span className="text-amber-600 dark:text-amber-400 font-bold">
+                        {service.SlaDays || 3} Days SLA
+                      </span>
+                    </div>
+
                     {service.Description && (
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                         {service.Description}
                       </p>
                     )}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                  <span className="text-xs font-semibold text-slate-400 px-2">
-                    {service.SubServices?.length || 0} Sub-services
-                  </span>
+                <div className="flex items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
+                  <Button
+                    onClick={() => openBuilder(service)}
+                    variant="outline"
+                    size="xs"
+                    leftIcon={<Edit2 className="w-3 h-3" />}
+                  >
+                    Rules & Fees
+                  </Button>
                   <Button
                     onClick={() => {
                       setSelectedServiceId(service.id);
@@ -548,7 +670,118 @@ export default function ServiceCatalogPage() {
         </form>
       </Modal>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Modal 4: Service Builder & Rules */}
+      <Modal
+        isOpen={isBuilderModalOpen}
+        onClose={() => setIsBuilderModalOpen(false)}
+        title={`Service Builder: ${editingService?.ServiceName || ''}`}
+        description="Configure Gujarati names, categories, pricing, SLA days, and portal endpoints."
+        maxWidth="2xl"
+      >
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            updateServiceMutation.mutate();
+          }}
+          className="space-y-4"
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Input
+              label="Official Service Name (English) *"
+              required
+              value={builderForm.ServiceName || ''}
+              onChange={(e) => setBuilderForm({ ...builderForm, ServiceName: e.target.value })}
+            />
+            <Input
+              label="સત્તાવાર સેવાનું નામ (ગુજરાતી) *"
+              required
+              value={builderForm.ServiceNameGu || ''}
+              onChange={(e) => setBuilderForm({ ...builderForm, ServiceNameGu: e.target.value })}
+              placeholder="દા.ત. આવકનો દાખલો, 7/12 ઉતારો"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Select
+              label="Official Service Category *"
+              value={builderForm.Category || 'GOVT_FORMS'}
+              onChange={(e) => setBuilderForm({ ...builderForm, Category: e.target.value as any })}
+            >
+              <option value="GOVT_FORMS">GOVT_FORMS (સરકારી યોજના અને ફોર્મ્સ)</option>
+              <option value="CARD_SERVICES">CARD_SERVICES (કાર્ડ સુધારા અને KYC)</option>
+              <option value="NEW_SERVICES">NEW_SERVICES (નવા કાર્ડ અને દસ્તાવેજ)</option>
+              <option value="OTHER_SERVICES">OTHER_SERVICES (ડેસ્ક, પ્રિન્ટિંગ, ઝેરોક્ષ)</option>
+              <option value="COMPUTER_COURSES">COMPUTER_COURSES (કોમ્પ્યુટર કોર્સ)</option>
+              <option value="ADDITIONAL_SERVICES">ADDITIONAL_SERVICES (ઓનલાઇન સેવાઓ)</option>
+            </Select>
+
+            <Input
+              label="SLA Target (Working Days) *"
+              type="number"
+              required
+              value={builderForm.SlaDays || 3}
+              onChange={(e) => setBuilderForm({ ...builderForm, SlaDays: Number(e.target.value) })}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Input
+              label="Government Portal Official Fee (₹)"
+              type="number"
+              value={builderForm.GovernmentFee ?? 0}
+              onChange={(e) => setBuilderForm({ ...builderForm, GovernmentFee: Number(e.target.value) })}
+            />
+            <Input
+              label="HY-TECH Service Desk Charge (₹)"
+              type="number"
+              value={builderForm.ServiceCharge ?? 50}
+              onChange={(e) => setBuilderForm({ ...builderForm, ServiceCharge: Number(e.target.value) })}
+            />
+          </div>
+
+          <Input
+            label="Government Portal Direct URL (e.g. Digital Gujarat, Parivahan, UIDAI)"
+            placeholder="https://digitalgujarat.gov.in"
+            value={builderForm.PortalUrl || ''}
+            onChange={(e) => setBuilderForm({ ...builderForm, PortalUrl: e.target.value })}
+          />
+
+          <Textarea
+            label="Staff Operating Instructions & Verification Guidelines"
+            placeholder="Special instructions for desk operators when processing this service..."
+            rows={2}
+            value={builderForm.StaffInstructions || ''}
+            onChange={(e) => setBuilderForm({ ...builderForm, StaffInstructions: e.target.value })}
+          />
+
+          <Textarea
+            label="Gujarati Citizen SMS Notification Template"
+            placeholder="નમસ્તે {citizen}, આપનું {service} સફળતાપૂર્વક પૂર્ણ થયેલ છે..."
+            rows={2}
+            value={builderForm.SmsTemplateGu || ''}
+            onChange={(e) => setBuilderForm({ ...builderForm, SmsTemplateGu: e.target.value })}
+          />
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setIsBuilderModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              isLoading={updateServiceMutation.isPending}
+            >
+              Save Service Rules & Pricing
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+
       <ConfirmDialog
         isOpen={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}

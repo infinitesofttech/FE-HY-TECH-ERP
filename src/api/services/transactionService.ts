@@ -1,6 +1,6 @@
 import apiClient from '../client';
 import { ENDPOINTS } from '../endpoints';
-import { Transaction } from '@/types';
+import { Transaction, PaymentMode } from '@/types';
 import { MOCK_TRANSACTIONS } from '../mockData';
 
 let localTxns = [...MOCK_TRANSACTIONS];
@@ -37,7 +37,7 @@ export const transactionService = {
     points_redeemed?: number;
     wallet_credit?: string;
     wallet_used?: string;
-    payment_mode: 'CASH' | 'ONLINE/UPI' | 'CARD';
+    payment_mode: PaymentMode;
     staff: number;
     remarks?: string;
   }): Promise<{ message: string; data: Transaction }> {
