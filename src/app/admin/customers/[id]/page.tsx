@@ -21,6 +21,7 @@ import {
   EmptyState,
 } from '@/components/ui';
 import { customerService } from '@/api/services/customerService';
+import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
 import { familyMemberService } from '@/api/services/familyMemberService';
 import { documentService } from '@/api/services/documentService';
 import { serviceVisitService } from '@/api/services/serviceVisitService';
@@ -470,11 +471,17 @@ export default function CustomerDetailPage() {
                 </div>
                 <div>
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Primary Mobile</span>
-                  <p className="font-mono font-bold text-slate-800 dark:text-slate-200 mt-0.5">{customer.mobile_number}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <p className="font-mono font-bold text-slate-800 dark:text-slate-200">{customer.mobile_number}</p>
+                    <WhatsAppButton number={customer.mobile_number} size="xs" />
+                  </div>
                 </div>
                 <div>
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">WhatsApp Contact</span>
-                  <p className="font-mono font-bold text-slate-800 dark:text-slate-200 mt-0.5">{customer.whatsapp_number}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <p className="font-mono font-bold text-slate-800 dark:text-slate-200">{customer.whatsapp_number}</p>
+                    <WhatsAppButton number={customer.whatsapp_number} size="xs" />
+                  </div>
                 </div>
                 <div>
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Birth Date</span>
@@ -659,7 +666,10 @@ export default function CustomerDetailPage() {
                         <Badge variant="purple">{m.relationship}</Badge>
                       </td>
                       <td className="py-4 px-4 font-mono text-slate-500">
-                        {m.mobile_number}
+                        <div className="flex items-center gap-1.5">
+                          <span>{m.mobile_number}</span>
+                          <WhatsAppButton number={m.mobile_number} size="xs" />
+                        </div>
                       </td>
                       <td className="py-4 px-4 font-mono text-slate-500">
                         {m.birth_date}

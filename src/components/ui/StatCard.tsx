@@ -25,39 +25,39 @@ export const StatCard: React.FC<StatCardProps> = ({
 }) => {
   const schemeStyles = {
     brand: {
-      bgHover: 'hover:border-brand-500/50 dark:hover:border-brand-500/50',
-      iconBox: 'bg-gradient-to-br from-brand-500 to-indigo-600 text-white shadow-lg shadow-brand-500/30',
-      glow: 'from-brand-500/10 via-transparent to-transparent',
+      borderHover: 'hover:border-brand-500/40 dark:hover:border-brand-400/40',
+      iconBg: 'bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 border border-brand-200/80 dark:border-brand-800/80',
+      accentGlow: 'from-brand-500/5 to-transparent',
       textAccent: 'text-brand-600 dark:text-brand-400',
     },
     emerald: {
-      bgHover: 'hover:border-emerald-500/50 dark:hover:border-emerald-500/50',
-      iconBox: 'bg-gradient-to-br from-emerald-400 to-teal-600 text-white shadow-lg shadow-emerald-500/30',
-      glow: 'from-emerald-500/10 via-transparent to-transparent',
+      borderHover: 'hover:border-emerald-500/40 dark:hover:border-emerald-400/40',
+      iconBg: 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800/80',
+      accentGlow: 'from-emerald-500/5 to-transparent',
       textAccent: 'text-emerald-600 dark:text-emerald-400',
     },
     amber: {
-      bgHover: 'hover:border-amber-500/50 dark:hover:border-amber-500/50',
-      iconBox: 'bg-gradient-to-br from-amber-400 to-orange-600 text-white shadow-lg shadow-amber-500/30',
-      glow: 'from-amber-500/10 via-transparent to-transparent',
+      borderHover: 'hover:border-amber-500/40 dark:hover:border-amber-400/40',
+      iconBg: 'bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200/80 dark:border-amber-800/80',
+      accentGlow: 'from-amber-500/5 to-transparent',
       textAccent: 'text-amber-600 dark:text-amber-400',
     },
     sky: {
-      bgHover: 'hover:border-sky-500/50 dark:hover:border-sky-500/50',
-      iconBox: 'bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-lg shadow-sky-500/30',
-      glow: 'from-sky-500/10 via-transparent to-transparent',
+      borderHover: 'hover:border-sky-500/40 dark:hover:border-sky-400/40',
+      iconBg: 'bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 border border-sky-200/80 dark:border-sky-800/80',
+      accentGlow: 'from-sky-500/5 to-transparent',
       textAccent: 'text-sky-600 dark:text-sky-400',
     },
     purple: {
-      bgHover: 'hover:border-purple-500/50 dark:hover:border-purple-500/50',
-      iconBox: 'bg-gradient-to-br from-purple-400 to-indigo-600 text-white shadow-lg shadow-purple-500/30',
-      glow: 'from-purple-500/10 via-transparent to-transparent',
+      borderHover: 'hover:border-purple-500/40 dark:hover:border-purple-400/40',
+      iconBg: 'bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-200/80 dark:border-purple-800/80',
+      accentGlow: 'from-purple-500/5 to-transparent',
       textAccent: 'text-purple-600 dark:text-purple-400',
     },
     rose: {
-      bgHover: 'hover:border-rose-500/50 dark:hover:border-rose-500/50',
-      iconBox: 'bg-gradient-to-br from-rose-400 to-red-600 text-white shadow-lg shadow-rose-500/30',
-      glow: 'from-rose-500/10 via-transparent to-transparent',
+      borderHover: 'hover:border-rose-500/40 dark:hover:border-rose-400/40',
+      iconBg: 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200/80 dark:border-rose-800/80',
+      accentGlow: 'from-rose-500/5 to-transparent',
       textAccent: 'text-rose-600 dark:text-rose-400',
     },
   };
@@ -67,14 +67,18 @@ export const StatCard: React.FC<StatCardProps> = ({
   return (
     <div
       onClick={onClick}
-      className={`relative overflow-hidden p-5 rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 shadow-card-elevated hover:shadow-card-hover transition-all duration-300 group ${scheme.bgHover} ${onClick ? 'cursor-pointer' : ''}`}
+      className={`relative overflow-hidden p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-card-hover transition-all duration-300 group ${scheme.borderHover} ${
+        onClick ? 'cursor-pointer' : ''
+      }`}
     >
-      {/* Background soft glow gradient */}
-      <div className={`absolute top-0 right-0 w-36 h-36 bg-gradient-to-bl ${scheme.glow} rounded-full blur-2xl pointer-events-none group-hover:scale-150 transition-transform duration-500`} />
+      {/* Background ambient accent */}
+      <div
+        className={`absolute -top-12 -right-12 w-32 h-32 bg-gradient-to-bl ${scheme.accentGlow} rounded-full blur-xl pointer-events-none group-hover:scale-150 transition-transform duration-500`}
+      />
 
       <div className="relative z-10 flex items-start justify-between">
         <div className="space-y-1">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
             {title}
           </span>
           <div className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
@@ -82,21 +86,23 @@ export const StatCard: React.FC<StatCardProps> = ({
           </div>
         </div>
 
-        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center group-hover:rotate-6 group-hover:scale-105 transition-all duration-300 ${scheme.iconBox}`}>
-          <Icon className="w-6 h-6" />
+        <div
+          className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-105 shadow-xs ${scheme.iconBg}`}
+        >
+          <Icon className="w-5 h-5" />
         </div>
       </div>
 
       <div className="relative z-10 mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
         {subtitle && (
-          <span className="text-slate-500 dark:text-slate-400 font-medium">
+          <span className="text-slate-500 dark:text-slate-400 font-medium truncate max-w-[170px]">
             {subtitle}
           </span>
         )}
 
         {trend && (
           <span
-            className={`inline-flex items-center gap-1 font-bold px-2 py-0.5 rounded-full text-[10px] ${
+            className={`inline-flex items-center gap-1 font-bold px-2 py-0.5 rounded-full text-[10px] ml-auto ${
               trend.isPositive !== false
                 ? 'text-emerald-700 bg-emerald-500/10 dark:text-emerald-400'
                 : 'text-rose-700 bg-rose-500/10 dark:text-rose-400'

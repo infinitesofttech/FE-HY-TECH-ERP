@@ -15,6 +15,7 @@ import {
 } from '@/components/ui';
 import { employeeService } from '@/api/services/employeeService';
 import { useLanguage } from '@/context/LanguageContext';
+import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
 import { EmployeeUser } from '@/types';
 import { toast } from 'sonner';
 import {
@@ -165,6 +166,7 @@ export default function EmployeesPage() {
               <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
                 <Phone className="w-3.5 h-3.5 text-slate-400" />
                 <span className="font-mono">{emp.mobile_number || '9876543210'}</span>
+                {(emp.mobile_number || '9876543210') && <WhatsAppButton number={emp.mobile_number || '9876543210'} size="xs" />}
               </div>
             </div>
 

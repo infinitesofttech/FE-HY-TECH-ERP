@@ -32,28 +32,28 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variants = {
       primary:
-        'bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white shadow-md shadow-brand-600/25 hover:shadow-lg hover:shadow-brand-600/35 focus:ring-brand-500 border border-brand-500/20',
+        'bg-brand-600 hover:bg-brand-500 text-white shadow-sm shadow-brand-600/30 hover:shadow-md hover:shadow-brand-600/25 focus:ring-brand-500 border border-brand-500/30',
       secondary:
-        'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 border border-slate-200/80 dark:border-slate-700/80 focus:ring-slate-400',
+        'bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200/80 dark:hover:bg-slate-700/80 text-slate-800 dark:text-slate-100 border border-slate-200/80 dark:border-slate-700/80 focus:ring-slate-400',
       outline:
         'bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 focus:ring-brand-500',
       ghost:
-        'bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white focus:ring-slate-400',
+        'bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white focus:ring-slate-400',
       danger:
-        'bg-rose-600 hover:bg-rose-500 text-white shadow-md shadow-rose-600/25 hover:shadow-lg hover:shadow-rose-600/35 focus:ring-rose-500 border border-rose-500/30',
+        'bg-rose-600 hover:bg-rose-500 text-white shadow-sm shadow-rose-600/25 hover:shadow-md focus:ring-rose-500 border border-rose-500/30',
       glass:
-        'bg-white/70 dark:bg-slate-900/70 backdrop-blur-md hover:bg-white/90 dark:hover:bg-slate-900/90 text-slate-800 dark:text-slate-100 border border-slate-200/80 dark:border-slate-800 shadow-sm focus:ring-brand-500',
+        'bg-white/80 dark:bg-slate-900/80 backdrop-blur-md hover:bg-white dark:hover:bg-slate-900 text-slate-800 dark:text-slate-100 border border-slate-200/80 dark:border-slate-800 shadow-xs focus:ring-brand-500',
       emerald:
-        'bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/25 hover:shadow-lg hover:shadow-emerald-600/35 focus:ring-emerald-500 border border-emerald-500/30',
+        'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm shadow-emerald-600/25 hover:shadow-md focus:ring-emerald-500 border border-emerald-500/30',
       amber:
-        'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md shadow-amber-500/25 hover:shadow-lg hover:shadow-amber-500/35 focus:ring-amber-500 border border-amber-400/40',
+        'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-sm shadow-amber-500/25 hover:shadow-md focus:ring-amber-500 border border-amber-400/40',
     };
 
     const sizes = {
       xs: 'px-2.5 py-1 text-xs gap-1.5 rounded-lg',
       sm: 'px-3 py-1.5 text-xs gap-1.5 rounded-xl',
       md: 'px-4 py-2 text-xs sm:text-sm gap-2 rounded-xl',
-      lg: 'px-5 py-2.5 text-sm gap-2.5 rounded-2xl font-extrabold',
+      lg: 'px-5 py-2.5 text-sm gap-2.5 rounded-xl font-bold',
     };
 
     return (

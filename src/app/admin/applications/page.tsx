@@ -18,6 +18,7 @@ import {
 } from '@/components/ui';
 import { applicationService } from '@/api/services/applicationService';
 import { useLanguage } from '@/context/LanguageContext';
+import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
 import { Application, ApplicationStatus, ServiceCategory } from '@/types';
 import { ServiceIntakeModal } from '@/components/applications/ServiceIntakeModal';
 import { ApplicationDetailDrawer } from '@/components/applications/ApplicationDetailDrawer';
@@ -128,8 +129,11 @@ export default function AdminApplicationsPage() {
           <div className="font-bold text-xs text-slate-900 dark:text-slate-100">
             {row.applicant_name || row.customer_name}
           </div>
-          <div className="text-[11px] text-slate-500 font-mono">
+          <div className="text-[11px] text-slate-500 font-mono flex items-center gap-1.5">
             {row.customer_family_id} &bull; {row.applicant_mobile || row.customer_mobile}
+            {(row.applicant_mobile || row.customer_mobile) && (
+              <WhatsAppButton number={(row.applicant_mobile || row.customer_mobile)!} size="xs" />
+            )}
           </div>
         </div>
       ),

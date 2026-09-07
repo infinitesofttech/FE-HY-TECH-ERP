@@ -11,6 +11,7 @@ import { applicationService } from '@/api/services/applicationService';
 import { auditLogService } from '@/api/services/auditLogService';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
+import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
 import {
   Customer,
   FamilyMember,
@@ -664,7 +665,10 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
                         Head
                       </span>
                     </div>
-                    <div className="text-[11px] text-slate-400 font-mono">{selectedCustomer.mobile_number}</div>
+                    <div className="text-[11px] text-slate-400 font-mono flex items-center gap-1.5">
+                      {selectedCustomer.mobile_number}
+                      <WhatsAppButton number={selectedCustomer.mobile_number} size="xs" />
+                    </div>
                   </div>
                 </div>
 
@@ -705,8 +709,9 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
                             {m.relationship}
                           </span>
                         </div>
-                        <div className="text-[11px] text-slate-400 font-mono">
+                        <div className="text-[11px] text-slate-400 font-mono flex items-center gap-1.5">
                           {m.mobile_number || 'Family Mobile'} &bull; Age: {m.age || 'N/A'}
+                          {m.mobile_number && <WhatsAppButton number={m.mobile_number} size="xs" />}
                         </div>
                       </div>
                     </div>

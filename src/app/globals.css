@@ -9,12 +9,12 @@
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 222 47% 5%;
     --foreground: 210 40% 98%;
   }
 
   body {
-    @apply antialiased text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 min-h-screen selection:bg-brand-500 selection:text-white;
+    @apply antialiased text-slate-800 dark:text-slate-100 bg-[#f6f9f8] dark:bg-[#050d0a] min-h-screen selection:bg-brand-600 selection:text-white;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
@@ -34,26 +34,26 @@
   }
 }
 
-/* Custom Luxury Glassmorphism & Visual Polish */
+/* Modern Enterprise Glassmorphism & Visual Polish */
 .glass-card {
-  @apply bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 shadow-card-elevated;
+  @apply bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 shadow-card-elevated;
 }
 
 .glass-card-hover {
-  @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover hover:border-brand-500/40 dark:hover:border-brand-400/40;
+  @apply transition-all duration-300 hover:-translate-y-0.5 hover:shadow-card-hover hover:border-brand-500/40 dark:hover:border-brand-400/40;
 }
 
 .glass-header {
-  @apply bg-white/75 dark:bg-slate-950/75 backdrop-blur-2xl border-b border-slate-200/80 dark:border-slate-800/80 sticky top-0 z-30;
+  @apply bg-white/85 dark:bg-[#07130f]/85 backdrop-blur-2xl border-b border-slate-200/80 dark:border-slate-800/80 sticky top-0 z-30;
 }
 
 .glass-panel {
-  @apply bg-slate-50/60 dark:bg-slate-900/50 backdrop-blur-lg border border-slate-200/60 dark:border-slate-800/60;
+  @apply bg-white/60 dark:bg-slate-900/50 backdrop-blur-lg border border-slate-200/60 dark:border-slate-800/60;
 }
 
 /* Luxury Gradient Text */
 .gradient-text-brand {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-600 via-indigo-500 to-purple-600 dark:from-brand-400 dark:via-indigo-300 dark:to-purple-300;
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-500 dark:from-emerald-400 dark:via-emerald-300 dark:to-teal-300;
 }
 
 .gradient-text-gold {
@@ -61,16 +61,16 @@
 }
 
 .gradient-text-emerald {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-teal-400;
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-300;
 }
 
 /* Neon Glow Accents */
 .glow-brand {
-  box-shadow: 0 0 20px -3px rgba(79, 70, 229, 0.35);
+  box-shadow: 0 0 20px -3px rgba(5, 150, 105, 0.4);
 }
 
 .glow-emerald {
-  box-shadow: 0 0 20px -3px rgba(16, 185, 129, 0.35);
+  box-shadow: 0 0 20px -3px rgba(16, 185, 129, 0.4);
 }
 
 .glow-amber {
@@ -88,7 +88,7 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-300 dark:bg-slate-700 rounded-full hover:bg-slate-400 dark:hover:bg-slate-600;
+  @apply bg-slate-300 dark:bg-slate-700/80 rounded-full hover:bg-slate-400 dark:hover:bg-slate-600;
 }
 
 /* Pulse indicators */

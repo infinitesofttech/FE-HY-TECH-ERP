@@ -7,6 +7,7 @@ import { Badge, Card, EmptyState } from '@/components/ui';
 import { useAuth } from '@/context/AuthContext';
 import { familyMemberService } from '@/api/services/familyMemberService';
 import { Users, Phone, Calendar, ShieldCheck, Sparkles } from 'lucide-react';
+import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
 
 export default function CustomerMembersPage() {
   const { user } = useAuth();
@@ -59,6 +60,7 @@ export default function CustomerMembersPage() {
               <div className="flex items-center gap-2">
                 <Phone className="w-3.5 h-3.5 text-slate-400" />
                 <span className="font-mono">{member.mobile_number || 'Mobile not registered'}</span>
+                {member.mobile_number && <WhatsAppButton number={member.mobile_number} size="xs" />}
               </div>
               <div className="flex items-center gap-2">
                 <Calendar className="w-3.5 h-3.5 text-slate-400" />

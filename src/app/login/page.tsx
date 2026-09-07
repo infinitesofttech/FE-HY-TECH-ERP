@@ -74,44 +74,43 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center p-4 bg-slate-950 text-slate-100 overflow-hidden selection:bg-brand-500 selection:text-white">
-      {/* Background Multi-color Mesh Lights */}
-      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-brand-600/25 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[500px] h-[500px] bg-emerald-600/15 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute top-3/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-amber-500/10 rounded-full blur-[140px] pointer-events-none" />
+    <div className="min-h-screen relative flex items-center justify-center p-4 bg-slate-50 dark:bg-[#070c18] text-slate-800 dark:text-slate-100 overflow-hidden selection:bg-brand-500 selection:text-white">
+      {/* Background Subtle Ambient Glows */}
+      <div className="absolute top-1/4 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand-500/10 dark:bg-brand-500/15 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/3 translate-x-1/2 translate-y-1/2 w-[450px] h-[450px] bg-emerald-500/10 dark:bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
 
       {/* Main Container Card */}
-      <div className="relative z-10 w-full max-w-xl p-8 sm:p-10 rounded-3xl bg-slate-900/80 backdrop-blur-2xl border border-slate-800/90 shadow-2xl shadow-black/80 space-y-7">
+      <div className="relative z-10 w-full max-w-lg p-8 sm:p-10 rounded-3xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-800 shadow-xl space-y-6">
         {/* Brand Crest */}
-        <div className="text-center space-y-3">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-gradient-to-br from-brand-500 via-indigo-600 to-purple-600 text-white font-black text-2xl shadow-xl shadow-brand-500/35 ring-4 ring-brand-500/20">
+        <div className="text-center space-y-2.5">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-600 to-brand-700 text-white font-black text-2xl shadow-sm shadow-brand-600/30">
             H
           </div>
 
           <div>
             <div className="flex items-center justify-center gap-2">
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+              <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
                 HY-TECH ERP
               </h1>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 uppercase tracking-widest shadow-md">
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-100 dark:bg-amber-400/20 text-amber-800 dark:text-amber-300 border border-amber-300/60 dark:border-amber-500/30 uppercase tracking-widest">
                 ENTERPRISE
               </span>
             </div>
-            <p className="text-xs text-slate-400 mt-1 font-medium">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
               Citizen Government Document & Workflow Infrastructure
             </p>
           </div>
         </div>
 
         {/* Portal Role Tabs */}
-        <div className="grid grid-cols-3 gap-1.5 p-1.5 rounded-2xl bg-slate-950/80 border border-slate-800">
+        <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60">
           <button
             type="button"
             onClick={() => setPortalType('admin')}
-            className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-black transition-all ${
+            className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${
               portalType === 'admin'
-                ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-600/30'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-white shadow-xs font-black'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <ShieldCheck className="w-3.5 h-3.5" />
@@ -120,10 +119,10 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={() => setPortalType('employee')}
-            className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-black transition-all ${
+            className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${
               portalType === 'employee'
-                ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-600/30'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-white shadow-xs font-black'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <UserCheck className="w-3.5 h-3.5" />
@@ -132,10 +131,10 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={() => setPortalType('customer')}
-            className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-black transition-all ${
+            className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${
               portalType === 'customer'
-                ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-600/30'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-white shadow-xs font-black'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <Users className="w-3.5 h-3.5" />
@@ -148,7 +147,7 @@ export default function LoginPage() {
           {portalType !== 'customer' ? (
             <>
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   Operator Username
                 </label>
                 <div className="relative">
@@ -158,13 +157,13 @@ export default function LoginPage() {
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder={portalType === 'admin' ? 'admin' : 'operator'}
-                    className="w-full pl-4 pr-4 py-3 text-sm bg-slate-950/90 border border-slate-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-500/50 text-white font-medium placeholder:text-slate-600"
+                    className="w-full pl-4 pr-4 py-2.5 text-sm bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/30 text-slate-900 dark:text-white font-medium placeholder:text-slate-400 transition-all"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   Security Password
                 </label>
                 <div className="relative">
@@ -174,7 +173,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full pl-4 pr-4 py-3 text-sm bg-slate-950/90 border border-slate-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-500/50 text-white font-medium placeholder:text-slate-600"
+                    className="w-full pl-4 pr-4 py-2.5 text-sm bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/30 text-slate-900 dark:text-white font-medium placeholder:text-slate-400 transition-all"
                   />
                 </div>
               </div>
@@ -182,7 +181,7 @@ export default function LoginPage() {
           ) : (
             <>
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   Family Identification Token (Family ID)
                 </label>
                 <input
@@ -191,12 +190,12 @@ export default function LoginPage() {
                   value={familyId}
                   onChange={(e) => setFamilyId(e.target.value)}
                   placeholder="HTF-000002"
-                  className="w-full px-4 py-3 text-sm bg-slate-950/90 border border-slate-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-500/50 text-white font-mono font-bold"
+                  className="w-full px-4 py-2.5 text-sm bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/30 text-slate-900 dark:text-white font-mono font-bold"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   Registered Mobile Number
                 </label>
                 <input
@@ -205,12 +204,12 @@ export default function LoginPage() {
                   value={mobileNumber}
                   onChange={(e) => setMobileNumber(e.target.value)}
                   placeholder="9876543210"
-                  className="w-full px-4 py-3 text-sm bg-slate-950/90 border border-slate-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-500/50 text-white font-mono font-bold"
+                  className="w-full px-4 py-2.5 text-sm bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/30 text-slate-900 dark:text-white font-mono font-bold"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   Portal Password
                 </label>
                 <input
@@ -219,7 +218,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Patel@123"
-                  className="w-full px-4 py-3 text-sm bg-slate-950/90 border border-slate-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-500/50 text-white font-medium"
+                  className="w-full px-4 py-2.5 text-sm bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/30 text-slate-900 dark:text-white font-medium"
                 />
               </div>
             </>
@@ -228,10 +227,10 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-indigo-500 text-white font-black text-sm shadow-xl shadow-brand-600/35 hover:scale-[1.01] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm shadow-sm shadow-brand-600/30 hover:shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98]"
           >
             {loading ? (
-              <span className="inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
             ) : (
               <>
                 <span>{t('sign_in_btn')}</span>
@@ -242,8 +241,8 @@ export default function LoginPage() {
         </form>
 
         {/* 1-Click Fast Fill Test Buttons */}
-        <div className="pt-4 border-t border-slate-800/80 space-y-2.5">
-          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block text-center">
+        <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block text-center">
             Fast One-Click Demo Credentials
           </span>
 
@@ -251,21 +250,21 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => handleQuickFill('admin')}
-              className="py-2 px-2 rounded-xl bg-slate-800/80 hover:bg-brand-600/20 text-slate-300 hover:text-brand-300 text-[11px] font-bold border border-slate-700/60 hover:border-brand-500/40 transition-all text-center"
+              className="py-1.5 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-brand-50 dark:hover:bg-brand-950/60 text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-300 text-[11px] font-semibold border border-slate-200/80 dark:border-slate-700/80 transition-all text-center"
             >
               {t('auto_fill_admin')}
             </button>
             <button
               type="button"
               onClick={() => handleQuickFill('employee')}
-              className="py-2 px-2 rounded-xl bg-slate-800/80 hover:bg-brand-600/20 text-slate-300 hover:text-brand-300 text-[11px] font-bold border border-slate-700/60 hover:border-brand-500/40 transition-all text-center"
+              className="py-1.5 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-brand-50 dark:hover:bg-brand-950/60 text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-300 text-[11px] font-semibold border border-slate-200/80 dark:border-slate-700/80 transition-all text-center"
             >
               {t('auto_fill_staff')}
             </button>
             <button
               type="button"
               onClick={() => handleQuickFill('customer')}
-              className="py-2 px-2 rounded-xl bg-slate-800/80 hover:bg-brand-600/20 text-slate-300 hover:text-brand-300 text-[11px] font-bold border border-slate-700/60 hover:border-brand-500/40 transition-all text-center"
+              className="py-1.5 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-brand-50 dark:hover:bg-brand-950/60 text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-300 text-[11px] font-semibold border border-slate-200/80 dark:border-slate-700/80 transition-all text-center"
             >
               {t('auto_fill_citizen')}
             </button>
@@ -273,8 +272,8 @@ export default function LoginPage() {
         </div>
 
         {/* Security Trust Footer */}
-        <div className="flex items-center justify-center gap-2 text-[11px] text-slate-500 font-semibold pt-1">
-          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+        <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400 font-medium pt-1">
+          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
           <span>AES-256 Cloud Encrypted &bull; Central API Configured</span>
         </div>
       </div>

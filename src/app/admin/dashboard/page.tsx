@@ -43,7 +43,7 @@ import {
   Cell,
 } from 'recharts';
 
-const PIE_COLORS = ['#4f46e5', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'];
+const PIE_COLORS = ['#059669', '#10b981', '#0d9488', '#f59e0b', '#0284c7', '#8b5cf6'];
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -94,61 +94,61 @@ export default function AdminDashboardPage() {
 
   return (
     <AppShell allowedRoles={['admin']}>
-      {/* 1. Executive Mesh Hero Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 border border-slate-800/80 p-6 sm:p-9 text-white shadow-2xl">
-        {/* Glow ambient meshes */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
+      {/* 1. Executive Modern Header */}
+      <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 shadow-sm">
+        {/* Ambient subtle tint */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/5 dark:bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-bold tracking-wide">
-              <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-spin" />
-              <span className="text-amber-200">HY-TECH ENTERPRISE SUITE v2.4</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-              <span className="text-[11px] text-emerald-300 font-semibold">Government Certified Desk</span>
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+          <div className="space-y-1.5">
+            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200/80 dark:border-brand-800/80 text-[11px] font-bold tracking-wide">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              <span>HY-TECH ENTERPRISE SUITE</span>
+              <span className="text-slate-300 dark:text-slate-700">&bull;</span>
+              <span className="text-slate-600 dark:text-slate-400 font-semibold">Government Certified Desk</span>
             </div>
 
-            <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-white">
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
               {t('exec_overview')}
             </h1>
 
-            <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed">
               {t('exec_sub')}
             </p>
           </div>
 
-          {/* Quick Action Buttons */}
-          <div className="flex flex-wrap items-center gap-2.5">
+          {/* Action Toolbar */}
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               onClick={() => setIsIntakeModalOpen(true)}
               variant="primary"
               size="sm"
-              leftIcon={<Sparkles className="w-4 h-4" />}
+              leftIcon={<Sparkles className="w-3.5 h-3.5" />}
             >
               + {t('new_application')}
             </Button>
             <Button
               onClick={() => router.push('/admin/applications')}
-              variant="glass"
+              variant="secondary"
               size="sm"
-              leftIcon={<FileCheck2 className="w-4 h-4" />}
+              leftIcon={<FileCheck2 className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />}
             >
               {t('nav_applications')} ({applications.length})
             </Button>
             <Button
               onClick={() => router.push('/admin/visits')}
-              variant="glass"
+              variant="secondary"
               size="sm"
-              leftIcon={<PlusCircle className="w-4 h-4" />}
+              leftIcon={<PlusCircle className="w-3.5 h-3.5 text-slate-500" />}
             >
               {t('new_service_visit')}
             </Button>
             <Button
               onClick={() => router.push('/admin/customers')}
-              variant="glass"
+              variant="secondary"
               size="sm"
-              leftIcon={<Users className="w-4 h-4" />}
+              leftIcon={<Users className="w-3.5 h-3.5 text-slate-500" />}
             >
               {t('register_new_family')}
             </Button>
@@ -156,7 +156,7 @@ export default function AdminDashboardPage() {
               onClick={() => router.push('/admin/transactions')}
               variant="emerald"
               size="sm"
-              leftIcon={<Receipt className="w-4 h-4" />}
+              leftIcon={<Receipt className="w-3.5 h-3.5" />}
             >
               {t('record_transaction')}
             </Button>
@@ -283,8 +283,8 @@ export default function AdminDashboardPage() {
                 <BarChart data={revenueData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                   <defs>
                     <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#4f46e5" stopOpacity={0.9} />
-                      <stop offset="100%" stopColor="#818cf8" stopOpacity={0.4} />
+                      <stop offset="0%" stopColor="#059669" stopOpacity={0.95} />
+                      <stop offset="100%" stopColor="#34d399" stopOpacity={0.35} />
                     </linearGradient>
                   </defs>
                   <XAxis
@@ -300,19 +300,19 @@ export default function AdminDashboardPage() {
                     tickFormatter={(val) => `₹${val}`}
                   />
                   <Tooltip
-                    cursor={{ fill: 'rgba(99, 102, 241, 0.08)' }}
+                    cursor={{ fill: 'rgba(5, 150, 105, 0.05)' }}
                     contentStyle={{
                       backgroundColor: '#0f172a',
-                      border: '1px solid #334155',
-                      borderRadius: '16px',
+                      border: '1px solid #1e293b',
+                      borderRadius: '12px',
                       color: '#fff',
                       fontSize: '12px',
                       fontWeight: 'bold',
-                      boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+                      boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
                     }}
                     formatter={(value: any) => [`₹${value}`, 'Invoiced']}
                   />
-                  <Bar dataKey="revenue" fill="url(#barGradient)" radius={[8, 8, 2, 2]} />
+                  <Bar dataKey="revenue" fill="url(#barGradient)" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

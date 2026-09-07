@@ -20,6 +20,7 @@ import { familyMemberService } from '@/api/services/familyMemberService';
 import { baseServiceService } from '@/api/services/baseServiceService';
 import { documentService } from '@/api/services/documentService';
 import { useLanguage } from '@/context/LanguageContext';
+import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
 import { ServiceVisit, VisitDocument } from '@/types';
 import { toast } from 'sonner';
 import {
@@ -360,7 +361,7 @@ export default function ServiceVisitsPage() {
       </div>
 
       {/* Filter Bar */}
-      <Card variant="elevated" className="p-4 flex flex-col sm:flex-row items-center gap-3">
+      <Card variant="elevated" className="p-3.5 flex flex-col sm:flex-row items-center gap-3">
         <div className="relative flex-1 w-full">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
@@ -368,7 +369,7 @@ export default function ServiceVisitsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by Visit Token (VIS-...), Customer Name, or Family ID..."
-            className="w-full pl-10 pr-4 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-200 font-medium"
+            className="w-full pl-10 pr-4 py-2 text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-slate-800 dark:text-slate-200 font-medium transition-all"
           />
         </div>
 
@@ -406,25 +407,26 @@ export default function ServiceVisitsPage() {
             <Card
               key={visit.visit_no}
               variant="elevated"
-              className="p-6 space-y-4 hover:shadow-card-hover transition-all duration-300"
+              className="p-5 sm:p-6 space-y-4 hover:shadow-card-hover transition-all duration-300"
             >
               {/* Card Header */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
                 <div className="flex items-center gap-3">
-                  <span className="font-mono text-sm font-black text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/60 px-3.5 py-1.5 rounded-2xl border border-brand-200 dark:border-brand-800/80 shadow-xs">
+                  <span className="font-mono text-xs font-bold text-brand-700 dark:text-brand-300 bg-brand-50 dark:bg-brand-950/60 px-2.5 py-1 rounded-xl border border-brand-200/80 dark:border-brand-800/80 shadow-xs">
                     {visit.visit_no}
                   </span>
                   <div>
-                    <h3 className="text-base font-black text-slate-900 dark:text-white">
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white">
                       {visit.customer_name}
                       {visit.family_member_name && (
-                        <span className="text-xs font-bold text-slate-500 ml-2">
+                        <span className="text-xs font-semibold text-slate-500 ml-2">
                           (Applicant: {visit.family_member_name})
                         </span>
                       )}
                     </h3>
-                    <span className="text-xs text-slate-400 font-mono">
+                    <span className="text-xs text-slate-400 font-mono flex items-center gap-1.5">
                       {visit.customer_family_id} &bull; {visit.customer_mobile}
+                      {visit.customer_mobile && <WhatsAppButton number={visit.customer_mobile} size="xs" />}
                     </span>
                   </div>
                 </div>
@@ -554,7 +556,7 @@ export default function ServiceVisitsPage() {
                   {(visit.documents || []).map((doc: any) => (
                     <div
                       key={doc.id}
-                      className="flex items-center justify-between p-3 rounded-2xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-800 transition-all hover:border-slate-300"
+                      className="flex items-center justify-between p-3 rounded-xl bg-slate-50/80 dark:bg-slate-850/60 border border-slate-200/70 dark:border-slate-800 transition-all hover:border-slate-300 dark:hover:border-slate-700"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         {doc.status === 'AVAILABLE' ? (
@@ -584,8 +586,8 @@ export default function ServiceVisitsPage() {
                           </button>
                         )}
 
-                        {/* Status Toggle Button */}
                         <button
+                          type="button"
                           onClick={() =>
                             toggleDocMutation.mutate({
                               visitNo: visit.visit_no,
@@ -596,13 +598,14 @@ export default function ServiceVisitsPage() {
                                   : 'AVAILABLE',
                             })
                           }
-                          className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-xs ${
+                          className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all cursor-pointer ${
                             doc.status === 'AVAILABLE'
-                              ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25'
-                              : 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 hover:bg-amber-500/25'
+                              ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800 hover:bg-emerald-100'
+                              : 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-800 hover:bg-amber-100'
                           }`}
+                          title={t('toggle_availability')}
                         >
-                          {doc.status}
+                          {doc.status === 'AVAILABLE' ? t('available') : t('not_available')}
                         </button>
                       </div>
                     </div>
@@ -614,7 +617,7 @@ export default function ServiceVisitsPage() {
         })}
       </div>
 
-      {/* Multi-step Service Visit Creation Wizard Modal */}
+      {/* Wizard Modal */}
       <Modal
         isOpen={isWizardOpen}
         onClose={() => setIsWizardOpen(false)}
@@ -633,11 +636,11 @@ export default function ServiceVisitsPage() {
             ].map((s) => (
               <div key={s.step} className="flex items-center gap-2">
                 <div
-                  className={`w-8 h-8 rounded-2xl flex items-center justify-center text-xs font-black transition-all ${
+                  className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-bold transition-all ${
                     wizardStep === s.step
-                      ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/30 ring-4 ring-brand-500/20'
+                      ? 'bg-brand-600 text-white shadow-sm shadow-brand-600/30 ring-2 ring-brand-500/20'
                       : wizardStep > s.step
-                      ? 'bg-emerald-500 text-white shadow-sm'
+                      ? 'bg-emerald-500 text-white shadow-xs'
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
                   }`}
                 >

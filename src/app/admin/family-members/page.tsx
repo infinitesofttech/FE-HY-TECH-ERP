@@ -18,6 +18,7 @@ import {
 import { familyMemberService } from '@/api/services/familyMemberService';
 import { customerService } from '@/api/services/customerService';
 import { useLanguage } from '@/context/LanguageContext';
+import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
 import { FamilyMember, RelationshipType, Customer } from '@/types';
 import { toast } from 'sonner';
 import {
@@ -236,6 +237,7 @@ export default function FamilyMembersPage() {
         <span className="inline-flex items-center gap-1.5 font-mono text-xs font-semibold text-slate-700 dark:text-slate-300">
           <Phone className="w-3.5 h-3.5 text-slate-400" />
           {member.mobile_number || 'N/A'}
+          {member.mobile_number && <WhatsAppButton number={member.mobile_number} size="xs" />}
         </span>
       ),
     },

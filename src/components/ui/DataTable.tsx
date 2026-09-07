@@ -130,7 +130,7 @@ export function DataTable<T>({
                 setCurrentPage(1);
               }}
               placeholder={searchPlaceholder}
-              className="w-full pl-10 pr-4 py-2 text-xs sm:text-sm bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/30 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 shadow-xs"
+              className="w-full pl-10 pr-4 py-2 text-xs sm:text-sm bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 shadow-xs transition-all"
             />
           </div>
         ) : (
@@ -141,7 +141,7 @@ export function DataTable<T>({
       </div>
 
       {/* Main Table Shell */}
-      <div className="overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
         {isLoading ? (
           <div className="p-6">
             <SkeletonTable rows={pageSize} cols={columns.length} />
@@ -159,7 +159,7 @@ export function DataTable<T>({
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-200/90 dark:border-slate-800 bg-slate-50/75 dark:bg-slate-950/40 text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 select-none">
+                <tr className="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/50 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 select-none">
                   {columns.map((col) => (
                     <th
                       key={col.key}
@@ -197,21 +197,21 @@ export function DataTable<T>({
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs sm:text-sm">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs sm:text-sm font-normal">
                 {paginatedData.map((item) => (
                   <tr
                     key={keyExtractor(item)}
                     onClick={() => onRowClick && onRowClick(item)}
                     className={`transition-colors duration-150 ${
                       onRowClick
-                        ? 'cursor-pointer hover:bg-brand-50/40 dark:hover:bg-slate-800/60'
-                        : 'hover:bg-slate-50/75 dark:hover:bg-slate-850/50'
+                        ? 'cursor-pointer hover:bg-brand-50/50 dark:hover:bg-slate-800/60'
+                        : 'hover:bg-slate-50/60 dark:hover:bg-slate-850/40'
                     }`}
                   >
                     {columns.map((col) => (
                       <td
                         key={col.key}
-                        className={`px-5 py-4 text-slate-700 dark:text-slate-200 ${
+                        className={`px-5 py-3.5 text-slate-700 dark:text-slate-200 ${
                           col.align === 'right'
                             ? 'text-right'
                             : col.align === 'center'

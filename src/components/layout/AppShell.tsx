@@ -6,6 +6,7 @@ import { Topbar } from './Topbar';
 import { RouteGuard } from './RouteGuard';
 import { UserRole } from '@/types';
 import { GlobalSearchModal } from '@/components/ui/GlobalSearchModal';
+import { WhatsAppPanel, WhatsAppFAB } from './WhatsAppPanel';
 
 interface AppShellProps {
   allowedRoles: UserRole[];
@@ -16,6 +17,7 @@ export const AppShell: React.FC<AppShellProps> = ({ allowedRoles, children }) =>
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
 
   // Global keyboard shortcut: Ctrl+K / Cmd+K opens search
   useEffect(() => {
@@ -56,6 +58,18 @@ export const AppShell: React.FC<AppShellProps> = ({ allowedRoles, children }) =>
       </div>
 
       <GlobalSearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+
+      {/* WhatsApp Floating Panel — available on every ERP page */}
+      <WhatsAppPanel
+        isOpen={isWhatsAppOpen}
+        onClose={() => setIsWhatsAppOpen(false)}
+      />
+
+      {/* Green FAB button — bottom-right corner */}
+      <WhatsAppFAB
+        isOpen={isWhatsAppOpen}
+        onClick={() => setIsWhatsAppOpen(!isWhatsAppOpen)}
+      />
     </RouteGuard>
   );
 };

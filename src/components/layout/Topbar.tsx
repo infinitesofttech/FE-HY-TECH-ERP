@@ -89,9 +89,9 @@ export const Topbar: React.FC<TopbarProps> = ({
   };
 
   return (
-    <header className="glass-header h-16 px-4 sm:px-6 flex items-center justify-between gap-3 select-none">
+    <header className="glass-header h-14 px-4 sm:px-6 flex items-center justify-between gap-3 select-none">
       {/* Left: Mobile Drawer Trigger + Global Search Trigger */}
-      <div className="flex items-center gap-3 flex-1 max-w-lg">
+      <div className="flex items-center gap-3 flex-1 max-w-md">
         {/* Mobile Hamburger Button */}
         <button
           onClick={onOpenMobileSidebar}
@@ -105,11 +105,11 @@ export const Topbar: React.FC<TopbarProps> = ({
         <button
           onClick={onOpenSearch}
           type="button"
-          className="w-full flex items-center justify-between px-3.5 py-2 text-xs bg-slate-100/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 rounded-2xl hover:border-brand-500/50 hover:bg-white dark:hover:bg-slate-900 transition-all text-slate-400 group cursor-pointer shadow-xs"
+          className="w-full flex items-center justify-between px-3 py-1.5 text-xs bg-slate-100/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 rounded-xl hover:border-brand-500/40 hover:bg-white dark:hover:bg-slate-900 transition-all text-slate-400 group cursor-pointer shadow-xs"
         >
-          <div className="flex items-center gap-2.5 truncate">
-            <Search className="w-4 h-4 text-slate-400 group-hover:text-brand-500 transition-colors flex-shrink-0" />
-            <span className="truncate group-hover:text-slate-600 dark:group-hover:text-slate-300">
+          <div className="flex items-center gap-2 truncate">
+            <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-brand-500 transition-colors flex-shrink-0" />
+            <span className="truncate group-hover:text-slate-700 dark:group-hover:text-slate-300">
               {t('quick_search_placeholder')}
             </span>
           </div>
@@ -121,12 +121,12 @@ export const Topbar: React.FC<TopbarProps> = ({
       </div>
 
       {/* Right Controls: Quick Action, Sync Pill, Lang, Theme, Notifications */}
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex items-center gap-2 sm:gap-2.5">
         {/* Quick Action Button */}
         {userRole !== 'customer' && (
           <button
             onClick={handleQuickAction}
-            className="hidden md:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-black shadow-sm shadow-brand-600/30 hover:scale-105 transition-all"
+            className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold shadow-sm shadow-brand-600/25 transition-all active:scale-[0.98]"
           >
             <PlusCircle className="w-3.5 h-3.5" />
             <span>{t('visit_wizard')}</span>
@@ -134,8 +134,8 @@ export const Topbar: React.FC<TopbarProps> = ({
         )}
 
         {/* Sync Engine Indicator */}
-        <div className="hidden xl:inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-[11px] font-bold">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+        <div className="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/80 dark:border-emerald-800/80 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
           <span>{t('sync_active')}</span>
         </div>
 
@@ -146,7 +146,7 @@ export const Topbar: React.FC<TopbarProps> = ({
         <button
           onClick={toggleTheme}
           aria-label="Toggle Dark Mode"
-          className="p-2 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors shadow-xs"
+          className="p-1.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors shadow-xs"
         >
           {theme === 'dark' ? (
             <Sun className="w-4 h-4 text-amber-400 hover:rotate-45 transition-transform" />
@@ -160,20 +160,20 @@ export const Topbar: React.FC<TopbarProps> = ({
           <button
             onClick={() => setShowNotifications(!showNotifications)}
             aria-label="Notifications"
-            className="p-2 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors relative shadow-xs"
+            className="p-1.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors relative shadow-xs"
           >
             <Bell className="w-4 h-4" />
             <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-slate-900 animate-pulse"></span>
           </button>
 
           {showNotifications && (
-            <div className="absolute right-0 mt-3 w-80 sm:w-96 p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl z-50 animate-slide-up space-y-3">
+            <div className="absolute right-0 mt-2 w-80 sm:w-96 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-dropdown z-50 animate-slide-up space-y-3">
               <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
                     Notifications
                   </span>
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-brand-500/10 text-brand-600 dark:text-brand-400">
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300">
                     3 New
                   </span>
                 </div>

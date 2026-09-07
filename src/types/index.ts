@@ -477,3 +477,54 @@ export interface AuditLog {
   ip_address?: string;
 }
 
+export interface Village {
+  id: number;
+  code: string;
+  name: string;
+  name_gu: string;
+  taluka: string;
+  district: string;
+  total_families: number;
+  total_citizens: number;
+  total_documents: number;
+  male_count: number;
+  female_count: number;
+  is_active: boolean;
+}
+
+export type GovDocStatus = 'VERIFIED' | 'UPLOADED' | 'MISSING' | 'REJECTED';
+
+export interface GovDocumentItem {
+  id: string;
+  title: string;
+  title_gu: string;
+  type: DocumentType;
+  status: GovDocStatus;
+  document_no?: string;
+  uploaded_date?: string;
+  file_url?: string;
+  notes?: string;
+  is_required: boolean;
+}
+
+export interface FamilyTreeNodeData {
+  id: number;
+  family_id: string;
+  name: string;
+  relationship: RelationshipType;
+  relationship_display?: string;
+  gender: 'MALE' | 'FEMALE' | 'OTHER';
+  age: number;
+  birth_date: string;
+  mobile_number: string;
+  is_head?: boolean;
+  is_active: boolean;
+  generation: 1 | 2 | 3 | 4; // 1: Grandparents, 2: Parents, 3: Children, 4: Grandchildren
+  parent_id?: number | null;
+  spouse_id?: number | null;
+  documents_verified: number;
+  documents_total: number;
+  documents: GovDocumentItem[];
+  children?: FamilyTreeNodeData[];
+}
+

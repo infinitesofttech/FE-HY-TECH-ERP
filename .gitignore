@@ -1,3 +1,10 @@
+# Next.js
+.next/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
 # Logs
 logs
 *.log
@@ -11,6 +18,7 @@ node_modules
 dist
 dist-ssr
 *.local
+.env*.local
 
 # Editor directories and files
 .vscode/*
