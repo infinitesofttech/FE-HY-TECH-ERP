@@ -143,7 +143,7 @@ export default function VillageFamilyTreePage() {
 
   // Taluka options
   const talukas = useMemo<string[]>(() => {
-    const unique = Array.from(new Set(villages.map((v) => v.taluka)));
+    const unique = Array.from(new Set<string>(villages.map((v) => v.taluka)));
     return ['ALL', ...unique];
   }, [villages]);
 
