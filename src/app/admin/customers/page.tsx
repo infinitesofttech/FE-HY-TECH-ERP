@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { AppShell } from '@/components/layout/AppShell';
 import {
   DataTable,
@@ -19,7 +19,8 @@ import {
 import { customerService } from '@/api/services/customerService';
 import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
 import { useLanguage } from '@/context/LanguageContext';
-import { Customer } from '@/types';
+import { Customer, RelationshipType } from '@/types';
+import { familyMemberService } from '@/api/services/familyMemberService';
 import { toast } from 'sonner';
 import {
   Users,
@@ -35,17 +36,49 @@ import {
   ShieldCheck,
   Building2,
   Sparkles,
+  Plus,
 } from 'lucide-react';
 
 export default function CustomersPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const queryClient = useQueryClient();
   const { t, language } = useLanguage();
 
+  const isStaffRoute = pathname?.startsWith('/staff');
+  const getCustomerDetailUrl = (familyId: string) =>
+    isStaffRoute ? `/staff/customers/${familyId}` : `/admin/customers/${familyId}`;
+
   const [selectedCity, setSelectedCity] = useState('ALL');
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
   const [formErrors, setFormErrors] = useState<{ head_of_family?: string; mobile_number?: string }>({});
+  const [memberForm, setMemberForm] = useState<{
+    family_id: string;
+    name: string;
+    relationship: RelationshipType;
+    mobile_number: string;
+    birth_date: string;
+  }>({
+    family_id: '',
+    name: '',
+    relationship: 'Son',
+    mobile_number: '',
+    birth_date: '',
+  });
+  const [memberFormErrors, setMemberFormErrors] = useState<{ family_id?: string; name?: string }>({});
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('action') === 'add_family') {
+        setIsRegisterOpen(true);
+      } else if (params.get('action') === 'add_family_member' || params.get('action') === 'add_member') {
+        setIsAddMemberOpen(true);
+      }
+    }
+  }, []);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -146,6 +179,64 @@ export default function CustomersPage() {
 
     setFormErrors({});
     createMutation.mutate(formData);
+  };
+
+  const addMemberMutation = useMutation({
+    mutationFn: async (data: typeof memberForm) => {
+      const targetFamilyId = data.family_id || customers[0]?.family_id;
+      if (!targetFamilyId) throw new Error('No household found to link member');
+      const targetCustomer = customers.find((c: any) => c.family_id === targetFamilyId);
+      return familyMemberService.addMember(targetFamilyId, {
+        name: data.name,
+        relationship: data.relationship,
+        mobile_number: data.mobile_number,
+        birth_date: data.birth_date,
+        is_active: true,
+        customer: targetCustomer?.id || 1,
+      });
+    },
+    onSuccess: () => {
+      toast.success(
+        language === 'gu'
+          ? 'પરિવાર સભ્ય સફળતાપૂર્વક ઉમેરાઈ ગયો!'
+          : 'Family member added successfully!'
+      );
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      setIsAddMemberOpen(false);
+      setMemberForm({
+        family_id: customers[0]?.family_id || '',
+        name: '',
+        relationship: 'Son',
+        mobile_number: '',
+        birth_date: '',
+      });
+      setMemberFormErrors({});
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || 'Failed to add family member');
+    },
+  });
+
+  const handleMemberSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const errors: { family_id?: string; name?: string } = {};
+    const selectedFamily = memberForm.family_id || customers[0]?.family_id;
+    if (!selectedFamily) {
+      errors.family_id = language === 'gu' ? 'પરિવાર પસંદ કરો' : 'Please select a household';
+    }
+    if (!memberForm.name.trim()) {
+      errors.name = language === 'gu' ? 'સભ્યનું નામ દાખલ કરો' : 'Member name is required';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setMemberFormErrors(errors);
+      return;
+    }
+
+    addMemberMutation.mutate({
+      ...memberForm,
+      family_id: selectedFamily,
+    });
   };
 
   const cities: string[] = [
@@ -259,7 +350,7 @@ export default function CustomersPage() {
       cell: (cust) => (
         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
           <button
-            onClick={() => router.push(`/admin/customers/${cust.family_id}`)}
+            onClick={() => router.push(getCustomerDetailUrl(cust.family_id))}
             className="p-1.5 rounded-xl text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/60 transition-colors"
             title={t('inspect_profile')}
           >
@@ -311,6 +402,8 @@ export default function CustomersPage() {
           subtitle="Registered families"
           icon={Users}
           colorScheme="brand"
+          onActionClick={() => setIsRegisterOpen(true)}
+          actionTitle={language === 'gu' ? 'નવો પરિવાર ઉમેરો (+)' : 'Register New Family (+)'}
         />
         <StatCard
           title={t('active_members')}
@@ -318,6 +411,13 @@ export default function CustomersPage() {
           subtitle="Verified family members"
           icon={ShieldCheck}
           colorScheme="emerald"
+          onActionClick={() => {
+            if (customers.length > 0 && !memberForm.family_id) {
+              setMemberForm((prev) => ({ ...prev, family_id: customers[0].family_id }));
+            }
+            setIsAddMemberOpen(true);
+          }}
+          actionTitle={language === 'gu' ? 'પરિવાર સભ્ય ઉમેરો (+)' : 'Add Family Member (+)'}
         />
         <StatCard
           title={t('loyalty_points')}
@@ -347,7 +447,7 @@ export default function CustomersPage() {
         emptyDescription="No families match your current filter criteria."
         emptyActionLabel="Register First Household"
         onEmptyAction={() => setIsRegisterOpen(true)}
-        onRowClick={(cust) => router.push(`/admin/customers/${cust.family_id}`)}
+        onRowClick={(cust) => router.push(getCustomerDetailUrl(cust.family_id))}
         filterComponent={
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-slate-500 whitespace-nowrap">
@@ -509,6 +609,113 @@ export default function CustomersPage() {
               isLoading={createMutation.isPending}
             >
               {language === 'gu' ? 'નોંધણી પૂર્ણ કરો' : 'Complete Registration'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Add Family Member Modal */}
+      <Modal
+        isOpen={isAddMemberOpen}
+        onClose={() => {
+          setIsAddMemberOpen(false);
+          setMemberFormErrors({});
+        }}
+        title={language === 'gu' ? 'પરિવાર સભ્ય ઉમેરો' : 'Add Family Member'}
+        description={
+          language === 'gu'
+            ? 'પરિવારમાં નવા સભ્યની માહિતી ઉમેરી નોંધણી પૂર્ણ કરો.'
+            : 'Enroll and link a new member to an existing household.'
+        }
+        maxWidth="md"
+      >
+        <form onSubmit={handleMemberSubmit} className="space-y-4">
+          <Select
+            label={language === 'gu' ? 'પરિવાર પસંદ કરો (Household) *' : 'Select Household / Family *'}
+            value={memberForm.family_id || customers[0]?.family_id || ''}
+            onChange={(e) => {
+              setMemberForm({ ...memberForm, family_id: e.target.value });
+              setMemberFormErrors((prev) => ({ ...prev, family_id: undefined }));
+            }}
+            error={memberFormErrors.family_id}
+          >
+            {customers.map((c: any) => (
+              <option key={c.family_id} value={c.family_id}>
+                {c.family_id} - {c.head_of_family} ({c.village_city})
+              </option>
+            ))}
+          </Select>
+
+          <Input
+            label={language === 'gu' ? 'સભ્યનું પૂરું નામ *' : 'Member Full Name *'}
+            required
+            value={memberForm.name}
+            onChange={(e) => {
+              setMemberForm({ ...memberForm, name: e.target.value });
+              setMemberFormErrors((prev) => ({ ...prev, name: undefined }));
+            }}
+            error={memberFormErrors.name}
+            placeholder={language === 'gu' ? 'દા.ત. પ્રિયાબેન પટેલ' : 'e.g. Priyaben Patel'}
+          />
+
+          <Select
+            label={language === 'gu' ? 'સંબંધ (Relationship) *' : 'Relationship *'}
+            value={memberForm.relationship}
+            onChange={(e) =>
+              setMemberForm({
+                ...memberForm,
+                relationship: e.target.value as RelationshipType,
+              })
+            }
+          >
+            <option value="Self">{language === 'gu' ? 'પોતે (Self)' : 'Self'}</option>
+            <option value="Spouse">{language === 'gu' ? 'પતિ/પત્ની (Spouse)' : 'Spouse'}</option>
+            <option value="Son">{language === 'gu' ? 'પુત્ર (Son)' : 'Son'}</option>
+            <option value="Daughter">{language === 'gu' ? 'પુત્રી (Daughter)' : 'Daughter'}</option>
+            <option value="Father">{language === 'gu' ? 'પિતા (Father)' : 'Father'}</option>
+            <option value="Mother">{language === 'gu' ? 'માતા (Mother)' : 'Mother'}</option>
+            <option value="Brother">{language === 'gu' ? 'ભાઈ (Brother)' : 'Brother'}</option>
+            <option value="Sister">{language === 'gu' ? 'બહેન (Sister)' : 'Sister'}</option>
+            <option value="Other">{language === 'gu' ? 'અન્ય (Other)' : 'Other'}</option>
+          </Select>
+
+          <Input
+            label={language === 'gu' ? 'મોબાઇલ નંબર (વૈકલ્પિક)' : 'Mobile Number (Optional)'}
+            type="tel"
+            value={memberForm.mobile_number}
+            onChange={(e) =>
+              setMemberForm({ ...memberForm, mobile_number: e.target.value })
+            }
+            placeholder="10-digit mobile"
+          />
+
+          <Input
+            label={language === 'gu' ? 'જન્મ તારીખ (વૈકલ્પિક)' : 'Birth Date (Optional)'}
+            type="date"
+            value={memberForm.birth_date}
+            onChange={(e) =>
+              setMemberForm({ ...memberForm, birth_date: e.target.value })
+            }
+          />
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                setIsAddMemberOpen(false);
+                setMemberFormErrors({});
+              }}
+            >
+              {language === 'gu' ? 'રદ કરો' : 'Cancel'}
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              isLoading={addMemberMutation.isPending}
+              leftIcon={<Plus className="w-4 h-4" />}
+            >
+              {language === 'gu' ? 'સભ્ય ઉમેરો' : 'Add Member'}
             </Button>
           </div>
         </form>

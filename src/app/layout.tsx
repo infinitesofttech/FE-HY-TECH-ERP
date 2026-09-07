@@ -5,6 +5,10 @@ import Providers from '@/components/providers/QueryProvider';
 export const metadata: Metadata = {
   title: 'HY-TECH ERP | Citizen Document Services & Government Portals',
   description: 'Enterprise ERP for Aadhar, Voter ID, PAN, Ration, Ayushman, and ABHA Card services',
+  icons: {
+    icon: '/logo.png',
+    apple: '/logo.png',
+  },
 };
 
 export default function RootLayout({

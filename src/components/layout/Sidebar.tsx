@@ -23,6 +23,10 @@ import {
   FileText,
   Network,
   X,
+  Coins,
+  FileCheck2,
+  Clock,
+  Building2,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -30,6 +34,18 @@ interface SidebarProps {
   onToggleCollapse?: () => void;
   isMobileOpen?: boolean;
   onCloseMobile?: () => void;
+}
+
+interface NavItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  badge?: string;
+}
+
+interface NavGroup {
+  group: string;
+  items: NavItem[];
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -42,71 +58,54 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { user, userRole, logout } = useAuth();
   const { t } = useLanguage();
 
-  const getAdminNavigation = () => [
+  const getAdminNavigation = (): NavGroup[] => [
     {
-      group: t('group_command'),
+      group: 'ADMINISTRATION',
       items: [
-        { name: t('nav_dashboard'), href: '/admin/dashboard', icon: LayoutDashboard, badge: 'Live' },
-      ],
-    },
-    {
-      group: t('group_citizen_ops'),
-      items: [
-        { name: t('nav_customers'), href: '/admin/customers', icon: Users },
-        { name: t('nav_family_members'), href: '/admin/family-members', icon: UserCheck },
-        { name: t('nav_village_tree'), href: '/admin/family-tree', icon: Network, badge: 'Tree' },
-        { name: t('nav_digital_vault'), href: '/admin/documents', icon: ShieldCheck },
-        { name: t('nav_applications'), href: '/admin/applications', icon: FileText, badge: 'Gov' },
-        { name: t('nav_visits'), href: '/admin/visits', icon: CalendarCheck, badge: 'Hot' },
-        { name: t('nav_pending_work'), href: '/admin/pending-work', icon: KanbanSquare, badge: '4' },
-        { name: t('nav_reminders'), href: '/admin/reminders', icon: BellRing },
-      ],
-    },
-    {
-      group: t('group_finance_catalog'),
-      items: [
-        { name: t('nav_transactions'), href: '/admin/transactions', icon: Receipt },
-        { name: t('nav_services'), href: '/admin/services', icon: FolderTree },
-      ],
-    },
-    {
-      group: t('group_platform_admin'),
-      items: [
-        { name: t('nav_employees'), href: '/admin/employees', icon: UserCog },
-        { name: t('nav_settings'), href: '/admin/settings', icon: Settings },
+        { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
+        { name: 'Office Dashboard', href: '/admin/office-dashboard', icon: Building2 },
+        { name: 'Services', href: '/admin/services', icon: FolderTree },
+        { name: 'Account & Finance', href: '/admin/transactions', icon: Receipt },
+        { name: 'HRMS', href: '/admin/employees', icon: UserCog },
+        { name: 'Settings', href: '/admin/settings', icon: Settings },
       ],
     },
   ];
 
-  const getStaffNavigation = () => [
+  const getStaffNavigation = (): NavGroup[] => [
     {
-      group: t('group_front_desk'),
+      group: 'OFFICE OPERATIONS',
       items: [
-        { name: t('nav_dashboard'), href: '/staff/dashboard', icon: LayoutDashboard },
-        { name: t('nav_customers'), href: '/staff/customers', icon: Users },
-        { name: t('nav_family_members'), href: '/staff/family-members', icon: UserCheck },
-        { name: t('nav_village_tree'), href: '/admin/family-tree', icon: Network, badge: 'Tree' },
-        { name: t('nav_digital_vault'), href: '/staff/documents', icon: ShieldCheck },
-        { name: t('nav_applications'), href: '/staff/applications', icon: FileText, badge: 'Gov' },
-        { name: t('nav_visits'), href: '/staff/visits', icon: CalendarCheck, badge: 'Desk' },
-        { name: t('nav_pending_work'), href: '/staff/pending-work', icon: KanbanSquare },
-        { name: t('nav_transactions'), href: '/staff/transactions', icon: Receipt },
-        { name: t('nav_reminders'), href: '/staff/reminders', icon: BellRing },
-        { name: t('nav_settings'), href: '/staff/settings', icon: Settings },
+        { name: 'Dashboard', href: '/staff/dashboard', icon: LayoutDashboard },
+        { name: 'Family', href: '/staff/customers', icon: Users },
+        { name: 'Services', href: '/staff/services', icon: FolderTree },
+        { name: 'HRMS', href: '/staff/hrms', icon: UserCog },
+        { name: 'Settings', href: '/staff/settings', icon: Settings },
       ],
     },
   ];
 
-  const getCustomerNavigation = () => [
+  const getCustomerNavigation = (): NavGroup[] => [
     {
-      group: t('group_citizen_portal'),
+      group: 'DASHBOARD',
       items: [
-        { name: t('nav_my_dashboard'), href: '/customer/dashboard', icon: LayoutDashboard },
-        { name: t('nav_family_members'), href: '/customer/members', icon: Users },
-        { name: t('nav_digital_vault'), href: '/customer/documents', icon: ShieldCheck, badge: 'Vault' },
-        { name: t('nav_applications'), href: '/customer/applications', icon: FileText },
-        { name: t('nav_my_visits'), href: '/customer/visits', icon: CalendarCheck },
-        { name: t('nav_alerts_reminders'), href: '/customer/reminders', icon: BellRing },
+        { name: t('nav_my_dashboard'), href: '/user/dashboard', icon: LayoutDashboard },
+      ],
+    },
+    {
+      group: 'FAMILY',
+      items: [
+        { name: 'Family Card', href: '/user/family?tab=card', icon: ShieldCheck },
+        { name: 'Family Member', href: '/user/family?tab=member', icon: Users },
+        { name: 'Wallet Points', href: '/user/family?tab=wallet', icon: Coins },
+      ],
+    },
+    {
+      group: 'MY APPLICATION',
+      items: [
+        { name: 'All Application', href: '/user/applications', icon: FileText },
+        { name: 'Services', href: '/user/services', icon: FolderTree },
+        { name: 'Settings', href: '/user/settings', icon: Settings },
       ],
     },
   ];
@@ -144,8 +143,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
           onClick={onCloseMobile}
           className="flex items-center gap-3 group min-w-0"
         >
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-black text-base shadow-sm shadow-brand-600/30 group-hover:scale-105 transition-all duration-300 flex-shrink-0">
-            H
+          <div className="w-10 h-10 rounded-xl overflow-hidden bg-slate-900 border border-slate-700/60 flex items-center justify-center shadow-md shadow-brand-500/15 group-hover:scale-105 transition-all duration-300 flex-shrink-0">
+            <img
+              src="/logo.png"
+              alt="HY-TECH Logo"
+              className="w-full h-full object-cover object-center"
+            />
           </div>
 
           {!isCollapsed && (
@@ -161,7 +164,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <div className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                 <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 tracking-wider uppercase truncate">
-                  GovTech Services
+                  Computer &amp; Online Hub
                 </span>
               </div>
             </div>

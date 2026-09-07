@@ -10,6 +10,7 @@ import { serviceVisitService } from '@/api/services/serviceVisitService';
 import { pendingWorkService } from '@/api/services/pendingWorkService';
 import { applicationService } from '@/api/services/applicationService';
 import { ServiceIntakeModal } from '@/components/applications/ServiceIntakeModal';
+import { QuickAddDropdown } from '@/components/common/QuickAddDropdown';
 import { useLanguage } from '@/context/LanguageContext';
 import {
   Users,
@@ -120,14 +121,10 @@ export default function AdminDashboardPage() {
 
           {/* Action Toolbar */}
           <div className="flex flex-wrap items-center gap-2">
-            <Button
-              onClick={() => setIsIntakeModalOpen(true)}
-              variant="primary"
-              size="sm"
-              leftIcon={<Sparkles className="w-3.5 h-3.5" />}
-            >
-              + {t('new_application')}
-            </Button>
+            <QuickAddDropdown
+              onAddNewApplication={() => setIsIntakeModalOpen(true)}
+              buttonLabel="+ Quick Add"
+            />
             <Button
               onClick={() => router.push('/admin/applications')}
               variant="secondary"
@@ -144,77 +141,10 @@ export default function AdminDashboardPage() {
             >
               {t('new_service_visit')}
             </Button>
-            <Button
-              onClick={() => router.push('/admin/customers')}
-              variant="secondary"
-              size="sm"
-              leftIcon={<Users className="w-3.5 h-3.5 text-slate-500" />}
-            >
-              {t('register_new_family')}
-            </Button>
-            <Button
-              onClick={() => router.push('/admin/transactions')}
-              variant="emerald"
-              size="sm"
-              leftIcon={<Receipt className="w-3.5 h-3.5" />}
-            >
-              {t('record_transaction')}
-            </Button>
           </div>
         </div>
       </div>
 
-      {/* 2. Primary Operational KPI Grid */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Zap className="w-4 h-4 text-amber-500" />
-            <h2 className="text-xs font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-              Real-Time Desk Indicators
-            </h2>
-          </div>
-          <span className="text-[11px] font-bold text-slate-400">Live Sync Active</span>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard
-            title={t('total_customers')}
-            value={dashboard?.today_summary?.total_customers ?? 2}
-            subtitle="Households enrolled"
-            trend={{ value: '+8.2% this month', isPositive: true }}
-            icon={Users}
-            colorScheme="brand"
-            onClick={() => router.push('/admin/customers')}
-          />
-          <StatCard
-            title={t('total_visits')}
-            value={dashboard?.today_summary?.total_service_entries ?? 3}
-            subtitle="Visits logged today"
-            trend={{ value: '+14.6% vs yesterday', isPositive: true }}
-            icon={CalendarCheck}
-            colorScheme="emerald"
-            onClick={() => router.push('/admin/visits')}
-          />
-          <StatCard
-            title={t('open_pending')}
-            value={dashboard?.today_summary?.open_pending_work ?? 3}
-            subtitle="In progress with Gov"
-            trend={{ value: 'Within SLA', isPositive: true }}
-            icon={Clock}
-            colorScheme="amber"
-            onClick={() => router.push('/admin/pending-work')}
-          />
-          <StatCard
-            title={t('ready_delivery')}
-            value={dashboard?.today_summary?.ready_for_delivery ?? 0}
-            subtitle="Documents ready for pickup"
-            trend={{ value: '100% Prepared', isPositive: true }}
-            icon={CheckCircle}
-            colorScheme="sky"
-            onClick={() => router.push('/admin/reminders')}
-          />
-        </div>
-      </div>
 
       {/* 3. Financial & Revenue KPI Grid */}
       <div className="space-y-3">

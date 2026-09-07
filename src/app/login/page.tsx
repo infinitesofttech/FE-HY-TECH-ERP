@@ -41,7 +41,7 @@ export default function LoginPage() {
           mobile_number: mobileNumber,
           password: password || 'Patel@123',
         });
-        toast.success(`Welcome to Citizen Portal, ${res.customer?.head_of_family || 'Citizen'}!`);
+        toast.success(`Welcome to Family Portal, ${res.customer?.head_of_family || 'Family Member'}!`);
       } else {
         const res = await loginStaff({
           username: username || (portalType === 'admin' ? 'admin' : 'operator'),
@@ -83,8 +83,12 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-lg p-8 sm:p-10 rounded-3xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-800 shadow-xl space-y-6">
         {/* Brand Crest */}
         <div className="text-center space-y-2.5">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-600 to-brand-700 text-white font-black text-2xl shadow-sm shadow-brand-600/30">
-            H
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl overflow-hidden bg-slate-900 border border-slate-700/60 shadow-lg shadow-brand-600/20">
+            <img
+              src="/logo.png"
+              alt="HY-TECH Logo"
+              className="w-full h-full object-cover object-center"
+            />
           </div>
 
           <div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AppShell } from '@/components/layout/AppShell';
 import {
@@ -39,6 +39,8 @@ import {
   Printer,
   Sparkles,
   ArrowUpRight,
+  TrendingUp,
+  TrendingDown,
 } from 'lucide-react';
 
 export default function TransactionsPage() {
@@ -61,6 +63,77 @@ export default function TransactionsPage() {
   const [walletUsed, setWalletUsed] = useState('0.00');
   const [paymentMode, setPaymentMode] = useState<PaymentMode>('CASH');
   const [remarks, setRemarks] = useState('Service processing payment');
+
+  // Expense State
+  const [expenses, setExpenses] = useState<Array<{ id: number; title: string; category: string; amount: number; date: string; notes?: string }>>([
+    { id: 1, title: 'Portal Wallet Top-up', category: 'PORTAL_FEE', amount: 100, date: new Date().toISOString().split('T')[0], notes: 'Digital Gujarat portal wallet recharge' },
+  ]);
+  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [expenseTitle, setExpenseTitle] = useState('');
+  const [expenseCategory, setExpenseCategory] = useState('OFFICE_SUPPLIES');
+  const [expenseAmount, setExpenseAmount] = useState('');
+  const [expenseNotes, setExpenseNotes] = useState('');
+
+  const [activeLedgerTab, setActiveLedgerTab] = useState<'income' | 'expenses'>('income');
+  const [expenseSearch, setExpenseSearch] = useState('');
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const type = params.get('type');
+      const action = params.get('action');
+      if (type === 'EXPENSE' || action === 'new_expense') {
+        setActiveLedgerTab('expenses');
+        setIsExpenseModalOpen(true);
+      } else if (type === 'INCOME' || action === 'new_income') {
+        setActiveLedgerTab('income');
+        setIsBillingModalOpen(true);
+      }
+    }
+  }, []);
+
+  const handleDeleteExpense = (id: number) => {
+    setExpenses((prev) => prev.filter((e) => e.id !== id));
+    toast.success('Expense record deleted');
+  };
+
+  const filteredExpenses = useMemo(() => {
+    if (!expenseSearch.trim()) return expenses;
+    const q = expenseSearch.toLowerCase();
+    return expenses.filter(
+      (e) =>
+        e.title.toLowerCase().includes(q) ||
+        e.category.toLowerCase().includes(q) ||
+        (e.notes && e.notes.toLowerCase().includes(q))
+    );
+  }, [expenses, expenseSearch]);
+
+  const handleAddExpense = (e: React.FormEvent) => {
+    e.preventDefault();
+    const amt = parseFloat(expenseAmount);
+    if (!amt || amt <= 0) {
+      toast.error('Please enter a valid expense amount');
+      return;
+    }
+    if (!expenseTitle.trim()) {
+      toast.error('Please enter an expense title/purpose');
+      return;
+    }
+    const newExp = {
+      id: Date.now(),
+      title: expenseTitle,
+      category: expenseCategory,
+      amount: amt,
+      date: new Date().toISOString().split('T')[0],
+      notes: expenseNotes,
+    };
+    setExpenses([newExp, ...expenses]);
+    toast.success('Expense recorded successfully!');
+    setIsExpenseModalOpen(false);
+    setExpenseTitle('');
+    setExpenseAmount('');
+    setExpenseNotes('');
+  };
 
   // Queries
   const { data: transactions = [], isLoading } = useQuery({
@@ -133,7 +206,10 @@ export default function TransactionsPage() {
   });
 
   const totalBilled = transactions.reduce((acc: number, t: any) => acc + (parseFloat(t.bill_amount) || 0), 0);
-  const totalPoints = transactions.reduce((acc: number, t: any) => acc + (t.points_earned || 0), 0);
+  const totalIncome = totalBilled;
+  const totalExpenses = expenses.reduce((acc, exp) => acc + (exp.amount || 0), 0);
+  const netProfitLoss = totalIncome - totalExpenses;
+  const isProfitable = netProfitLoss >= 0;
 
   return (
     <AppShell allowedRoles={['admin', 'employee']}>
@@ -142,7 +218,7 @@ export default function TransactionsPage() {
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 text-xs font-black tracking-wide mb-2">
             <Coins className="w-3.5 h-3.5" />
-            <span>FINANCIAL LEDGER & LOYALTY</span>
+            <span>FINANCIAL LEDGER &amp; ACCOUNTS</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
             {t('transactions_title')}
@@ -152,148 +228,288 @@ export default function TransactionsPage() {
           </p>
         </div>
 
-        <Button
-          onClick={() => setIsBillingModalOpen(true)}
-          variant="primary"
-          leftIcon={<Plus className="w-4 h-4" />}
-        >
-          {t('record_transaction')}
-        </Button>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Button
+            onClick={() => setIsExpenseModalOpen(true)}
+            variant="outline"
+            size="sm"
+            leftIcon={<TrendingDown className="w-4 h-4 text-rose-500" />}
+          >
+            + Add Expense
+          </Button>
+          <Button
+            onClick={() => setIsBillingModalOpen(true)}
+            variant="primary"
+            size="sm"
+            leftIcon={<Plus className="w-4 h-4" />}
+          >
+            {t('record_transaction')}
+          </Button>
+        </div>
       </div>
 
-      {/* Summary Highlights Row */}
+      {/* Summary Highlights Row: Profit & Loss, Income, Expenses */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard
-          title={t('total_billing')}
-          value={`₹${totalBilled.toFixed(2)}`}
-          subtitle="Total services processed"
-          icon={IndianRupee}
+          title={isProfitable ? 'Profit (ચોખ્ખો નફો)' : 'Loss (ખોટ)'}
+          value={`${isProfitable ? '₹+' : '₹-'}${Math.abs(netProfitLoss).toFixed(2)}`}
+          subtitle={isProfitable ? 'Net operating surplus' : 'Net operating deficit'}
+          icon={isProfitable ? TrendingUp : TrendingDown}
+          colorScheme={isProfitable ? 'emerald' : 'rose'}
+        />
+        <StatCard
+          title="Income (આવક)"
+          value={`₹${totalIncome.toFixed(2)}`}
+          subtitle="Customer receipts &amp; collections"
+          icon={TrendingUp}
           colorScheme="emerald"
+          onClick={() => setActiveLedgerTab('income')}
         />
         <StatCard
-          title={t('points_issued')}
-          value={`${totalPoints} Pts`}
-          subtitle="Circulating wallet currency"
-          icon={Coins}
-          colorScheme="amber"
-        />
-        <StatCard
-          title={t('invoices')}
-          value={`${transactions.length} Receipts`}
-          subtitle="Customer receipts recorded"
-          icon={Receipt}
-          colorScheme="brand"
+          title="Expenses (ખર્ચ)"
+          value={`₹${totalExpenses.toFixed(2)}`}
+          subtitle="Center &amp; operational costs"
+          icon={TrendingDown}
+          colorScheme="rose"
+          onClick={() => setActiveLedgerTab('expenses')}
         />
       </div>
 
-      {/* Filter & Search Bar */}
-      <Card variant="elevated" className="p-4 flex flex-col sm:flex-row items-center gap-3">
-        <div className="relative flex-1 w-full">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by Txn No, Customer Name, or Family ID..."
-            className="w-full pl-10 pr-4 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-200"
-          />
-        </div>
+      {/* Ledger History Switcher Tabs */}
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+        <button
+          type="button"
+          onClick={() => setActiveLedgerTab('income')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            activeLedgerTab === 'income'
+              ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+          }`}
+        >
+          <Receipt className="w-4 h-4" />
+          <span>Invoices &amp; Income History ({transactions.length})</span>
+        </button>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <span className="text-xs font-bold text-slate-400 whitespace-nowrap">Mode:</span>
-          <Select
-            value={paymentFilter}
-            onChange={(e) => setPaymentFilter(e.target.value)}
-            className="py-1.5 text-xs font-bold"
-          >
-            <option value="ALL">All Modes</option>
-            <option value="CASH">CASH</option>
-            <option value="ONLINE/UPI">ONLINE / UPI</option>
-            <option value="CARD">CARD</option>
-          </Select>
-        </div>
-      </Card>
+        <button
+          type="button"
+          onClick={() => setActiveLedgerTab('expenses')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            activeLedgerTab === 'expenses'
+              ? 'bg-rose-600 text-white shadow-md shadow-rose-600/20'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+          }`}
+        >
+          <TrendingDown className="w-4 h-4" />
+          <span>Expenses History ({expenses.length})</span>
+        </button>
+      </div>
 
-      {/* Transactions Data Table */}
-      <Card variant="elevated" className="overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase tracking-wider text-[10px] bg-slate-50/50 dark:bg-slate-900/50">
-              <tr>
-                <th className="py-3.5 px-4 font-black">Txn Token</th>
-                <th className="py-3.5 px-4 font-black">Citizen & Household</th>
-                <th className="py-3.5 px-4 font-black">Service Provided</th>
-                <th className="py-3.5 px-4 font-black">Bill Amount</th>
-                <th className="py-3.5 px-4 font-black">Points Credit</th>
-                <th className="py-3.5 px-4 font-black">Wallet Change</th>
-                <th className="py-3.5 px-4 font-black">Payment Mode</th>
-                <th className="py-3.5 px-4 font-black">Date</th>
-                <th className="py-3.5 px-4 font-black text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
-              {filteredTransactions.map((txn: any) => (
-                <tr key={txn.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                  <td className="py-3.5 px-4 font-mono font-black text-brand-600 dark:text-brand-400">
-                    {txn.transaction_no}
-                  </td>
-                  <td className="py-3.5 px-4">
-                    <div className="font-bold text-slate-900 dark:text-white">
-                      {txn.customer_name}
-                    </div>
-                    <div className="text-[11px] text-slate-400 font-mono">
-                      {txn.family_id}
-                    </div>
-                  </td>
-                  <td className="py-3.5 px-4">
-                    <div className="font-bold text-slate-800 dark:text-slate-200">
-                      {txn.service_name}
-                    </div>
-                    <div className="text-[10px] text-slate-400">
-                      {txn.sub_service_name}
-                    </div>
-                  </td>
-                  <td className="py-3.5 px-4 font-black text-sm text-slate-900 dark:text-white">
-                    ₹{txn.bill_amount}
-                  </td>
-                  <td className="py-3.5 px-4 font-black text-amber-500">
-                    +{txn.points_earned} Pts
-                  </td>
-                  <td className="py-3.5 px-4 font-mono text-slate-600 dark:text-slate-300">
-                    {txn.net_wallet_change >= 0 ? `+₹${txn.net_wallet_change}` : `-₹${Math.abs(txn.net_wallet_change)}`}
-                  </td>
-                  <td className="py-3.5 px-4">
-                    <Badge variant={txn.payment_mode === 'CASH' ? 'success' : 'info'}>
-                      {txn.payment_mode}
-                    </Badge>
-                  </td>
-                  <td className="py-3.5 px-4 font-mono text-slate-400">
-                    {txn.transaction_date}
-                  </td>
-                  <td className="py-3.5 px-4 text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <button
-                        onClick={() => setSelectedReceipt(txn)}
-                        className="p-1.5 rounded-xl text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-950/40 transition-colors"
-                        title="View Official Receipt"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => setTxnToDelete(txn)}
-                        className="p-1.5 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-                        title="Delete Invoice"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* 1. Invoices & Income History View */}
+      {activeLedgerTab === 'income' && (
+        <div className="space-y-4 animate-fade-in">
+          {/* Filter & Search Bar */}
+          <Card variant="elevated" className="p-4 flex flex-col sm:flex-row items-center gap-3">
+            <div className="relative flex-1 w-full">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by Txn No, Customer Name, or Family ID..."
+                className="w-full pl-10 pr-4 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-200"
+              />
+            </div>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <span className="text-xs font-bold text-slate-400 whitespace-nowrap">Mode:</span>
+              <Select
+                value={paymentFilter}
+                onChange={(e) => setPaymentFilter(e.target.value)}
+                className="py-1.5 text-xs font-bold"
+              >
+                <option value="ALL">All Modes</option>
+                <option value="CASH">CASH</option>
+                <option value="ONLINE/UPI">ONLINE / UPI</option>
+                <option value="CARD">CARD</option>
+              </Select>
+            </div>
+          </Card>
+
+          {/* Transactions Data Table */}
+          <Card variant="elevated" className="overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase tracking-wider text-[10px] bg-slate-50/50 dark:bg-slate-900/50">
+                  <tr>
+                    <th className="py-3.5 px-4 font-black">Txn Token</th>
+                    <th className="py-3.5 px-4 font-black">Citizen &amp; Household</th>
+                    <th className="py-3.5 px-4 font-black">Service Provided</th>
+                    <th className="py-3.5 px-4 font-black">Bill Amount</th>
+                    <th className="py-3.5 px-4 font-black">Points Credit</th>
+                    <th className="py-3.5 px-4 font-black">Wallet Change</th>
+                    <th className="py-3.5 px-4 font-black">Payment Mode</th>
+                    <th className="py-3.5 px-4 font-black">Date</th>
+                    <th className="py-3.5 px-4 font-black text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
+                  {filteredTransactions.map((txn: any) => (
+                    <tr key={txn.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="py-3.5 px-4 font-mono font-black text-brand-600 dark:text-brand-400">
+                        {txn.transaction_no}
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <div className="font-bold text-slate-900 dark:text-white">
+                          {txn.customer_name}
+                        </div>
+                        <div className="text-[11px] text-slate-400 font-mono">
+                          {txn.family_id}
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <div className="font-bold text-slate-800 dark:text-slate-200">
+                          {txn.service_name}
+                        </div>
+                        <div className="text-[10px] text-slate-400">
+                          {txn.sub_service_name}
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4 font-black text-sm text-slate-900 dark:text-white">
+                        ₹{txn.bill_amount}
+                      </td>
+                      <td className="py-3.5 px-4 font-black text-amber-500">
+                        +{txn.points_earned} Pts
+                      </td>
+                      <td className="py-3.5 px-4 font-mono text-slate-600 dark:text-slate-300">
+                        {txn.net_wallet_change >= 0 ? `+₹${txn.net_wallet_change}` : `-₹${Math.abs(txn.net_wallet_change)}`}
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <Badge variant={txn.payment_mode === 'CASH' ? 'success' : 'info'}>
+                          {txn.payment_mode}
+                        </Badge>
+                      </td>
+                      <td className="py-3.5 px-4 font-mono text-slate-400">
+                        {txn.transaction_date}
+                      </td>
+                      <td className="py-3.5 px-4 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => setSelectedReceipt(txn)}
+                            className="p-1.5 rounded-xl text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-950/40 transition-colors"
+                            title="View Official Receipt"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => setTxnToDelete(txn)}
+                            className="p-1.5 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                            title="Delete Invoice"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
         </div>
-      </Card>
+      )}
+
+      {/* 2. Expenses History View */}
+      {activeLedgerTab === 'expenses' && (
+        <div className="space-y-4 animate-fade-in">
+          <Card variant="elevated" className="p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="relative flex-1 w-full">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={expenseSearch}
+                onChange={(e) => setExpenseSearch(e.target.value)}
+                placeholder="Search expenses by purpose, category, or notes..."
+                className="w-full pl-10 pr-4 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-500 text-slate-800 dark:text-slate-200"
+              />
+            </div>
+
+            <Button
+              onClick={() => setIsExpenseModalOpen(true)}
+              variant="primary"
+              size="sm"
+              leftIcon={<Plus className="w-4 h-4" />}
+              className="bg-rose-600 hover:bg-rose-500 text-white flex-shrink-0 font-bold"
+            >
+              + Add New Expense
+            </Button>
+          </Card>
+
+          <Card variant="elevated" className="overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase tracking-wider text-[10px] bg-slate-50/50 dark:bg-slate-900/50">
+                  <tr>
+                    <th className="py-3.5 px-4 font-black">Date</th>
+                    <th className="py-3.5 px-4 font-black">Expense Purpose / Title</th>
+                    <th className="py-3.5 px-4 font-black">Category</th>
+                    <th className="py-3.5 px-4 font-black">Notes / Remarks</th>
+                    <th className="py-3.5 px-4 font-black">Amount</th>
+                    <th className="py-3.5 px-4 font-black text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
+                  {filteredExpenses.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center text-slate-400">
+                        <div className="flex flex-col items-center justify-center">
+                          <TrendingDown className="w-8 h-8 text-rose-300 dark:text-rose-600 mb-2" />
+                          <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                            No expenses matching your search
+                          </p>
+                          <p className="text-xs text-slate-400 mt-1">
+                            Click &quot;+ Add New Expense&quot; above to log an operating cost.
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredExpenses.map((exp) => (
+                      <tr key={exp.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                        <td className="py-3.5 px-4 font-mono text-slate-500">
+                          {exp.date}
+                        </td>
+                        <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
+                          {exp.title}
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400">
+                            {exp.category}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4 text-slate-500 text-[11px]">
+                          {exp.notes || '—'}
+                        </td>
+                        <td className="py-3.5 px-4 font-black text-sm text-rose-600 dark:text-rose-400 font-mono">
+                          ₹{exp.amount.toFixed(2)}
+                        </td>
+                        <td className="py-3.5 px-4 text-right">
+                          <button
+                            onClick={() => handleDeleteExpense(exp.id)}
+                            className="p-1.5 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                            title="Delete Expense"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </div>
+      )}
 
       {/* Create Transaction / Billing Modal */}
       <Modal
@@ -480,6 +696,97 @@ export default function TransactionsPage() {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* Add Expense Modal */}
+      <Modal
+        isOpen={isExpenseModalOpen}
+        onClose={() => setIsExpenseModalOpen(false)}
+        title="Record Center Expense"
+        description="Log operational costs, portal top-ups, stationery, and utility bills"
+        maxWidth="md"
+      >
+        <form onSubmit={handleAddExpense} className="space-y-4 text-xs">
+          <div>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+              Expense Title / Purpose *
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="e.g. Digital Gujarat Wallet Refill, Printer Paper & Toner"
+              value={expenseTitle}
+              onChange={(e) => setExpenseTitle(e.target.value)}
+              className="w-full text-xs py-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:outline-none"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                Category *
+              </label>
+              <select
+                value={expenseCategory}
+                onChange={(e) => setExpenseCategory(e.target.value)}
+                className="w-full text-xs py-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:outline-none"
+              >
+                <option value="PORTAL_FEE">Portal Wallet Recharge</option>
+                <option value="OFFICE_SUPPLIES">Office Supplies &amp; Paper</option>
+                <option value="UTILITY_BILL">Electricity / Internet</option>
+                <option value="MAINTENANCE">Hardware Maintenance</option>
+                <option value="OTHER">Other Expense</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                Expense Amount (₹) *
+              </label>
+              <input
+                type="number"
+                min="1"
+                step="1"
+                required
+                placeholder="e.g. 500"
+                value={expenseAmount}
+                onChange={(e) => setExpenseAmount(e.target.value)}
+                className="w-full text-xs py-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:outline-none font-mono"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+              Notes / Remarks (Optional)
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. Bill reference, Paid via UPI"
+              value={expenseNotes}
+              onChange={(e) => setExpenseNotes(e.target.value)}
+              className="w-full text-xs py-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:outline-none"
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+            <Button
+              type="button"
+              variant="outline"
+              size="xs"
+              onClick={() => setIsExpenseModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              size="xs"
+              className="bg-rose-600 hover:bg-rose-500 text-white font-bold"
+            >
+              Save Expense Entry
+            </Button>
+          </div>
+        </form>
       </Modal>
 
       {/* Delete Confirmation Dialog */}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { LucideIcon, TrendingUp, TrendingDown } from 'lucide-react';
+import { LucideIcon, TrendingUp, TrendingDown, Plus } from 'lucide-react';
 
 interface StatCardProps {
   title: string;
@@ -12,6 +12,8 @@ interface StatCardProps {
   icon: LucideIcon;
   colorScheme?: 'brand' | 'emerald' | 'amber' | 'sky' | 'purple' | 'rose';
   onClick?: () => void;
+  onActionClick?: () => void;
+  actionTitle?: string;
 }
 
 export const StatCard: React.FC<StatCardProps> = ({
@@ -22,6 +24,8 @@ export const StatCard: React.FC<StatCardProps> = ({
   icon: Icon,
   colorScheme = 'brand',
   onClick,
+  onActionClick,
+  actionTitle,
 }) => {
   const schemeStyles = {
     brand: {
@@ -93,11 +97,37 @@ export const StatCard: React.FC<StatCardProps> = ({
         </div>
       </div>
 
-      <div className="relative z-10 mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
+      <div className="relative z-10 mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs min-h-[36px]">
         {subtitle && (
-          <span className="text-slate-500 dark:text-slate-400 font-medium truncate max-w-[170px]">
+          <span className="text-slate-500 dark:text-slate-400 font-medium truncate pr-2">
             {subtitle}
           </span>
+        )}
+
+        {onActionClick && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onActionClick();
+            }}
+            className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center text-white shadow-sm transition-all hover:scale-110 active:scale-95 shrink-0 ml-auto ${
+              colorScheme === 'emerald'
+                ? 'bg-emerald-600 hover:bg-emerald-500'
+                : colorScheme === 'amber'
+                ? 'bg-amber-600 hover:bg-amber-500'
+                : colorScheme === 'purple'
+                ? 'bg-purple-600 hover:bg-purple-500'
+                : colorScheme === 'sky'
+                ? 'bg-sky-600 hover:bg-sky-500'
+                : colorScheme === 'rose'
+                ? 'bg-rose-600 hover:bg-rose-500'
+                : 'bg-brand-600 hover:bg-brand-500'
+            }`}
+            title={actionTitle || 'Add (+)'}
+          >
+            <Plus className="w-4 h-4 stroke-[3]" />
+          </button>
         )}
 
         {trend && (

@@ -17,6 +17,60 @@ export interface EmployeeUser {
   mobile_number?: string;
   is_active?: boolean;
   created_at?: string;
+  designation?: string;
+  department?: string;
+  shift_timing?: string;
+  joining_date?: string;
+  basic_salary?: number;
+}
+
+export type AttendanceStatus = 'PRESENT' | 'ABSENT' | 'HALF_DAY' | 'HOLIDAY' | 'LEAVE';
+
+export interface AttendanceRecord {
+  id: number;
+  employee_id: number;
+  date: string; // YYYY-MM-DD
+  day_name: string;
+  in_time?: string;
+  out_time?: string;
+  status: AttendanceStatus;
+  work_hours?: number;
+  notes?: string;
+}
+
+export type LeaveType = 'CASUAL' | 'SICK' | 'PAID' | 'UNPAID';
+export type LeaveStatus = 'APPROVED' | 'PENDING' | 'REJECTED';
+
+export interface LeaveRecord {
+  id: number;
+  employee_id: number;
+  leave_type: LeaveType;
+  start_date: string;
+  end_date: string;
+  days_count: number;
+  reason: string;
+  status: LeaveStatus;
+  applied_at: string;
+  approved_by?: string;
+}
+
+export interface LeaveBalance {
+  casual_total: number;
+  casual_used: number;
+  sick_total: number;
+  sick_used: number;
+  paid_total: number;
+  paid_used: number;
+}
+
+export interface HolidayItem {
+  id: number;
+  title: string;
+  title_gu: string;
+  date: string;
+  day: string;
+  type: 'GOVERNMENT' | 'REGIONAL' | 'NATIONAL';
+  description?: string;
 }
 
 export interface CustomerUser {

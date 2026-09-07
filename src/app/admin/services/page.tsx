@@ -36,6 +36,8 @@ import {
   Sparkles,
   FileText,
   Search,
+  LayoutGrid,
+  List,
 } from 'lucide-react';
 
 const DOC_TYPES: DocumentType[] = [
@@ -55,6 +57,7 @@ export default function ServiceCatalogPage() {
   const queryClient = useQueryClient();
   const { t } = useLanguage();
   const [expandedServices, setExpandedServices] = useState<Record<number, boolean>>({ 3: true, 4: true });
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
 
   // Modals state
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
@@ -62,6 +65,15 @@ export default function ServiceCatalogPage() {
   const [isDocModalOpen, setIsDocModalOpen] = useState(false);
   const [isBuilderModalOpen, setIsBuilderModalOpen] = useState(false);
   const [editingService, setEditingService] = useState<BaseService | null>(null);
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('action') === 'add_service') {
+        setIsServiceModalOpen(true);
+      }
+    }
+  }, []);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -230,7 +242,7 @@ export default function ServiceCatalogPage() {
   );
 
   return (
-    <AppShell allowedRoles={['admin']}>
+    <AppShell allowedRoles={['admin', 'employee']}>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -306,210 +318,405 @@ export default function ServiceCatalogPage() {
           ))}
         </div>
 
-        <div className="relative">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search service by English name, Gujarati name (દા.ત. 7/12, આવક, કિસાન), or description..."
-            className="w-full pl-10 pr-4 py-2 text-xs rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
-          />
+        {/* Search Bar & View Mode Switcher */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search service by English name, Gujarati name (દા.ત. 7/12, આવક, કિસાન), or description..."
+              className="w-full pl-10 pr-4 py-2.5 text-xs rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-xs"
+            />
+          </div>
+
+          {/* View Switcher: Box / Grid vs List */}
+          <div className="flex items-center gap-1 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 flex-shrink-0 select-none">
+            <button
+              type="button"
+              onClick={() => setViewMode('grid')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                viewMode === 'grid'
+                  ? 'bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 shadow-xs ring-1 ring-slate-200 dark:ring-slate-700'
+                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
+              title="Box / Grid View"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>Box / Grid View</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('list')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                viewMode === 'list'
+                  ? 'bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 shadow-xs ring-1 ring-slate-200 dark:ring-slate-700'
+                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
+              title="List View"
+            >
+              <List className="w-3.5 h-3.5" />
+              <span>List View</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Tree Accordion View */}
-      <div className="space-y-4">
-        {filteredServices.map((service) => {
-          const isExpanded = !!expandedServices[service.id];
+      {/* ========================================================================= */}
+      {/* 1. BOX / GRID VIEW */}
+      {/* ========================================================================= */}
+      {viewMode === 'grid' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in">
+          {filteredServices.map((service) => {
+            const isExpanded = !!expandedServices[service.id];
+            const subCount = (service.SubServices || []).length;
+            const reqDocCount = (service.SubServices || []).reduce(
+              (sum, sub) => sum + (sub.RequiredDocuments || []).length,
+              0
+            );
 
-          return (
-            <Card
-              key={service.id}
-              variant="elevated"
-              className="overflow-hidden"
-            >
-              {/* Service Header Row */}
-              <div
-                onClick={() => toggleExpand(service.id)}
-                className="flex flex-col lg:flex-row lg:items-center justify-between p-5 bg-slate-50/75 dark:bg-slate-800/40 hover:bg-slate-100/70 dark:hover:bg-slate-800/70 cursor-pointer transition-colors border-b border-slate-100 dark:border-slate-800/60 gap-3"
+            return (
+              <Card
+                key={service.id}
+                variant="elevated"
+                className="group flex flex-col justify-between overflow-hidden border border-slate-200/80 dark:border-slate-800 hover:border-brand-500/50 hover:shadow-lg transition-all duration-300 rounded-2xl bg-white dark:bg-slate-900"
               >
-                <div className="flex items-start gap-3">
-                  <div className="p-1 rounded-lg text-slate-400 mt-1">
-                    {isExpanded ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+                <div className="p-5 space-y-3.5">
+                  {/* Category & Status */}
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
+                      {service.Category || 'GOVT_FORMS'}
+                    </span>
+                    <Badge variant={service.IsActive ? 'success' : 'default'}>
+                      {service.IsActive ? 'Active' : 'Disabled'}
+                    </Badge>
                   </div>
+
+                  {/* Title */}
                   <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-black text-base text-slate-900 dark:text-white">
-                        {service.ServiceName}
-                      </h3>
-                      {service.ServiceNameGu && (
-                        <span className="text-xs font-bold text-brand-600 dark:text-brand-400">
-                          ({service.ServiceNameGu})
-                        </span>
-                      )}
-                      <Badge variant={service.IsActive ? 'success' : 'default'}>
-                        {service.IsActive ? 'Active' : 'Disabled'}
-                      </Badge>
-                      {service.Category && (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
-                          {service.Category}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mt-1 font-mono">
-                      <span>Govt Fee: ₹{service.GovernmentFee ?? 0}</span>
-                      <span>&bull;</span>
-                      <span>Service Charge: ₹{service.ServiceCharge ?? 50}</span>
-                      <span>&bull;</span>
-                      <span className="text-amber-600 dark:text-amber-400 font-bold">
-                        {service.SlaDays || 3} Days SLA
-                      </span>
-                    </div>
-
-                    {service.Description && (
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                        {service.Description}
+                    <h3 className="font-black text-base text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                      {service.ServiceName}
+                    </h3>
+                    {service.ServiceNameGu && (
+                      <p className="text-xs font-bold text-brand-600 dark:text-brand-400 mt-0.5">
+                        {service.ServiceNameGu}
                       </p>
                     )}
                   </div>
+
+                  {/* Description */}
+                  {service.Description && (
+                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                      {service.Description}
+                    </p>
+                  )}
+
+                  {/* Fee & SLA Info Box */}
+                  <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 text-center font-mono">
+                    <div>
+                      <span className="text-[10px] text-slate-400 block font-sans">Govt Fee</span>
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        ₹{service.GovernmentFee ?? 0}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 block font-sans">Desk Fee</span>
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        ₹{service.ServiceCharge ?? 50}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 block font-sans">SLA</span>
+                      <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
+                        {service.SlaDays || 3}d
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Sub-services & Checklist Counts */}
+                  <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
+                    <span className="flex items-center gap-1.5 font-medium">
+                      <Layers className="w-3.5 h-3.5 text-brand-500" />
+                      {subCount} Sub-services
+                    </span>
+                    <span className="flex items-center gap-1.5 font-medium">
+                      <FileCheck2 className="w-3.5 h-3.5 text-purple-500" />
+                      {reqDocCount} Rules
+                    </span>
+                  </div>
+
+                  {/* Expanded Sub-services Drawer inside card */}
+                  {isExpanded && (
+                    <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2 animate-fade-in">
+                      <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                        Sub-Service Operations:
+                      </h4>
+                      {(service.SubServices || []).length === 0 ? (
+                        <p className="text-xs text-slate-400 italic">No sub-services attached</p>
+                      ) : (
+                        (service.SubServices || []).map((sub) => (
+                          <div
+                            key={sub.id}
+                            className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs"
+                          >
+                            <span className="font-bold text-slate-900 dark:text-slate-100 truncate mr-2">
+                              {sub.SubServiceName}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-mono flex-shrink-0">
+                              {(sub.RequiredDocuments || []).length} Docs
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
                 </div>
 
-                <div className="flex items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
-                  <Button
-                    onClick={() => openBuilder(service)}
-                    variant="outline"
-                    size="xs"
-                    leftIcon={<Edit2 className="w-3 h-3" />}
-                  >
-                    Rules & Fees
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setSelectedServiceId(service.id);
-                      setIsSubServiceModalOpen(true);
-                    }}
-                    variant="glass"
-                    size="xs"
-                    leftIcon={<Plus className="w-3.5 h-3.5" />}
-                  >
-                    Add Sub-service
-                  </Button>
+                {/* Card Actions Footer */}
+                <div className="p-3 bg-slate-50/75 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-1.5">
                   <button
-                    onClick={() =>
-                      setDeleteTarget({
-                        type: 'service',
-                        id: service.id,
-                        title: `Base Service: ${service.ServiceName}`,
-                      })
-                    }
-                    className="p-2 text-slate-400 hover:text-rose-500 rounded-xl transition-colors"
-                    title="Delete Service"
+                    onClick={() => toggleExpand(service.id)}
+                    className="flex items-center gap-1 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 px-2 py-1 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    {isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                    <span>{isExpanded ? 'Hide' : 'Details'}</span>
                   </button>
-                </div>
-              </div>
 
-              {/* Sub-services Body */}
-              {isExpanded && (
-                <div className="p-5 space-y-4 bg-white dark:bg-slate-900 animate-fade-in">
-                  {(service.SubServices || []).map((sub) => (
-                    <div
-                      key={sub.id}
-                      className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 space-y-3"
+                  <div className="flex items-center gap-1">
+                    <Button
+                      onClick={() => openBuilder(service)}
+                      variant="outline"
+                      size="xs"
+                      leftIcon={<Edit2 className="w-3 h-3" />}
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Layers className="w-4 h-4 text-brand-500" />
-                          <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">
-                            {sub.SubServiceName}
-                          </h4>
-                          <span className="text-[11px] text-slate-400">
-                            ({sub.RequiredDocuments?.length || 0} checklist items)
-                          </span>
-                        </div>
+                      Rules
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setSelectedServiceId(service.id);
+                        setIsSubServiceModalOpen(true);
+                      }}
+                      variant="glass"
+                      size="xs"
+                      leftIcon={<Plus className="w-3 h-3" />}
+                    >
+                      + Sub
+                    </Button>
+                    <button
+                      onClick={() =>
+                        setDeleteTarget({
+                          type: 'service',
+                          id: service.id,
+                          title: `Base Service: ${service.ServiceName}`,
+                        })
+                      }
+                      className="p-1.5 text-slate-400 hover:text-rose-500 rounded-lg transition-colors"
+                      title="Delete Service"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
-                        <div className="flex items-center gap-2">
-                          <Button
-                            onClick={() => {
-                              setSelectedSubServiceId(sub.id);
-                              setIsDocModalOpen(true);
-                            }}
-                            variant="secondary"
-                            size="xs"
-                            leftIcon={<Plus className="w-3.5 h-3.5" />}
-                          >
-                            Add Required Doc
-                          </Button>
-                          <button
-                            onClick={() =>
-                              setDeleteTarget({
-                                type: 'subservice',
-                                id: sub.id,
-                                title: `Sub-service: ${sub.SubServiceName}`,
-                              })
-                            }
-                            className="p-1.5 text-slate-400 hover:text-rose-500 transition-colors"
-                            title="Delete Sub-service"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
+      {/* ========================================================================= */}
+      {/* 2. LIST / ACCORDION VIEW */}
+      {/* ========================================================================= */}
+      {viewMode === 'list' && (
+        <div className="space-y-4 animate-fade-in">
+          {filteredServices.map((service) => {
+            const isExpanded = !!expandedServices[service.id];
+
+            return (
+              <Card
+                key={service.id}
+                variant="elevated"
+                className="overflow-hidden"
+              >
+                {/* Service Header Row */}
+                <div
+                  onClick={() => toggleExpand(service.id)}
+                  className="flex flex-col lg:flex-row lg:items-center justify-between p-5 bg-slate-50/75 dark:bg-slate-800/40 hover:bg-slate-100/70 dark:hover:bg-slate-800/70 cursor-pointer transition-colors border-b border-slate-100 dark:border-slate-800/60 gap-3"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="p-1 rounded-lg text-slate-400 mt-1">
+                      {isExpanded ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-black text-base text-slate-900 dark:text-white">
+                          {service.ServiceName}
+                        </h3>
+                        {service.ServiceNameGu && (
+                          <span className="text-xs font-bold text-brand-600 dark:text-brand-400">
+                            ({service.ServiceNameGu})
+                          </span>
+                        )}
+                        <Badge variant={service.IsActive ? 'success' : 'default'}>
+                          {service.IsActive ? 'Active' : 'Disabled'}
+                        </Badge>
+                        {service.Category && (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                            {service.Category}
+                          </span>
+                        )}
                       </div>
 
-                      {/* Required Documents List */}
-                      <div className="pl-6 space-y-2 border-l-2 border-slate-200 dark:border-slate-800">
-                        {(sub.RequiredDocuments || []).map((doc) => (
-                          <div
-                            key={doc.id}
-                            className="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-xs"
-                          >
-                            <div className="flex items-center gap-2">
-                              <FileCheck2 className="w-3.5 h-3.5 text-emerald-500" />
-                              <span className="font-medium text-slate-800 dark:text-slate-200">
-                                {doc.DocumentName}
-                              </span>
-                              <Badge variant="purple">{doc.document_type}</Badge>
-                            </div>
+                      <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mt-1 font-mono">
+                        <span>Govt Fee: ₹{service.GovernmentFee ?? 0}</span>
+                        <span>&bull;</span>
+                        <span>Service Charge: ₹{service.ServiceCharge ?? 50}</span>
+                        <span>&bull;</span>
+                        <span className="text-amber-600 dark:text-amber-400 font-bold">
+                          {service.SlaDays || 3} Days SLA
+                        </span>
+                      </div>
 
+                      {service.Description && (
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                          {service.Description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
+                    <Button
+                      onClick={() => openBuilder(service)}
+                      variant="outline"
+                      size="xs"
+                      leftIcon={<Edit2 className="w-3 h-3" />}
+                    >
+                      Rules &amp; Fees
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setSelectedServiceId(service.id);
+                        setIsSubServiceModalOpen(true);
+                      }}
+                      variant="glass"
+                      size="xs"
+                      leftIcon={<Plus className="w-3.5 h-3.5" />}
+                    >
+                      Add Sub-service
+                    </Button>
+                    <button
+                      onClick={() =>
+                        setDeleteTarget({
+                          type: 'service',
+                          id: service.id,
+                          title: `Base Service: ${service.ServiceName}`,
+                        })
+                      }
+                      className="p-2 text-slate-400 hover:text-rose-500 rounded-xl transition-colors"
+                      title="Delete Service"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Sub-services Body */}
+                {isExpanded && (
+                  <div className="p-5 space-y-4 bg-white dark:bg-slate-900 animate-fade-in">
+                    {(service.SubServices || []).map((sub) => (
+                      <div
+                        key={sub.id}
+                        className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 space-y-3"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Layers className="w-4 h-4 text-brand-500" />
+                            <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">
+                              {sub.SubServiceName}
+                            </h4>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Button
+                              onClick={() => {
+                                setSelectedSubServiceId(sub.id);
+                                setIsDocModalOpen(true);
+                              }}
+                              variant="outline"
+                              size="xs"
+                              leftIcon={<Plus className="w-3 h-3" />}
+                            >
+                              Add Required Doc
+                            </Button>
                             <button
                               onClick={() =>
                                 setDeleteTarget({
-                                  type: 'doc',
-                                  id: doc.id,
-                                  title: `Required Document: ${doc.DocumentName}`,
+                                  type: 'subservice',
+                                  id: sub.id,
+                                  title: `Sub-service: ${sub.SubServiceName}`,
                                 })
                               }
                               className="p-1 text-slate-400 hover:text-rose-500 transition-colors"
-                              title="Delete Requirement"
+                              title="Delete Sub-service"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
-                        ))}
+                        </div>
 
-                        {(!sub.RequiredDocuments || sub.RequiredDocuments.length === 0) && (
-                          <p className="text-[11px] text-slate-400 italic py-1">
-                            No mandatory documents attached yet. Click &apos;Add Required Doc&apos; to configure checklist triggers.
-                          </p>
-                        )}
+                        {/* Checklist Documents */}
+                        <div className="space-y-1.5 pl-6">
+                          {(sub.RequiredDocuments || []).map((doc) => (
+                            <div
+                              key={doc.id}
+                              className="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-xs"
+                            >
+                              <div className="flex items-center gap-2">
+                                <FileCheck2 className="w-3.5 h-3.5 text-emerald-500" />
+                                <span className="font-medium text-slate-800 dark:text-slate-200">
+                                  {doc.DocumentName}
+                                </span>
+                                <Badge variant="purple">{doc.document_type}</Badge>
+                              </div>
+
+                              <button
+                                onClick={() =>
+                                  setDeleteTarget({
+                                    type: 'doc',
+                                    id: doc.id,
+                                    title: `Required Document: ${doc.DocumentName}`,
+                                  })
+                                }
+                                className="p-1 text-slate-400 hover:text-rose-500 transition-colors"
+                                title="Delete Requirement"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ))}
+
+                          {(!sub.RequiredDocuments || sub.RequiredDocuments.length === 0) && (
+                            <p className="text-[11px] text-slate-400 italic py-1">
+                              No mandatory documents attached yet. Click &apos;Add Required Doc&apos; to configure checklist triggers.
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
 
-                  {(!service.SubServices || service.SubServices.length === 0) && (
-                    <p className="text-xs text-slate-400 text-center py-4">
-                      No sub-services configured for {service.ServiceName}. Click &apos;Add Sub-service&apos; above.
-                    </p>
-                  )}
-                </div>
-              )}
-            </Card>
-          );
-        })}
-      </div>
+                    {(!service.SubServices || service.SubServices.length === 0) && (
+                      <p className="text-xs text-slate-400 text-center py-4">
+                        No sub-services configured for {service.ServiceName}. Click &apos;Add Sub-service&apos; above.
+                      </p>
+                    )}
+                  </div>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
       {/* Modal 1: Create Base Service */}
       <Modal

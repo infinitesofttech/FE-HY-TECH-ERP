@@ -20,6 +20,7 @@ import {
   ChevronDown,
   Sparkles,
 } from 'lucide-react';
+import { QuickAddDropdown } from '@/components/common/QuickAddDropdown';
 import { toast } from 'sonner';
 
 interface TopbarProps {
@@ -122,15 +123,12 @@ export const Topbar: React.FC<TopbarProps> = ({
 
       {/* Right Controls: Quick Action, Sync Pill, Lang, Theme, Notifications */}
       <div className="flex items-center gap-2 sm:gap-2.5">
-        {/* Quick Action Button */}
+        {/* Quick Action Dropdown */}
         {userRole !== 'customer' && (
-          <button
-            onClick={handleQuickAction}
-            className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold shadow-sm shadow-brand-600/25 transition-all active:scale-[0.98]"
-          >
-            <PlusCircle className="w-3.5 h-3.5" />
-            <span>{t('visit_wizard')}</span>
-          </button>
+          <QuickAddDropdown
+            variant="compact"
+            buttonLabel="+ Quick Add"
+          />
         )}
 
         {/* Sync Engine Indicator */}

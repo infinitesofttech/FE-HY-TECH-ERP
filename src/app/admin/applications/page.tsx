@@ -60,6 +60,15 @@ export default function AdminApplicationsPage() {
   const [selectedAppForDrawer, setSelectedAppForDrawer] = useState<Application | null>(null);
   const [selectedAppForReceipt, setSelectedAppForReceipt] = useState<Application | null>(null);
 
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('action') === 'new') {
+        setIsIntakeModalOpen(true);
+      }
+    }
+  }, []);
+
   // Fetch applications
   const { data: applications = [], isLoading } = useQuery({
     queryKey: ['applications'],

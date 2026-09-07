@@ -69,7 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       authStorage.setSession(res);
       setUserRole(res.user_type);
       setUser(res.customer || null);
-      router.push('/customer/dashboard');
+      router.push('/user/dashboard');
       return res;
     } finally {
       setIsLoading(false);

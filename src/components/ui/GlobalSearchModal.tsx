@@ -93,6 +93,11 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
           { title: 'Service Catalog Manager', desc: 'Configure 45 services, fees, SLAs & required docs', href: '/admin/services', icon: FolderTree },
           { title: 'Employee Management', desc: 'Operator accounts & desk permissions', href: '/admin/employees', icon: UserCog },
         ]
+      : userRole === 'employee'
+      ? [
+          { title: 'Services Catalog', desc: 'Service directory, requirements & fees', href: '/staff/services', icon: FolderTree },
+          { title: 'HRMS & Attendance', desc: 'Punch attendance, holiday calendar & leaves', href: '/staff/hrms', icon: UserCog },
+        ]
       : []),
     { title: 'System Settings', desc: 'Environment diagnostics, language & theme', href: `${basePrefix}/settings`, icon: Settings },
   ];

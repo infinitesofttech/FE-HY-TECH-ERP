@@ -18,7 +18,7 @@ export default function RootPage() {
     } else if (userRole === 'employee') {
       router.replace('/staff/dashboard');
     } else if (userRole === 'customer') {
-      router.replace('/customer/dashboard');
+      router.replace('/user/dashboard');
     } else {
       router.replace('/login');
     }

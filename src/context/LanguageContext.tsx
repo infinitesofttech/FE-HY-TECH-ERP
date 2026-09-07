@@ -726,6 +726,9 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const t = (key: string): string => {
+    if (language === 'en') {
+      return translations['en']?.[key] || translations['gu']?.[key] || key;
+    }
     return (
       (translations as any)[language]?.[key] ||
       translations['gu']?.[key] ||

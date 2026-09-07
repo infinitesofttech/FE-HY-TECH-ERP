@@ -70,15 +70,16 @@ export const ApplicationDetailDrawer: React.FC<ApplicationDetailDrawerProps> = (
   const [isEditingGovtRef, setIsEditingGovtRef] = useState(false);
   const [govtRefInput, setGovtRefInput] = useState('');
 
-  if (!application) return null;
-
   const actorName = (user as any)?.username || (user as any)?.full_name || 'Admin Operator';
 
   // Update Status Mutation
   const updateStatusMutation = useMutation({
-    mutationFn: () =>
-      applicationService.updateStatus(application.id, newStatus, statusNotes, actorName),
+    mutationFn: () => {
+      if (!application) throw new Error('No application selected');
+      return applicationService.updateStatus(application.id, newStatus, statusNotes, actorName);
+    },
     onSuccess: (updated) => {
+      if (!application) return;
       toast.success(
         language === 'gu'
           ? `અરજીની સ્થિતિ બદલાઈ: ${updated.status}`
@@ -99,16 +100,20 @@ export const ApplicationDetailDrawer: React.FC<ApplicationDetailDrawerProps> = (
 
   // Save Govt App Reference Mutation
   const saveGovtRefMutation = useMutation({
-    mutationFn: () =>
-      applicationService.updateApplication(application.id, {
+    mutationFn: () => {
+      if (!application) throw new Error('No application selected');
+      return applicationService.updateApplication(application.id, {
         government_app_no: govtRefInput,
-      }),
+      });
+    },
     onSuccess: () => {
       toast.success('Government reference number saved');
       queryClient.invalidateQueries({ queryKey: ['applications'] });
       setIsEditingGovtRef(false);
     },
   });
+
+  if (!application) return null;
 
   // Check SLA Status
   const isOverdue = application.expected_date
