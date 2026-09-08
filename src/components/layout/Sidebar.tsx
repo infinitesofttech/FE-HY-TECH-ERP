@@ -79,15 +79,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { user, userRole, logout } = useAuth();
   const { t } = useLanguage();
 
-  const [openDropdowns, setOpenDropdowns] = React.useState<Record<string, boolean>>({
-    'Office Dashboard': true,
-    'ઓફિસ ડેશબોર્ડ': true,
-    'कार्यालय डैशबोर्ड': true,
-    'HRMS': true,
-    'Payroll': false,
-    'Reports': false,
-    'Settings': false,
-  });
+  const [openDropdowns, setOpenDropdowns] = React.useState<Record<string, boolean>>({});
 
   // Track active HRMS / query tab
   const [currentTab, setCurrentTab] = useState<string>('employees');
@@ -111,11 +103,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
     };
   }, [pathname]);
 
-  const toggleDropdown = (name: string) => {
-    setOpenDropdowns((prev) => ({
-      ...prev,
-      [name]: !prev[name],
-    }));
+  const toggleDropdown = (name: string, currentlyOpen?: boolean) => {
+    setOpenDropdowns((prev) => {
+      const isCur = currentlyOpen !== undefined ? currentlyOpen : Boolean(prev[name]);
+      return {
+        ...prev,
+        [name]: !isCur,
+      };
+    });
   };
 
   const getAdminNavigation = (): NavGroup[] => [
@@ -384,7 +379,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            toggleDropdown(item.name);
+                            toggleDropdown(item.name, isOpen);
                           }}
                           className="p-2 mr-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-850 transition-colors cursor-pointer"
                           aria-label="Toggle submenu"
@@ -416,7 +411,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                     onClick={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
-                                      toggleDropdown(subItem.name);
+                                      toggleDropdown(subItem.name, isSubOpen);
                                     }}
                                     className={`w-full group flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                                       hasActiveChild

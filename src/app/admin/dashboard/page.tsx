@@ -157,7 +157,7 @@ export default function AdminDashboardPage() {
   }, [chartData]);
 
   const categoryData = dashboard?.category_distribution || [
-    { name: 'Aadhar Card', count: 42, percentage: 38 },
+    { name: 'Aadhaar Card', count: 42, percentage: 38 },
     { name: 'Ayushman Card', count: 28, percentage: 25 },
     { name: 'Election Card', count: 18, percentage: 16 },
     { name: 'PAN Card', count: 14, percentage: 13 },

@@ -356,7 +356,7 @@ export default function TransactionsPage() {
           subtitle={
             language === 'gu'
               ? `ઓનલાઇન = ₹${(incomeOnline - expenseOnline).toFixed(0)} અને કેશ = ₹${(incomeCash - expenseCash).toFixed(0)}`
-              : `online payment = ${(incomeOnline - expenseOnline).toFixed(0)} and Cash Payment = ${(incomeCash - expenseCash).toFixed(0)}`
+              : `Online Payment = ₹${(incomeOnline - expenseOnline).toFixed(0)} and Cash Payment = ₹${(incomeCash - expenseCash).toFixed(0)}`
           }
           icon={isProfitable ? TrendingUp : TrendingDown}
           colorScheme={isProfitable ? 'emerald' : 'rose'}
@@ -367,8 +367,8 @@ export default function TransactionsPage() {
           value={`₹${totalIncome.toFixed(2)}`}
           subtitle={
             language === 'gu'
-              ? `ઓનલાઇન પેમેન્ટ = ${incomeOnline.toFixed(0)} અને કેશ પેમેન્ટ = ${incomeCash.toFixed(0)}`
-              : `online payment = ${incomeOnline.toFixed(0)} and Cash Payment = ${incomeCash.toFixed(0)}`
+              ? `ઓનલાઇન પેમેન્ટ = ₹${incomeOnline.toFixed(0)} અને કેશ પેમેન્ટ = ₹${incomeCash.toFixed(0)}`
+              : `Online Payment = ₹${incomeOnline.toFixed(0)} and Cash Payment = ₹${incomeCash.toFixed(0)}`
           }
           icon={TrendingUp}
           colorScheme="emerald"
@@ -379,8 +379,8 @@ export default function TransactionsPage() {
           value={`₹${totalExpenses.toFixed(2)}`}
           subtitle={
             language === 'gu'
-              ? `ઓનલાઇન પેમેન્ટ = ${expenseOnline.toFixed(0)} અને કેશ પેમેન્ટ = ${expenseCash.toFixed(0)}`
-              : `online payment = ${expenseOnline.toFixed(0)} and Cash Payment = ${expenseCash.toFixed(0)}`
+              ? `ઓનલાઇન પેમેન્ટ = ₹${expenseOnline.toFixed(0)} અને કેશ પેમેન્ટ = ₹${expenseCash.toFixed(0)}`
+              : `Online Payment = ₹${expenseOnline.toFixed(0)} and Cash Payment = ₹${expenseCash.toFixed(0)}`
           }
           icon={TrendingDown}
           colorScheme="rose"

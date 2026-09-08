@@ -1222,7 +1222,7 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
                   Select Service
                 </h3>
                 <p className="text-[11px] text-slate-500">
-                  Select from official catalog (Govt Schemes, KYC, New Cards, Utility)
+                  Select from official catalogue (Govt Schemes, KYC, New Cards, Utility)
                 </p>
               </div>
             </div>

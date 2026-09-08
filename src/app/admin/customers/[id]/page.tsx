@@ -992,7 +992,7 @@ export default function CustomerDetailPage() {
             required
             value={docForm.document_name}
             onChange={(e) => setDocForm({ ...docForm, document_name: e.target.value })}
-            placeholder="e.g. Aadhar Card Front & Back"
+            placeholder="e.g. Aadhaar Card Front & Back"
           />
 
           <Input

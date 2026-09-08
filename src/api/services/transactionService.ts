@@ -63,7 +63,7 @@ export const transactionService = {
         staff: payload.staff,
         family_id: 'HTF-000002',
         customer_name: 'Dineshbhai Changani',
-        service_name: 'Aadhar Card',
+        service_name: 'Aadhaar Card',
         sub_service_name: 'New Aadhaar Card',
         staff_name: 'MITALI CHANGANI',
         bill_amount: bill.toFixed(2),

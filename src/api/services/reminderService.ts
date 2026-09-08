@@ -54,7 +54,7 @@ export const reminderService = {
         customer_name: 'Vitthalbhai Changani',
         customer_mobile: '6789012345',
         service: payload.service,
-        service_name: 'Aadhar Card',
+        service_name: 'Aadhaar Card',
         reminder_type: payload.reminder_type,
         subject: payload.subject,
         due_date: payload.due_date,

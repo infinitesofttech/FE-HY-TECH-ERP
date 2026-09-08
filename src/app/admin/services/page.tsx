@@ -1214,7 +1214,7 @@ export default function ServiceCatalogPage() {
         isOpen={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDeleteConfirm}
-        title="Delete Catalog Item?"
+        title="Delete Catalogue Item?"
         message={`Are you sure you want to permanently remove ${deleteTarget?.title}? This may affect automatic visit checklists.`}
         confirmText="Delete"
         variant="danger"

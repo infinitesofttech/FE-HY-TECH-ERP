@@ -769,7 +769,7 @@ export default function EmployeesPage() {
                         {row.hrs}
                       </td>
                       <td className="py-3.5 px-4 text-right">
-                        <Badge variant={row.status === 'PRESENT' ? 'success' : 'amber'}>
+                        <Badge variant={row.status === 'PRESENT' ? 'success' : 'warning'}>
                           {row.status}
                         </Badge>
                       </td>
@@ -832,7 +832,7 @@ export default function EmployeesPage() {
                           ? 'success'
                           : req.status === 'REJECTED'
                             ? 'danger'
-                            : 'amber'
+                            : 'warning'
                       }
                     >
                       {req.status}

@@ -352,7 +352,7 @@ export default function ServiceVisitsPage() {
           colorScheme="amber"
         />
         <StatCard
-          title="Catalog Services"
+          title="Catalogue Services"
           value={services.length}
           subtitle="Active government schemes"
           icon={FileText}

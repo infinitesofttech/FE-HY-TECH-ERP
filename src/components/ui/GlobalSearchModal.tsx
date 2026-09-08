@@ -90,12 +90,12 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
     { title: 'Citizen Reminders', desc: 'SMS alerts & customer follow-up feed', href: `${basePrefix}/reminders`, icon: BellRing },
     ...(userRole === 'admin'
       ? [
-          { title: 'Service Catalog Manager', desc: 'Configure 45 services, fees, SLAs & required docs', href: '/admin/services', icon: FolderTree },
+          { title: 'Service Catalogue Manager', desc: 'Configure 45 services, fees, SLAs & required docs', href: '/admin/services', icon: FolderTree },
           { title: 'Employee Management', desc: 'Operator accounts & desk permissions', href: '/admin/employees', icon: UserCog },
         ]
       : userRole === 'employee'
       ? [
-          { title: 'Services Catalog', desc: 'Service directory, requirements & fees', href: '/staff/services', icon: FolderTree },
+          { title: 'Services Catalogue', desc: 'Service directory, requirements & fees', href: '/staff/services', icon: FolderTree },
           { title: 'HRMS & Attendance', desc: 'Punch attendance, holiday calendar & leaves', href: '/staff/hrms', icon: UserCog },
         ]
       : []),
@@ -210,7 +210,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
           {matchedServices.length > 0 && (
             <div className="space-y-1">
               <div className="px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                Government Services (45 Catalog)
+                Government Services (45 Catalogue)
               </div>
               {matchedServices.map((srv) => (
                 <div

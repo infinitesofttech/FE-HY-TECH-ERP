@@ -229,10 +229,10 @@ export const MOCK_DOCUMENTS: Record<string, CustomerDocument[]> = {
       family_id: 'HTF-000002',
       member_name: 'Mitali Changani',
       document_type: 'AADHAR',
-      document_type_display: 'Aadhar Card',
-      document_name: 'Mitali Aadharcard',
+      document_type_display: 'Aadhaar Card',
+      document_name: 'Mitali Aadhaar Card',
       document_file: '/media/customer_documents/2026/08/aadharcard_old_t35FaHi.pdf',
-      description: "Mitali's Aadharcard pdf",
+      description: "Mitali's Aadhaar Card PDF",
       is_verified: true,
       created_at: '2026-08-27T06:36:14.119308Z',
       family_member: 3,
@@ -243,7 +243,7 @@ export const MOCK_DOCUMENTS: Record<string, CustomerDocument[]> = {
 export const MOCK_SERVICES: BaseService[] = [
   {
     id: 3,
-    ServiceName: 'Aadhar Card',
+    ServiceName: 'Aadhaar Card',
     Description: 'Person must be present and all documents must be original',
     IsActive: true,
     CreatedAt: '2026-08-26T06:24:07.031182Z',

@@ -85,7 +85,7 @@ export const pendingWorkService = {
         customer_name: 'Vitthalbhai Changani',
         customer_mobile: '6789012345',
         service: payload.service,
-        service_name: 'Aadhar Card',
+        service_name: 'Aadhaar Card',
         pending_since: payload.pending_since,
         expected_date: payload.expected_date,
         priority: payload.priority,

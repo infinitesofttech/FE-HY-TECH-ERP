@@ -58,14 +58,14 @@ export const Topbar: React.FC<TopbarProps> = ({
   const notifications = [
     {
       id: 1,
-      title: 'Aadhar Ready for Pickup',
+      title: 'Aadhaar Ready for Pickup',
       desc: 'Bipinbhai Patel (HTF-000002) - SMS dispatched in Gujarati.',
       time: '10m ago',
       type: 'ready',
     },
     {
       id: 2,
-      title: 'Pending Gov Verification',
+      title: 'Pending Govt Verification',
       desc: 'Ration card member addition pending UIDAI sync.',
       time: '45m ago',
       type: 'alert',
