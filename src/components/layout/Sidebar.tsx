@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
@@ -28,6 +28,17 @@ import {
   FileCheck2,
   Clock,
   Building2,
+  Calendar,
+  CalendarDays,
+  Banknote,
+  FileSpreadsheet,
+  DollarSign,
+  BarChart3,
+  BarChart2,
+  FileCheck,
+  Sliders,
+  Bell,
+  TrendingUp,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -39,9 +50,10 @@ interface SidebarProps {
 
 interface NavSubItem {
   name: string;
-  href: string;
+  href?: string;
   icon?: React.ComponentType<{ className?: string }>;
   badge?: string;
+  children?: NavSubItem[];
 }
 
 interface NavItem {
@@ -71,12 +83,38 @@ export const Sidebar: React.FC<SidebarProps> = ({
     'Office Dashboard': true,
     'ઓફિસ ડેશબોર્ડ': true,
     'कार्यालय डैशबोर्ड': true,
+    'HRMS': true,
+    'Payroll': false,
+    'Reports': false,
+    'Settings': false,
   });
 
-  const toggleDropdown = (key: string) => {
+  // Track active HRMS / query tab
+  const [currentTab, setCurrentTab] = useState<string>('employees');
+
+  useEffect(() => {
+    const syncTabFromUrl = () => {
+      if (typeof window !== 'undefined') {
+        const sp = new URLSearchParams(window.location.search);
+        setCurrentTab(sp.get('tab') || 'employees');
+      }
+    };
+    syncTabFromUrl();
+    window.addEventListener('popstate', syncTabFromUrl);
+    const handleCustomTab = (e: any) => {
+      if (e.detail) setCurrentTab(e.detail);
+    };
+    window.addEventListener('hrms-tab-change', handleCustomTab);
+    return () => {
+      window.removeEventListener('popstate', syncTabFromUrl);
+      window.removeEventListener('hrms-tab-change', handleCustomTab);
+    };
+  }, [pathname]);
+
+  const toggleDropdown = (name: string) => {
     setOpenDropdowns((prev) => ({
       ...prev,
-      [key]: !prev[key],
+      [name]: !prev[name],
     }));
   };
 
@@ -96,7 +134,48 @@ export const Sidebar: React.FC<SidebarProps> = ({
         },
         { name: t('nav_services'), href: '/admin/services', icon: FolderTree },
         { name: t('nav_account_finance'), href: '/admin/transactions', icon: Receipt },
-        { name: t('nav_hrms'), href: '/admin/employees', icon: UserCog },
+        {
+          name: t('nav_hrms'),
+          href: '/admin/employees',
+          icon: UserCog,
+          children: [
+            { name: 'Employees', href: '/admin/employees?tab=employees', icon: Users },
+            { name: 'Attendance', href: '/admin/employees?tab=attendance', icon: Calendar },
+            { name: 'Leave', href: '/admin/employees?tab=leave', icon: CalendarDays },
+            {
+              name: 'Payroll',
+              icon: Banknote,
+              children: [
+                { name: 'Salary Structure', href: '/admin/employees?tab=salary-structure', icon: FileSpreadsheet },
+                { name: 'Payroll', href: '/admin/employees?tab=payroll', icon: DollarSign },
+                { name: 'Salary Slips', href: '/admin/employees?tab=salary-slips', icon: Receipt },
+                { name: 'Payroll Reports', href: '/admin/employees?tab=payroll-reports', icon: BarChart3 },
+              ],
+            },
+            {
+              name: 'Reports',
+              icon: BarChart2,
+              children: [
+                { name: 'Attendance Report', href: '/admin/employees?tab=attendance-report', icon: FileCheck },
+                { name: 'Leave Report', href: '/admin/employees?tab=leave-report', icon: FileText },
+                { name: 'Employee Report', href: '/admin/employees?tab=employee-report', icon: Users },
+                { name: 'Late Coming Report', href: '/admin/employees?tab=late-coming-report', icon: Clock },
+                { name: 'Monthly HR Report', href: '/admin/employees?tab=monthly-hr-report', icon: TrendingUp },
+              ],
+            },
+            {
+              name: 'Settings',
+              icon: Settings,
+              children: [
+                { name: 'Company Settings', href: '/admin/employees?tab=company-settings', icon: Building2 },
+                { name: 'Attendance Settings', href: '/admin/employees?tab=attendance-settings', icon: Sliders },
+                { name: 'Leave Settings', href: '/admin/employees?tab=leave-settings', icon: Calendar },
+                { name: 'Notification Settings', href: '/admin/employees?tab=notification-settings', icon: Bell },
+                { name: 'Roles & Permissions', href: '/admin/employees?tab=roles-permissions', icon: ShieldCheck },
+              ],
+            },
+          ],
+        },
         { name: t('nav_settings'), href: '/admin/settings', icon: Settings },
       ],
     },
@@ -228,11 +307,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
               {group.items.map((item) => {
                 const Icon = item.icon;
                 const hasChildren = Boolean(item.children && item.children.length > 0);
-                const isChildActive = Boolean(hasChildren && item.children?.some(
-                  (child) => pathname === child.href || pathname.startsWith(`${child.href}/`)
-                ));
+                const isChildActive = Boolean(
+                  hasChildren &&
+                    item.children?.some((child) => {
+                      if (child.href) {
+                        const childPath = child.href.split('?')[0];
+                        return pathname === childPath || pathname.startsWith(`${childPath}/`);
+                      }
+                      if (child.children) {
+                        return child.children.some((c) => {
+                          const cPath = (c.href || '').split('?')[0];
+                          return pathname === cPath || pathname.startsWith(`${cPath}/`);
+                        });
+                      }
+                      return false;
+                    })
+                );
                 const isActive = !hasChildren && (pathname === item.href || (item.href ? pathname.startsWith(`${item.href}/`) : false));
-                const isOpen = openDropdowns[item.name] ?? (isChildActive || false);
+                const isOpen = openDropdowns[item.name] ?? (isChildActive || Boolean(item.href && pathname === item.href) || false);
 
                 if (hasChildren && item.children) {
                   const isParentActive = Boolean(item.href && pathname === item.href);
@@ -294,7 +386,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             e.stopPropagation();
                             toggleDropdown(item.name);
                           }}
-                          className="p-2 mr-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                          className="p-2 mr-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-850 transition-colors cursor-pointer"
                           aria-label="Toggle submenu"
                         >
                           <ChevronDown
@@ -309,14 +401,93 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         <div className="pl-4 ml-3.5 my-1 space-y-1 border-l-2 border-slate-200/80 dark:border-slate-800 transition-all">
                           {item.children.map((subItem) => {
                             const SubIcon = subItem.icon || FolderTree;
+
+                            if (subItem.children && subItem.children.length > 0) {
+                              const hasActiveChild = subItem.children.some((child) => {
+                                const childTab = (child.href || '').match(/tab=([^&]+)/)?.[1];
+                                return childTab === currentTab;
+                              });
+                              const isSubOpen = openDropdowns[subItem.name] ?? hasActiveChild;
+
+                              return (
+                                <div key={subItem.name} className="space-y-0.5 pt-0.5">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      toggleDropdown(subItem.name);
+                                    }}
+                                    className={`w-full group flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                      hasActiveChild
+                                        ? 'text-brand-700 dark:text-brand-300 bg-brand-500/10'
+                                        : 'text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-850/80'
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <SubIcon className={`w-3.5 h-3.5 flex-shrink-0 ${hasActiveChild ? 'text-brand-600 dark:text-brand-400' : 'text-brand-500'}`} />
+                                      <span className="truncate">{subItem.name}</span>
+                                    </div>
+                                    <ChevronDown
+                                      className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 flex-shrink-0 ${
+                                        isSubOpen ? 'rotate-180 text-brand-500' : ''
+                                      }`}
+                                    />
+                                  </button>
+
+                                  {isSubOpen && (
+                                    <div className="pl-3 ml-2.5 space-y-0.5 border-l border-slate-200 dark:border-slate-800 transition-all">
+                                      {subItem.children.map((child, cIdx) => {
+                                        const isLast = cIdx === subItem.children!.length - 1;
+                                        const childTab = (child.href || '').match(/tab=([^&]+)/)?.[1];
+                                        const isChildItemActive = pathname === '/admin/employees' && childTab === currentTab;
+
+                                        return (
+                                          <Link
+                                            key={child.name + (child.href || '')}
+                                            href={child.href || '#'}
+                                            onClick={() => {
+                                              onCloseMobile?.();
+                                              if (childTab && typeof window !== 'undefined') {
+                                                window.dispatchEvent(new CustomEvent('hrms-tab-change', { detail: childTab }));
+                                              }
+                                            }}
+                                            className={`group flex items-center px-2 py-1 rounded-md text-[11px] font-medium transition-all ${
+                                              isChildItemActive
+                                                ? 'text-brand-700 dark:text-brand-300 bg-brand-500/15 font-bold shadow-xs'
+                                                : 'text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-300 hover:bg-brand-500/10'
+                                            }`}
+                                          >
+                                            <span className={`font-mono mr-1.5 text-[10px] ${isChildItemActive ? 'text-brand-500 font-bold' : 'text-slate-300 dark:text-slate-600'}`}>
+                                              {isLast ? '└──' : '├──'}
+                                            </span>
+                                            <span className="truncate">{child.name}</span>
+                                          </Link>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            }
+
+                            const subTab = (subItem.href || '').match(/tab=([^&]+)/)?.[1];
                             const isSubActive =
-                              pathname === subItem.href || pathname.startsWith(`${subItem.href}/`);
+                              pathname === (subItem.href || '').split('?')[0] &&
+                              ((!subTab && (!currentTab || currentTab === 'employees')) ||
+                                subTab === currentTab ||
+                                (subTab === 'employees' && (!currentTab || currentTab === 'employees')));
 
                             return (
                               <Link
-                                key={subItem.href}
-                                href={subItem.href}
-                                onClick={onCloseMobile}
+                                key={subItem.href || subItem.name}
+                                href={subItem.href || '#'}
+                                onClick={() => {
+                                  onCloseMobile?.();
+                                  if (subTab && typeof window !== 'undefined') {
+                                    window.dispatchEvent(new CustomEvent('hrms-tab-change', { detail: subTab }));
+                                  }
+                                }}
                                 className={`group flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                                   isSubActive
                                     ? 'bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 font-bold border border-brand-200/80 dark:border-brand-800/80 shadow-xs'

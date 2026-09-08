@@ -3,7 +3,9 @@
 import React from 'react';
 
 interface WhatsAppButtonProps {
-  number: string;
+  number?: string;
+  phoneNumber?: string;
+  message?: string;
   size?: 'xs' | 'sm' | 'md';
   className?: string;
   tooltip?: boolean;
@@ -13,11 +15,22 @@ interface WhatsAppButtonProps {
  * WhatsAppButton — already logged-in WhatsApp Web tab-ma chat khule.
  * Target "whatsapp_web" use karyo che — same tab reuse thay, new tab nahi.
  */
-export function WhatsAppButton({ number, size = 'sm', className = '', tooltip = true }: WhatsAppButtonProps) {
-  const cleaned = number.replace(/\D/g, '');
+export function WhatsAppButton({
+  number,
+  phoneNumber,
+  message = '',
+  size = 'sm',
+  className = '',
+  tooltip = true,
+}: WhatsAppButtonProps) {
+  const rawNumber = String(number || phoneNumber || '');
+  const cleaned = rawNumber.replace(/\D/g, '');
+  if (!cleaned) return null;
+
   const e164 = cleaned.startsWith('91') && cleaned.length === 12 ? cleaned : `91${cleaned}`;
+  const encodedMsg = message ? encodeURIComponent(message) : '';
   // web.whatsapp.com/send opens inside the already-logged-in WhatsApp Web tab
-  const url = `https://web.whatsapp.com/send?phone=${e164}&text=`;
+  const url = `https://web.whatsapp.com/send?phone=${e164}&text=${encodedMsg}`;
 
   const sizeMap = {
     xs: 'w-6 h-6',
@@ -44,7 +57,7 @@ export function WhatsAppButton({ number, size = 'sm', className = '', tooltip = 
   return (
     <a
       href={url}
-      title={tooltip ? `WhatsApp: ${number}` : undefined}
+      title={tooltip ? `WhatsApp: ${rawNumber}` : undefined}
       onClick={handleClick}
       className={`inline-flex items-center justify-center rounded-full bg-[#25D366]/10 hover:bg-[#25D366]/25 border border-[#25D366]/30 hover:border-[#25D366]/60 text-[#25D366] transition-all duration-200 hover:scale-110 flex-shrink-0 cursor-pointer ${sizeMap[size]} ${className}`}
     >
