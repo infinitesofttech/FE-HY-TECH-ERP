@@ -99,7 +99,7 @@ export const StatCard: React.FC<StatCardProps> = ({
 
       <div className="relative z-10 mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs min-h-[36px]">
         {subtitle && (
-          <span className="text-slate-500 dark:text-slate-400 font-medium truncate pr-2">
+          <span className="text-slate-500 dark:text-slate-400 font-medium text-[11px] leading-tight pr-2">
             {subtitle}
           </span>
         )}

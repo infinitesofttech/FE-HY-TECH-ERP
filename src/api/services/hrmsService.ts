@@ -19,6 +19,11 @@ let localLeaveBalances: Record<number, LeaveBalance> = { ...MOCK_LEAVE_BALANCES 
 let localHolidays: HolidayItem[] = [...MOCK_HOLIDAYS];
 
 export const hrmsService = {
+  // Get all leaves across employees (for Admin approval)
+  async getAllLeaves(): Promise<LeaveRecord[]> {
+    return localLeaves;
+  },
+
   // Get all annual holidays
   async getHolidays(): Promise<HolidayItem[]> {
     return localHolidays;

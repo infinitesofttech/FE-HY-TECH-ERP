@@ -55,7 +55,7 @@ const DOC_TYPES: DocumentType[] = [
 
 export default function ServiceCatalogPage() {
   const queryClient = useQueryClient();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [expandedServices, setExpandedServices] = useState<Record<number, boolean>>({ 3: true, 4: true });
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
 
@@ -112,6 +112,92 @@ export default function ServiceCatalogPage() {
     queryFn: () => baseServiceService.getServices(),
   });
 
+  const categoryCounts = React.useMemo(() => {
+    const counts: Record<string, number> = {
+      ALL: services.length,
+      GOVT_FORMS: 0,
+      CARD_SERVICES: 0,
+      NEW_SERVICES: 0,
+      OTHER_SERVICES: 0,
+      COMPUTER_COURSES: 0,
+      ADDITIONAL_SERVICES: 0,
+    };
+    services.forEach((s) => {
+      const cat = s.Category || 'GOVT_FORMS';
+      if (counts[cat] !== undefined) {
+        counts[cat]++;
+      } else {
+        counts[cat] = 1;
+      }
+    });
+    return counts;
+  }, [services]);
+
+  const categoryPills = React.useMemo(() => {
+    if (language === 'gu') {
+      return [
+        { key: 'ALL', label: `બધી સેવાઓ (${categoryCounts.ALL || 0})` },
+        { key: 'GOVT_FORMS', label: `મહેસૂલી & સરકારી યોજના (${categoryCounts.GOVT_FORMS || 0})` },
+        { key: 'CARD_SERVICES', label: `કાર્ડ સુધારા & KYC (${categoryCounts.CARD_SERVICES || 0})` },
+        { key: 'NEW_SERVICES', label: `નવા કાર્ડ & દાખલા (${categoryCounts.NEW_SERVICES || 0})` },
+        { key: 'OTHER_SERVICES', label: `કાનૂની & પ્રિન્ટિંગ (${categoryCounts.OTHER_SERVICES || 0})` },
+        { key: 'COMPUTER_COURSES', label: `કોમ્પ્યુટર કોર્સ (${categoryCounts.COMPUTER_COURSES || 0})` },
+        { key: 'ADDITIONAL_SERVICES', label: `ઓનલાઇન & બેંકિંગ (${categoryCounts.ADDITIONAL_SERVICES || 0})` },
+      ];
+    }
+    if (language === 'hi') {
+      return [
+        { key: 'ALL', label: `सभी सेवाएं (${categoryCounts.ALL || 0})` },
+        { key: 'GOVT_FORMS', label: `राजस्व एवं सरकारी योजनाएं (${categoryCounts.GOVT_FORMS || 0})` },
+        { key: 'CARD_SERVICES', label: `कार्ड सुधार एवं KYC (${categoryCounts.CARD_SERVICES || 0})` },
+        { key: 'NEW_SERVICES', label: `नए कार्ड एवं प्रमाण पत्र (${categoryCounts.NEW_SERVICES || 0})` },
+        { key: 'OTHER_SERVICES', label: `कानूनी एवं प्रिंटिंग (${categoryCounts.OTHER_SERVICES || 0})` },
+        { key: 'COMPUTER_COURSES', label: `कंप्यूटर कोर्स (${categoryCounts.COMPUTER_COURSES || 0})` },
+        { key: 'ADDITIONAL_SERVICES', label: `ऑनलाइन एवं बैंकिंग (${categoryCounts.ADDITIONAL_SERVICES || 0})` },
+      ];
+    }
+    return [
+      { key: 'ALL', label: `All Services (${categoryCounts.ALL || 0})` },
+      { key: 'GOVT_FORMS', label: `Revenue & Govt Schemes (${categoryCounts.GOVT_FORMS || 0})` },
+      { key: 'CARD_SERVICES', label: `Card Updates & KYC (${categoryCounts.CARD_SERVICES || 0})` },
+      { key: 'NEW_SERVICES', label: `New Cards & Certificates (${categoryCounts.NEW_SERVICES || 0})` },
+      { key: 'OTHER_SERVICES', label: `Legal & Printing (${categoryCounts.OTHER_SERVICES || 0})` },
+      { key: 'COMPUTER_COURSES', label: `Computer Courses (${categoryCounts.COMPUTER_COURSES || 0})` },
+      { key: 'ADDITIONAL_SERVICES', label: `Online & Banking (${categoryCounts.ADDITIONAL_SERVICES || 0})` },
+    ];
+  }, [language, categoryCounts]);
+
+  const getCategoryBadgeLabel = (cat?: string) => {
+    if (!cat) return language === 'gu' ? 'સરકારી યોજના' : 'Govt Schemes';
+    const mapGu: Record<string, string> = {
+      GOVT_FORMS: 'મહેસૂલી & સરકારી યોજના',
+      CARD_SERVICES: 'કાર્ડ સુધારા & KYC',
+      NEW_SERVICES: 'નવા કાર્ડ & દાખલા',
+      OTHER_SERVICES: 'કાનૂની & પ્રિન્ટિંગ',
+      COMPUTER_COURSES: 'કોમ્પ્યુટર કોર્સ',
+      ADDITIONAL_SERVICES: 'ઓનલાઇન & બેંકિંગ',
+    };
+    const mapEn: Record<string, string> = {
+      GOVT_FORMS: 'Govt Schemes',
+      CARD_SERVICES: 'Card Updates',
+      NEW_SERVICES: 'New Cards',
+      OTHER_SERVICES: 'Legal & Print',
+      COMPUTER_COURSES: 'Courses',
+      ADDITIONAL_SERVICES: 'Online Services',
+    };
+    const mapHi: Record<string, string> = {
+      GOVT_FORMS: 'सरकारी योजना',
+      CARD_SERVICES: 'कार्ड सुधार',
+      NEW_SERVICES: 'नए कार्ड',
+      OTHER_SERVICES: 'कानूनी सेवाएं',
+      COMPUTER_COURSES: 'कंप्यूटर कोर्स',
+      ADDITIONAL_SERVICES: 'ऑनलाइन सेवाएं',
+    };
+    if (language === 'gu') return mapGu[cat] || cat;
+    if (language === 'hi') return mapHi[cat] || cat;
+    return mapEn[cat] || cat;
+  };
+
   const updateServiceMutation = useMutation({
     mutationFn: () => {
       if (!editingService) throw new Error('No service selected');
@@ -142,7 +228,8 @@ export default function ServiceCatalogPage() {
   };
 
   const filteredServices = services.filter((s) => {
-    const matchesCat = selectedCategory === 'ALL' || s.Category === selectedCategory;
+    const cat = s.Category || 'GOVT_FORMS';
+    const matchesCat = selectedCategory === 'ALL' || cat === selectedCategory;
     const q = searchQuery.toLowerCase();
     const matchesSearch =
       !q ||
@@ -151,6 +238,86 @@ export default function ServiceCatalogPage() {
       (s.Description && s.Description.toLowerCase().includes(q));
     return matchesCat && matchesSearch;
   });
+
+  const getCategoryTitle = (catKey: string) => {
+    if (language === 'gu') {
+      const map: Record<string, string> = {
+        ALL: 'બધી સેવાઓ',
+        GOVT_FORMS: 'મહેસૂલી & સરકારી યોજના',
+        CARD_SERVICES: 'કાર્ડ સુધારા & KYC',
+        NEW_SERVICES: 'નવા કાર્ડ & દાખલા',
+        OTHER_SERVICES: 'કાનૂની & પ્રિન્ટિંગ',
+        COMPUTER_COURSES: 'કોમ્પ્યુટર કોર્સ',
+        ADDITIONAL_SERVICES: 'ઓનલાઇન & બેંકિંગ',
+      };
+      return map[catKey] || catKey;
+    }
+    if (language === 'hi') {
+      const map: Record<string, string> = {
+        ALL: 'सभी सेवाएं',
+        GOVT_FORMS: 'राजस्व एवं सरकारी योजनाएं',
+        CARD_SERVICES: 'कार्ड सुधार एवं KYC',
+        NEW_SERVICES: 'नए कार्ड एवं प्रमाण पत्र',
+        OTHER_SERVICES: 'कानूनी एवं प्रिंटिंग',
+        COMPUTER_COURSES: 'कंप्यूटर कोर्स',
+        ADDITIONAL_SERVICES: 'ऑनलाइन एवं बैंकिंग',
+      };
+      return map[catKey] || catKey;
+    }
+    const map: Record<string, string> = {
+      ALL: 'All Services',
+      GOVT_FORMS: 'Revenue & Govt Schemes',
+      CARD_SERVICES: 'Card Updates & KYC',
+      NEW_SERVICES: 'New Cards & Certificates',
+      OTHER_SERVICES: 'Legal & Printing',
+      COMPUTER_COURSES: 'Computer Courses',
+      ADDITIONAL_SERVICES: 'Online & Banking',
+    };
+    return map[catKey] || catKey;
+  };
+
+  const groupedCategories = React.useMemo(() => {
+    const categoryKeys = [
+      'GOVT_FORMS',
+      'CARD_SERVICES',
+      'NEW_SERVICES',
+      'OTHER_SERVICES',
+      'COMPUTER_COURSES',
+      'ADDITIONAL_SERVICES',
+    ];
+
+    if (selectedCategory !== 'ALL') {
+      const items = filteredServices.filter(
+        (s) => (s.Category || 'GOVT_FORMS') === selectedCategory
+      );
+      return [{ key: selectedCategory, title: getCategoryTitle(selectedCategory), items }];
+    }
+
+    const groups: { key: string; title: string; items: BaseService[] }[] = [];
+    categoryKeys.forEach((key) => {
+      const items = filteredServices.filter((s) => (s.Category || 'GOVT_FORMS') === key);
+      if (items.length > 0) {
+        groups.push({
+          key,
+          title: getCategoryTitle(key),
+          items,
+        });
+      }
+    });
+
+    const otherItems = filteredServices.filter(
+      (s) => !categoryKeys.includes(s.Category || 'GOVT_FORMS')
+    );
+    if (otherItems.length > 0) {
+      groups.push({
+        key: 'OTHER',
+        title: language === 'gu' ? 'અન્ય સેવાઓ' : 'Other Services',
+        items: otherItems,
+      });
+    }
+
+    return groups;
+  }, [filteredServices, selectedCategory, language]);
 
   const toggleExpand = (id: number) => {
     setExpandedServices((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -270,23 +437,23 @@ export default function ServiceCatalogPage() {
       {/* KPI Overview Row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard
-          title="Base Services"
+          title={language === 'gu' ? 'મુખ્ય સેવાઓ' : 'Base Services'}
           value={services.length}
-          subtitle="Primary portal categories"
+          subtitle={language === 'gu' ? 'મુખ્ય પોર્ટલ કેટેગરીઝ' : 'Primary portal categories'}
           icon={FolderTree}
           colorScheme="brand"
         />
         <StatCard
-          title="Sub-Service Operations"
+          title={language === 'gu' ? 'પેટા-સેવા કામગીરી' : 'Sub-Service Operations'}
           value={totalSubServices}
-          subtitle="Configured operations"
+          subtitle={language === 'gu' ? 'રૂપરેખાંકિત કામગીરી' : 'Configured operations'}
           icon={Layers}
           colorScheme="emerald"
         />
         <StatCard
-          title="Checklist Document Rules"
+          title={language === 'gu' ? 'ચેકલિસ્ટ દસ્તાવેજ નિયમો' : 'Checklist Document Rules'}
           value={totalRequiredDocs}
-          subtitle="Active requirement rules"
+          subtitle={language === 'gu' ? 'સક્રિય જરૂરિયાત નિયમો' : 'Active requirement rules'}
           icon={FileCheck2}
           colorScheme="purple"
         />
@@ -295,19 +462,11 @@ export default function ServiceCatalogPage() {
       {/* Category Pills & Search Filter */}
       <div className="space-y-3">
         <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-          {[
-            { key: 'ALL', label: 'બધી સેવાઓ / All (45)' },
-            { key: 'GOVT_FORMS', label: 'મહેસૂલી & સરકારી યોજના (15)' },
-            { key: 'CARD_SERVICES', label: 'કાર્ડ સુધારા & KYC (7)' },
-            { key: 'NEW_SERVICES', label: 'નવા કાર્ડ & દાખલા (6)' },
-            { key: 'OTHER_SERVICES', label: 'કાનૂની & પ્રિન્ટિંગ (7)' },
-            { key: 'COMPUTER_COURSES', label: 'કોમ્પ્યુટર કોર્સ (6)' },
-            { key: 'ADDITIONAL_SERVICES', label: 'ઓનલાઇન & બેંકિંગ (4)' },
-          ].map((cat) => (
+          {categoryPills.map((cat) => (
             <button
               key={cat.key}
               onClick={() => setSelectedCategory(cat.key)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                 selectedCategory === cat.key
                   ? 'bg-brand-600 text-white shadow-xs'
                   : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
@@ -326,7 +485,13 @@ export default function ServiceCatalogPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search service by English name, Gujarati name (દા.ત. 7/12, આવક, કિસાન), or description..."
+              placeholder={
+                language === 'gu'
+                  ? 'સેવાનું નામ, યોજના (દા.ત. 7/12, આવક, કિસાન) અથવા વિગત શોધો...'
+                  : language === 'hi'
+                  ? 'सेवा का नाम, योजना या विवरण खोजें...'
+                  : 'Search service by name, government scheme, or keywords...'
+              }
               className="w-full pl-10 pr-4 py-2.5 text-xs rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-xs"
             />
           </div>
@@ -367,160 +532,188 @@ export default function ServiceCatalogPage() {
       {/* 1. BOX / GRID VIEW */}
       {/* ========================================================================= */}
       {viewMode === 'grid' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in">
-          {filteredServices.map((service) => {
-            const isExpanded = !!expandedServices[service.id];
-            const subCount = (service.SubServices || []).length;
-            const reqDocCount = (service.SubServices || []).reduce(
-              (sum, sub) => sum + (sub.RequiredDocuments || []).length,
-              0
-            );
-
-            return (
-              <Card
-                key={service.id}
-                variant="elevated"
-                className="group flex flex-col justify-between overflow-hidden border border-slate-200/80 dark:border-slate-800 hover:border-brand-500/50 hover:shadow-lg transition-all duration-300 rounded-2xl bg-white dark:bg-slate-900"
-              >
-                <div className="p-5 space-y-3.5">
-                  {/* Category & Status */}
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
-                      {service.Category || 'GOVT_FORMS'}
-                    </span>
-                    <Badge variant={service.IsActive ? 'success' : 'default'}>
-                      {service.IsActive ? 'Active' : 'Disabled'}
-                    </Badge>
+        <div className="space-y-8 animate-fade-in">
+          {groupedCategories.length === 0 ? (
+            <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
+              <FolderTree className="w-10 h-10 mx-auto text-slate-400 mb-2" />
+              <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                {language === 'gu' ? 'કોઈ સેવા મળી નથી' : 'No services found matching criteria'}
+              </p>
+            </div>
+          ) : (
+            groupedCategories.map((group) => (
+              <div key={group.key} className="space-y-4 pt-2">
+                {/* Category Section Header */}
+                <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 shadow-xs">
+                  <div className="flex items-center gap-3">
+                    <span className="w-2.5 h-2.5 rounded-full bg-brand-500 ring-4 ring-brand-500/20"></span>
+                    <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
+                      {group.title} <span className="text-brand-600 dark:text-brand-400 font-extrabold">({group.items.length})</span>
+                    </h2>
                   </div>
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
+                    {language === 'gu'
+                      ? `${group.items.length} સેવાઓ`
+                      : language === 'hi'
+                      ? `${group.items.length} सेवाएं`
+                      : `${group.items.length} Services`}
+                  </span>
+                </div>
 
-                  {/* Title */}
-                  <div>
-                    <h3 className="font-black text-base text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-                      {service.ServiceName}
-                    </h3>
-                    {service.ServiceNameGu && (
-                      <p className="text-xs font-bold text-brand-600 dark:text-brand-400 mt-0.5">
-                        {service.ServiceNameGu}
-                      </p>
-                    )}
-                  </div>
+                {/* Grid for this category */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {group.items.map((service) => {
+                    const isExpanded = !!expandedServices[service.id];
+                    const subCount = (service.SubServices || []).length;
+                    const reqDocCount = (service.SubServices || []).reduce(
+                      (sum, sub) => sum + (sub.RequiredDocuments || []).length,
+                      0
+                    );
 
-                  {/* Description */}
-                  {service.Description && (
-                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
-                      {service.Description}
-                    </p>
-                  )}
-
-                  {/* Fee & SLA Info Box */}
-                  <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 text-center font-mono">
-                    <div>
-                      <span className="text-[10px] text-slate-400 block font-sans">Govt Fee</span>
-                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                        ₹{service.GovernmentFee ?? 0}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-slate-400 block font-sans">Desk Fee</span>
-                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                        ₹{service.ServiceCharge ?? 50}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-slate-400 block font-sans">SLA</span>
-                      <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
-                        {service.SlaDays || 3}d
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Sub-services & Checklist Counts */}
-                  <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
-                    <span className="flex items-center gap-1.5 font-medium">
-                      <Layers className="w-3.5 h-3.5 text-brand-500" />
-                      {subCount} Sub-services
-                    </span>
-                    <span className="flex items-center gap-1.5 font-medium">
-                      <FileCheck2 className="w-3.5 h-3.5 text-purple-500" />
-                      {reqDocCount} Rules
-                    </span>
-                  </div>
-
-                  {/* Expanded Sub-services Drawer inside card */}
-                  {isExpanded && (
-                    <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2 animate-fade-in">
-                      <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-                        Sub-Service Operations:
-                      </h4>
-                      {(service.SubServices || []).length === 0 ? (
-                        <p className="text-xs text-slate-400 italic">No sub-services attached</p>
-                      ) : (
-                        (service.SubServices || []).map((sub) => (
-                          <div
-                            key={sub.id}
-                            className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs"
-                          >
-                            <span className="font-bold text-slate-900 dark:text-slate-100 truncate mr-2">
-                              {sub.SubServiceName}
+                    return (
+                      <Card
+                        key={service.id}
+                        variant="elevated"
+                        className="group flex flex-col justify-between overflow-hidden border border-slate-200/80 dark:border-slate-800 hover:border-brand-500/50 hover:shadow-lg transition-all duration-300 rounded-2xl bg-white dark:bg-slate-900"
+                      >
+                        <div className="p-5 space-y-3.5">
+                          {/* Category & Status */}
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
+                              {getCategoryBadgeLabel(service.Category)}
                             </span>
-                            <span className="text-[10px] text-slate-400 font-mono flex-shrink-0">
-                              {(sub.RequiredDocuments || []).length} Docs
+                            <Badge variant={service.IsActive ? 'success' : 'default'}>
+                              {service.IsActive ? (language === 'gu' ? 'સક્રિય' : 'Active') : (language === 'gu' ? 'નિષ્ક્રિય' : 'Disabled')}
+                            </Badge>
+                          </div>
+
+                          {/* Title */}
+                          <div>
+                            <h3 className="font-black text-base text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                              {language === 'gu' && service.ServiceNameGu ? service.ServiceNameGu : service.ServiceName}
+                            </h3>
+                          </div>
+
+                          {/* Description */}
+                          {service.Description && (
+                            <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                              {service.Description}
+                            </p>
+                          )}
+
+                          {/* Fee & SLA Info Box */}
+                          <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 text-center font-mono">
+                            <div>
+                              <span className="text-[10px] text-slate-400 block font-sans">Govt Fee</span>
+                              <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                ₹{service.GovernmentFee ?? 0}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-slate-400 block font-sans">Desk Fee</span>
+                              <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                ₹{service.ServiceCharge ?? 50}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-slate-400 block font-sans">SLA</span>
+                              <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
+                                {service.SlaDays || 3}d
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Sub-services & Checklist Counts */}
+                          <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
+                            <span className="flex items-center gap-1.5 font-medium">
+                              <Layers className="w-3.5 h-3.5 text-brand-500" />
+                              {subCount} Sub-services
+                            </span>
+                            <span className="flex items-center gap-1.5 font-medium">
+                              <FileCheck2 className="w-3.5 h-3.5 text-purple-500" />
+                              {reqDocCount} Rules
                             </span>
                           </div>
-                        ))
-                      )}
-                    </div>
-                  )}
-                </div>
 
-                {/* Card Actions Footer */}
-                <div className="p-3 bg-slate-50/75 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-1.5">
-                  <button
-                    onClick={() => toggleExpand(service.id)}
-                    className="flex items-center gap-1 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 px-2 py-1 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors"
-                  >
-                    {isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-                    <span>{isExpanded ? 'Hide' : 'Details'}</span>
-                  </button>
+                          {/* Expanded Sub-services Drawer inside card */}
+                          {isExpanded && (
+                            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2 animate-fade-in">
+                              <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                                Sub-Service Operations:
+                              </h4>
+                              {(service.SubServices || []).length === 0 ? (
+                                <p className="text-xs text-slate-400 italic">No sub-services attached</p>
+                              ) : (
+                                (service.SubServices || []).map((sub) => (
+                                  <div
+                                    key={sub.id}
+                                    className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs"
+                                  >
+                                    <span className="font-bold text-slate-900 dark:text-slate-100 truncate mr-2">
+                                      {sub.SubServiceName}
+                                    </span>
+                                    <span className="text-[10px] text-slate-400 font-mono flex-shrink-0">
+                                      {(sub.RequiredDocuments || []).length} Docs
+                                    </span>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          )}
+                        </div>
 
-                  <div className="flex items-center gap-1">
-                    <Button
-                      onClick={() => openBuilder(service)}
-                      variant="outline"
-                      size="xs"
-                      leftIcon={<Edit2 className="w-3 h-3" />}
-                    >
-                      Rules
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        setSelectedServiceId(service.id);
-                        setIsSubServiceModalOpen(true);
-                      }}
-                      variant="glass"
-                      size="xs"
-                      leftIcon={<Plus className="w-3 h-3" />}
-                    >
-                      + Sub
-                    </Button>
-                    <button
-                      onClick={() =>
-                        setDeleteTarget({
-                          type: 'service',
-                          id: service.id,
-                          title: `Base Service: ${service.ServiceName}`,
-                        })
-                      }
-                      className="p-1.5 text-slate-400 hover:text-rose-500 rounded-lg transition-colors"
-                      title="Delete Service"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                        {/* Card Actions Footer */}
+                        <div className="p-3 bg-slate-50/75 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-1.5">
+                          <button
+                            onClick={() => toggleExpand(service.id)}
+                            className="flex items-center gap-1 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 px-2 py-1 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer"
+                          >
+                            {isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                            <span>{isExpanded ? 'Hide' : 'Details'}</span>
+                          </button>
+
+                          <div className="flex items-center gap-1">
+                            <Button
+                              onClick={() => openBuilder(service)}
+                              variant="outline"
+                              size="xs"
+                              leftIcon={<Edit2 className="w-3 h-3" />}
+                            >
+                              Rules
+                            </Button>
+                            <Button
+                              onClick={() => {
+                                setSelectedServiceId(service.id);
+                                setIsSubServiceModalOpen(true);
+                              }}
+                              variant="glass"
+                              size="xs"
+                              leftIcon={<Plus className="w-3 h-3" />}
+                            >
+                              + Sub
+                            </Button>
+                            <button
+                              onClick={() =>
+                                setDeleteTarget({
+                                  type: 'service',
+                                  id: service.id,
+                                  title: `Base Service: ${service.ServiceName}`,
+                                })
+                              }
+                              className="p-1.5 text-slate-400 hover:text-rose-500 rounded-lg transition-colors cursor-pointer"
+                              title="Delete Service"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      </Card>
+                    );
+                  })}
                 </div>
-              </Card>
-            );
-          })}
+              </div>
+            ))
+          )}
         </div>
       )}
 
@@ -528,193 +721,221 @@ export default function ServiceCatalogPage() {
       {/* 2. LIST / ACCORDION VIEW */}
       {/* ========================================================================= */}
       {viewMode === 'list' && (
-        <div className="space-y-4 animate-fade-in">
-          {filteredServices.map((service) => {
-            const isExpanded = !!expandedServices[service.id];
-
-            return (
-              <Card
-                key={service.id}
-                variant="elevated"
-                className="overflow-hidden"
-              >
-                {/* Service Header Row */}
-                <div
-                  onClick={() => toggleExpand(service.id)}
-                  className="flex flex-col lg:flex-row lg:items-center justify-between p-5 bg-slate-50/75 dark:bg-slate-800/40 hover:bg-slate-100/70 dark:hover:bg-slate-800/70 cursor-pointer transition-colors border-b border-slate-100 dark:border-slate-800/60 gap-3"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="p-1 rounded-lg text-slate-400 mt-1">
-                      {isExpanded ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-black text-base text-slate-900 dark:text-white">
-                          {service.ServiceName}
-                        </h3>
-                        {service.ServiceNameGu && (
-                          <span className="text-xs font-bold text-brand-600 dark:text-brand-400">
-                            ({service.ServiceNameGu})
-                          </span>
-                        )}
-                        <Badge variant={service.IsActive ? 'success' : 'default'}>
-                          {service.IsActive ? 'Active' : 'Disabled'}
-                        </Badge>
-                        {service.Category && (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
-                            {service.Category}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mt-1 font-mono">
-                        <span>Govt Fee: ₹{service.GovernmentFee ?? 0}</span>
-                        <span>&bull;</span>
-                        <span>Service Charge: ₹{service.ServiceCharge ?? 50}</span>
-                        <span>&bull;</span>
-                        <span className="text-amber-600 dark:text-amber-400 font-bold">
-                          {service.SlaDays || 3} Days SLA
-                        </span>
-                      </div>
-
-                      {service.Description && (
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                          {service.Description}
-                        </p>
-                      )}
-                    </div>
+        <div className="space-y-8 animate-fade-in">
+          {groupedCategories.length === 0 ? (
+            <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
+              <FolderTree className="w-10 h-10 mx-auto text-slate-400 mb-2" />
+              <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                {language === 'gu' ? 'કોઈ સેવા મળી નથી' : 'No services found matching criteria'}
+              </p>
+            </div>
+          ) : (
+            groupedCategories.map((group) => (
+              <div key={group.key} className="space-y-4 pt-2">
+                {/* Category Section Header */}
+                <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 shadow-xs">
+                  <div className="flex items-center gap-3">
+                    <span className="w-2.5 h-2.5 rounded-full bg-brand-500 ring-4 ring-brand-500/20"></span>
+                    <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
+                      {group.title} <span className="text-brand-600 dark:text-brand-400 font-extrabold">({group.items.length})</span>
+                    </h2>
                   </div>
-
-                  <div className="flex items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
-                    <Button
-                      onClick={() => openBuilder(service)}
-                      variant="outline"
-                      size="xs"
-                      leftIcon={<Edit2 className="w-3 h-3" />}
-                    >
-                      Rules &amp; Fees
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        setSelectedServiceId(service.id);
-                        setIsSubServiceModalOpen(true);
-                      }}
-                      variant="glass"
-                      size="xs"
-                      leftIcon={<Plus className="w-3.5 h-3.5" />}
-                    >
-                      Add Sub-service
-                    </Button>
-                    <button
-                      onClick={() =>
-                        setDeleteTarget({
-                          type: 'service',
-                          id: service.id,
-                          title: `Base Service: ${service.ServiceName}`,
-                        })
-                      }
-                      className="p-2 text-slate-400 hover:text-rose-500 rounded-xl transition-colors"
-                      title="Delete Service"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
+                    {language === 'gu'
+                      ? `${group.items.length} સેવાઓ`
+                      : language === 'hi'
+                      ? `${group.items.length} सेवाएं`
+                      : `${group.items.length} Services`}
+                  </span>
                 </div>
 
-                {/* Sub-services Body */}
-                {isExpanded && (
-                  <div className="p-5 space-y-4 bg-white dark:bg-slate-900 animate-fade-in">
-                    {(service.SubServices || []).map((sub) => (
-                      <div
-                        key={sub.id}
-                        className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 space-y-3"
+                {/* List of cards for this category */}
+                <div className="space-y-4">
+                  {group.items.map((service) => {
+                    const isExpanded = !!expandedServices[service.id];
+
+                    return (
+                      <Card
+                        key={service.id}
+                        variant="elevated"
+                        className="overflow-hidden"
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Layers className="w-4 h-4 text-brand-500" />
-                            <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">
-                              {sub.SubServiceName}
-                            </h4>
+                        {/* Service Header Row */}
+                        <div
+                          onClick={() => toggleExpand(service.id)}
+                          className="flex flex-col lg:flex-row lg:items-center justify-between p-5 bg-slate-50/75 dark:bg-slate-800/40 hover:bg-slate-100/70 dark:hover:bg-slate-800/70 cursor-pointer transition-colors border-b border-slate-100 dark:border-slate-800/60 gap-3"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="p-1 rounded-lg text-slate-400 mt-1">
+                              {isExpanded ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h3 className="font-black text-base text-slate-900 dark:text-white">
+                                  {language === 'gu' && service.ServiceNameGu ? service.ServiceNameGu : service.ServiceName}
+                                </h3>
+                                <Badge variant={service.IsActive ? 'success' : 'default'}>
+                                  {service.IsActive ? (language === 'gu' ? 'સક્રિય' : 'Active') : (language === 'gu' ? 'નિષ્ક્રિય' : 'Disabled')}
+                                </Badge>
+                                {service.Category && (
+                                  <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                                    {getCategoryBadgeLabel(service.Category)}
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mt-1 font-mono">
+                                <span>Govt Fee: ₹{service.GovernmentFee ?? 0}</span>
+                                <span>&bull;</span>
+                                <span>Service Charge: ₹{service.ServiceCharge ?? 50}</span>
+                                <span>&bull;</span>
+                                <span className="text-amber-600 dark:text-amber-400 font-bold">
+                                  {service.SlaDays || 3} Days SLA
+                                </span>
+                              </div>
+
+                              {service.Description && (
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                  {service.Description}
+                                </p>
+                              )}
+                            </div>
                           </div>
 
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
                             <Button
-                              onClick={() => {
-                                setSelectedSubServiceId(sub.id);
-                                setIsDocModalOpen(true);
-                              }}
+                              onClick={() => openBuilder(service)}
                               variant="outline"
                               size="xs"
-                              leftIcon={<Plus className="w-3 h-3" />}
+                              leftIcon={<Edit2 className="w-3 h-3" />}
                             >
-                              Add Required Doc
+                              Rules &amp; Fees
+                            </Button>
+                            <Button
+                              onClick={() => {
+                                setSelectedServiceId(service.id);
+                                setIsSubServiceModalOpen(true);
+                              }}
+                              variant="glass"
+                              size="xs"
+                              leftIcon={<Plus className="w-3.5 h-3.5" />}
+                            >
+                              Add Sub-service
                             </Button>
                             <button
                               onClick={() =>
                                 setDeleteTarget({
-                                  type: 'subservice',
-                                  id: sub.id,
-                                  title: `Sub-service: ${sub.SubServiceName}`,
+                                  type: 'service',
+                                  id: service.id,
+                                  title: `Base Service: ${service.ServiceName}`,
                                 })
                               }
-                              className="p-1 text-slate-400 hover:text-rose-500 transition-colors"
-                              title="Delete Sub-service"
+                              className="p-2 text-slate-400 hover:text-rose-500 rounded-xl transition-colors cursor-pointer"
+                              title="Delete Service"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
                         </div>
 
-                        {/* Checklist Documents */}
-                        <div className="space-y-1.5 pl-6">
-                          {(sub.RequiredDocuments || []).map((doc) => (
-                            <div
-                              key={doc.id}
-                              className="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-xs"
-                            >
-                              <div className="flex items-center gap-2">
-                                <FileCheck2 className="w-3.5 h-3.5 text-emerald-500" />
-                                <span className="font-medium text-slate-800 dark:text-slate-200">
-                                  {doc.DocumentName}
-                                </span>
-                                <Badge variant="purple">{doc.document_type}</Badge>
-                              </div>
-
-                              <button
-                                onClick={() =>
-                                  setDeleteTarget({
-                                    type: 'doc',
-                                    id: doc.id,
-                                    title: `Required Document: ${doc.DocumentName}`,
-                                  })
-                                }
-                                className="p-1 text-slate-400 hover:text-rose-500 transition-colors"
-                                title="Delete Requirement"
+                        {/* Sub-services Body */}
+                        {isExpanded && (
+                          <div className="p-5 space-y-4 bg-white dark:bg-slate-900 animate-fade-in">
+                            {(service.SubServices || []).map((sub) => (
+                              <div
+                                key={sub.id}
+                                className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 space-y-3"
                               >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          ))}
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <Layers className="w-4 h-4 text-brand-500" />
+                                    <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">
+                                      {sub.SubServiceName}
+                                    </h4>
+                                  </div>
 
-                          {(!sub.RequiredDocuments || sub.RequiredDocuments.length === 0) && (
-                            <p className="text-[11px] text-slate-400 italic py-1">
-                              No mandatory documents attached yet. Click &apos;Add Required Doc&apos; to configure checklist triggers.
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                                  <div className="flex items-center gap-2">
+                                    <Button
+                                      onClick={() => {
+                                        setSelectedSubServiceId(sub.id);
+                                        setIsDocModalOpen(true);
+                                      }}
+                                      variant="outline"
+                                      size="xs"
+                                      leftIcon={<Plus className="w-3 h-3" />}
+                                    >
+                                      Add Required Doc
+                                    </Button>
+                                    <button
+                                      onClick={() =>
+                                        setDeleteTarget({
+                                          type: 'subservice',
+                                          id: sub.id,
+                                          title: `Sub-service: ${sub.SubServiceName}`,
+                                        })
+                                      }
+                                      className="p-1 text-slate-400 hover:text-rose-500 transition-colors cursor-pointer"
+                                      title="Delete Sub-service"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                </div>
 
-                    {(!service.SubServices || service.SubServices.length === 0) && (
-                      <p className="text-xs text-slate-400 text-center py-4">
-                        No sub-services configured for {service.ServiceName}. Click &apos;Add Sub-service&apos; above.
-                      </p>
-                    )}
-                  </div>
-                )}
-              </Card>
-            );
-          })}
+                                {/* Checklist Documents */}
+                                <div className="space-y-1.5 pl-6">
+                                  {(sub.RequiredDocuments || []).map((doc) => (
+                                    <div
+                                      key={doc.id}
+                                      className="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-xs"
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <FileCheck2 className="w-3.5 h-3.5 text-emerald-500" />
+                                        <span className="font-medium text-slate-800 dark:text-slate-200">
+                                          {doc.DocumentName}
+                                        </span>
+                                        <Badge variant="purple">{doc.document_type}</Badge>
+                                      </div>
+
+                                      <button
+                                        onClick={() =>
+                                          setDeleteTarget({
+                                            type: 'doc',
+                                            id: doc.id,
+                                            title: `Required Document: ${doc.DocumentName}`,
+                                          })
+                                        }
+                                        className="p-1 text-slate-400 hover:text-rose-500 transition-colors cursor-pointer"
+                                        title="Delete Requirement"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                  ))}
+
+                                  {(!sub.RequiredDocuments || sub.RequiredDocuments.length === 0) && (
+                                    <p className="text-[11px] text-slate-400 italic py-1">
+                                      No mandatory documents attached yet. Click &apos;Add Required Doc&apos; to configure checklist triggers.
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+
+                            {(!service.SubServices || service.SubServices.length === 0) && (
+                              <p className="text-xs text-slate-400 text-center py-4">
+                                No sub-services configured for {service.ServiceName}. Click &apos;Add Sub-service&apos; above.
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            ))
+          )}
         </div>
       )}
 
@@ -900,11 +1121,11 @@ export default function ServiceCatalogPage() {
               onChange={(e) => setBuilderForm({ ...builderForm, ServiceName: e.target.value })}
             />
             <Input
-              label="સત્તાવાર સેવાનું નામ (ગુજરાતી) *"
+              label={language === 'gu' ? 'સત્તાવાર સેવાનું નામ (ગુજરાતી) *' : 'Official Service Name (Gujarati) *'}
               required
               value={builderForm.ServiceNameGu || ''}
               onChange={(e) => setBuilderForm({ ...builderForm, ServiceNameGu: e.target.value })}
-              placeholder="દા.ત. આવકનો દાખલો, 7/12 ઉતારો"
+              placeholder={language === 'gu' ? 'દા.ત. આવકનો દાખલો, 7/12 ઉતારો' : 'e.g. Income Certificate, 7/12'}
             />
           </div>
 
@@ -914,12 +1135,12 @@ export default function ServiceCatalogPage() {
               value={builderForm.Category || 'GOVT_FORMS'}
               onChange={(e) => setBuilderForm({ ...builderForm, Category: e.target.value as any })}
             >
-              <option value="GOVT_FORMS">GOVT_FORMS (સરકારી યોજના અને ફોર્મ્સ)</option>
-              <option value="CARD_SERVICES">CARD_SERVICES (કાર્ડ સુધારા અને KYC)</option>
-              <option value="NEW_SERVICES">NEW_SERVICES (નવા કાર્ડ અને દસ્તાવેજ)</option>
-              <option value="OTHER_SERVICES">OTHER_SERVICES (ડેસ્ક, પ્રિન્ટિંગ, ઝેરોક્ષ)</option>
-              <option value="COMPUTER_COURSES">COMPUTER_COURSES (કોમ્પ્યુટર કોર્સ)</option>
-              <option value="ADDITIONAL_SERVICES">ADDITIONAL_SERVICES (ઓનલાઇન સેવાઓ)</option>
+              <option value="GOVT_FORMS">{language === 'gu' ? 'મહેસૂલી & સરકારી યોજના' : 'Revenue & Govt Schemes'}</option>
+              <option value="CARD_SERVICES">{language === 'gu' ? 'કાર્ડ સુધારા & KYC' : 'Card Updates & KYC'}</option>
+              <option value="NEW_SERVICES">{language === 'gu' ? 'નવા કાર્ડ & દાખલા' : 'New Cards & Certificates'}</option>
+              <option value="OTHER_SERVICES">{language === 'gu' ? 'કાનૂની & પ્રિન્ટિંગ' : 'Legal & Printing'}</option>
+              <option value="COMPUTER_COURSES">{language === 'gu' ? 'કોમ્પ્યુટર કોર્સ' : 'Computer Courses'}</option>
+              <option value="ADDITIONAL_SERVICES">{language === 'gu' ? 'ઓનલાઇન & બેંકિંગ' : 'Online & Banking'}</option>
             </Select>
 
             <Input

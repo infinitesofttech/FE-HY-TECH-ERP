@@ -131,12 +131,8 @@ export default function EmployeesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-300 border border-brand-500/30 text-xs font-black tracking-wide mb-2">
-            <UserCog className="w-3.5 h-3.5" />
-            <span>HRMS &bull; OPERATOR CREDENTIALS &amp; DESKS</span>
-          </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-            {isGu ? 'કર્મચારી અને ઓપરેટર સંચાલન (HRMS)' : 'Employee & Operator Management (HRMS)'}
+            {isGu ? 'કર્મચારી સંચાલન (HRMS)' : 'Employee Management (HRMS)'}
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
             {isGu
@@ -146,14 +142,6 @@ export default function EmployeesPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
-          <Button
-            variant="outline"
-            onClick={() => router.push('/staff/hrms')}
-            leftIcon={<Calendar className="w-4 h-4 text-emerald-600" />}
-            className="border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
-          >
-            {isGu ? 'મારી હાજરી અને રજાઓ (My HRMS)' : 'My Attendance & Leaves'}
-          </Button>
           <Button
             onClick={() => setIsAddOpen(true)}
             leftIcon={<UserPlus className="w-4 h-4" />}

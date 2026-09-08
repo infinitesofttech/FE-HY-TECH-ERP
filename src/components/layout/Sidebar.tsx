@@ -18,6 +18,7 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   ShieldCheck,
   UserCheck,
   FileText,
@@ -36,11 +37,19 @@ interface SidebarProps {
   onCloseMobile?: () => void;
 }
 
-interface NavItem {
+interface NavSubItem {
   name: string;
   href: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  badge?: string;
+}
+
+interface NavItem {
+  name: string;
+  href?: string;
   icon: React.ComponentType<{ className?: string }>;
   badge?: string;
+  children?: NavSubItem[];
 }
 
 interface NavGroup {
@@ -58,13 +67,33 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { user, userRole, logout } = useAuth();
   const { t } = useLanguage();
 
+  const [openDropdowns, setOpenDropdowns] = React.useState<Record<string, boolean>>({
+    'Office Dashboard': true,
+    'ઓફિસ ડેશબોર્ડ': true,
+    'कार्यालय डैशबोर्ड': true,
+  });
+
+  const toggleDropdown = (key: string) => {
+    setOpenDropdowns((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
   const getAdminNavigation = (): NavGroup[] => [
     {
       group: t('group_administration'),
       items: [
         { name: t('nav_dashboard'), href: '/admin/dashboard', icon: LayoutDashboard },
-        { name: t('nav_office_dashboard'), href: '/admin/office-dashboard', icon: Building2 },
-        { name: t('nav_village_tree'), href: '/admin/family-tree', icon: Network, badge: 'Tree' },
+        {
+          name: t('nav_office_dashboard'),
+          href: '/admin/office-dashboard',
+          icon: Building2,
+          children: [
+            { name: t('nav_family'), href: '/admin/customers', icon: Users },
+            { name: t('nav_village'), href: '/admin/family-tree', icon: Network, badge: 'Tree' },
+          ],
+        },
         { name: t('nav_services'), href: '/admin/services', icon: FolderTree },
         { name: t('nav_account_finance'), href: '/admin/transactions', icon: Receipt },
         { name: t('nav_hrms'), href: '/admin/employees', icon: UserCog },
@@ -198,12 +227,137 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="space-y-1">
               {group.items.map((item) => {
                 const Icon = item.icon;
-                const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                const hasChildren = Boolean(item.children && item.children.length > 0);
+                const isChildActive = Boolean(hasChildren && item.children?.some(
+                  (child) => pathname === child.href || pathname.startsWith(`${child.href}/`)
+                ));
+                const isActive = !hasChildren && (pathname === item.href || (item.href ? pathname.startsWith(`${item.href}/`) : false));
+                const isOpen = openDropdowns[item.name] ?? (isChildActive || false);
+
+                if (hasChildren && item.children) {
+                  const isParentActive = Boolean(item.href && pathname === item.href);
+
+                  if (isCollapsed) {
+                    return (
+                      <Link
+                        key={item.name}
+                        href={item.href || item.children[0].href}
+                        onClick={onCloseMobile}
+                        title={item.name}
+                        className={`group relative flex items-center justify-center p-2.5 rounded-xl text-xs font-semibold transition-all duration-150 ${
+                          isParentActive || isChildActive
+                            ? 'bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 font-bold border border-brand-200/80 dark:border-brand-800/80 shadow-xs'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-slate-850/60 border border-transparent'
+                        }`}
+                      >
+                        <Icon
+                          className={`w-4 h-4 flex-shrink-0 transition-colors ${
+                            isParentActive || isChildActive
+                              ? 'text-brand-600 dark:text-brand-400'
+                              : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'
+                          }`}
+                        />
+                      </Link>
+                    );
+                  }
+
+                  return (
+                    <div key={item.name} className="space-y-1">
+                      <div
+                        className={`w-full group relative flex items-center justify-between rounded-xl text-xs font-semibold transition-all duration-150 ${
+                          isParentActive
+                            ? 'bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 font-bold border border-brand-200/80 dark:border-brand-800/80 shadow-xs'
+                            : isChildActive
+                            ? 'bg-slate-100/70 dark:bg-slate-850/70 text-slate-800 dark:text-slate-200 font-semibold border border-slate-200/60 dark:border-slate-800'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-slate-850/60 border border-transparent'
+                        }`}
+                      >
+                        <Link
+                          href={item.href || '#'}
+                          onClick={onCloseMobile}
+                          className="flex-1 flex items-center gap-2.5 px-3 py-2 min-w-0"
+                        >
+                          <Icon
+                            className={`w-4 h-4 flex-shrink-0 transition-colors ${
+                              isParentActive || isChildActive
+                                ? 'text-brand-600 dark:text-brand-400'
+                                : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'
+                            }`}
+                          />
+                          <span className="truncate">{item.name}</span>
+                        </Link>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            toggleDropdown(item.name);
+                          }}
+                          className="p-2 mr-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                          aria-label="Toggle submenu"
+                        >
+                          <ChevronDown
+                            className={`w-4 h-4 transition-transform duration-200 flex-shrink-0 ${
+                              isOpen ? 'rotate-180 text-brand-500' : ''
+                            }`}
+                          />
+                        </button>
+                      </div>
+
+                      {isOpen && (
+                        <div className="pl-4 ml-3.5 my-1 space-y-1 border-l-2 border-slate-200/80 dark:border-slate-800 transition-all">
+                          {item.children.map((subItem) => {
+                            const SubIcon = subItem.icon || FolderTree;
+                            const isSubActive =
+                              pathname === subItem.href || pathname.startsWith(`${subItem.href}/`);
+
+                            return (
+                              <Link
+                                key={subItem.href}
+                                href={subItem.href}
+                                onClick={onCloseMobile}
+                                className={`group flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                                  isSubActive
+                                    ? 'bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 font-bold border border-brand-200/80 dark:border-brand-800/80 shadow-xs'
+                                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-slate-850/60 border border-transparent'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <SubIcon
+                                    className={`w-3.5 h-3.5 flex-shrink-0 ${
+                                      isSubActive
+                                        ? 'text-brand-600 dark:text-brand-400'
+                                        : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'
+                                    }`}
+                                  />
+                                  <span className="truncate">{subItem.name}</span>
+                                </div>
+
+                                {subItem.badge && (
+                                  <span
+                                    className={`px-1.5 py-0.2 rounded-full text-[9px] font-bold transition-all flex-shrink-0 ${
+                                      isSubActive
+                                        ? 'bg-brand-600 text-white'
+                                        : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:bg-brand-500/15 group-hover:text-brand-600 dark:group-hover:text-brand-300'
+                                    }`}
+                                  >
+                                    {subItem.badge}
+                                  </span>
+                                )}
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
 
                 return (
                   <Link
-                    key={item.href}
-                    href={item.href}
+                    key={item.href || item.name}
+                    href={item.href || '#'}
                     onClick={onCloseMobile}
                     title={isCollapsed ? item.name : undefined}
                     className={`group relative flex items-center rounded-xl text-xs font-semibold transition-all duration-150 ${

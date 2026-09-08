@@ -41,11 +41,12 @@ import {
   ArrowUpRight,
   TrendingUp,
   TrendingDown,
+  History,
 } from 'lucide-react';
 
 export default function TransactionsPage() {
   const queryClient = useQueryClient();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [search, setSearch] = useState('');
   const [paymentFilter, setPaymentFilter] = useState('ALL');
   const [isBillingModalOpen, setIsBillingModalOpen] = useState(false);
@@ -65,16 +66,20 @@ export default function TransactionsPage() {
   const [remarks, setRemarks] = useState('Service processing payment');
 
   // Expense State
-  const [expenses, setExpenses] = useState<Array<{ id: number; title: string; category: string; amount: number; date: string; notes?: string }>>([
-    { id: 1, title: 'Portal Wallet Top-up', category: 'PORTAL_FEE', amount: 100, date: new Date().toISOString().split('T')[0], notes: 'Digital Gujarat portal wallet recharge' },
+  const [expenses, setExpenses] = useState<Array<{ id: number; title: string; category: string; amount: number; date: string; notes?: string; paymentMode?: string }>>([
+    { id: 1, title: 'Portal Wallet Top-up', category: 'PORTAL_FEE', amount: 50, date: new Date().toISOString().split('T')[0], notes: 'Digital Gujarat portal wallet recharge', paymentMode: 'ONLINE' },
+    { id: 2, title: 'Office Supplies & Refreshment', category: 'OFFICE_SUPPLIES', amount: 50, date: new Date().toISOString().split('T')[0], notes: 'Center daily operations', paymentMode: 'CASH' },
   ]);
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [expenseTitle, setExpenseTitle] = useState('');
   const [expenseCategory, setExpenseCategory] = useState('OFFICE_SUPPLIES');
+  const [expensePaymentMode, setExpensePaymentMode] = useState<'ONLINE' | 'CASH'>('ONLINE');
   const [expenseAmount, setExpenseAmount] = useState('');
   const [expenseNotes, setExpenseNotes] = useState('');
 
-  const [activeLedgerTab, setActiveLedgerTab] = useState<'income' | 'expenses'>('income');
+  const [activeLedgerTab, setActiveLedgerTab] = useState<'all' | 'income' | 'expenses'>('all');
+  const [allSearch, setAllSearch] = useState('');
+  const [allTypeFilter, setAllTypeFilter] = useState('ALL');
   const [expenseSearch, setExpenseSearch] = useState('');
 
   React.useEffect(() => {
@@ -126,6 +131,7 @@ export default function TransactionsPage() {
       amount: amt,
       date: new Date().toISOString().split('T')[0],
       notes: expenseNotes,
+      paymentMode: expensePaymentMode,
     };
     setExpenses([newExp, ...expenses]);
     toast.success('Expense recorded successfully!');
@@ -205,21 +211,115 @@ export default function TransactionsPage() {
     return matchesSearch && matchesFilter;
   });
 
+  const combinedHistory = useMemo(() => {
+    const list: Array<{
+      id: string;
+      originalId: number;
+      type: 'INCOME' | 'EXPENSE';
+      date: string;
+      token: string;
+      title: string;
+      subtitle?: string;
+      categoryOrService: string;
+      subCategory?: string;
+      paymentMode: string;
+      amount: number;
+      points?: number;
+      walletChange?: number;
+      originalTxn?: any;
+      originalExpense?: any;
+    }> = [];
+
+    transactions.forEach((txn: any) => {
+      list.push({
+        id: `txn-${txn.id}`,
+        originalId: txn.id,
+        type: 'INCOME',
+        date: txn.transaction_date || (txn.created_at ? txn.created_at.split('T')[0] : ''),
+        token: txn.transaction_no,
+        title: txn.customer_name,
+        subtitle: txn.family_id,
+        categoryOrService: txn.service_name,
+        subCategory: txn.sub_service_name,
+        paymentMode: txn.payment_mode || 'CASH',
+        amount: parseFloat(txn.bill_amount) || 0,
+        points: txn.points_earned,
+        walletChange: txn.net_wallet_change,
+        originalTxn: txn,
+      });
+    });
+
+    expenses.forEach((exp: any) => {
+      list.push({
+        id: `exp-${exp.id}`,
+        originalId: exp.id,
+        type: 'EXPENSE',
+        date: exp.date,
+        token: `EXP-${exp.id.toString().padStart(6, '0')}`,
+        title: exp.title,
+        subtitle: exp.notes,
+        categoryOrService: exp.category,
+        subCategory: undefined,
+        paymentMode: exp.paymentMode || 'ONLINE',
+        amount: exp.amount || 0,
+        points: undefined,
+        walletChange: undefined,
+        originalExpense: exp,
+      });
+    });
+
+    list.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return list;
+  }, [transactions, expenses]);
+
+  const filteredCombinedHistory = useMemo(() => {
+    return combinedHistory.filter((item) => {
+      const q = allSearch.toLowerCase();
+      const matchesSearch =
+        !q ||
+        item.token.toLowerCase().includes(q) ||
+        item.title.toLowerCase().includes(q) ||
+        (item.subtitle && item.subtitle.toLowerCase().includes(q)) ||
+        item.categoryOrService.toLowerCase().includes(q) ||
+        (item.subCategory && item.subCategory.toLowerCase().includes(q));
+
+      const matchesFilter =
+        allTypeFilter === 'ALL' ||
+        (allTypeFilter === 'INCOME' && item.type === 'INCOME') ||
+        (allTypeFilter === 'EXPENSE' && item.type === 'EXPENSE') ||
+        item.paymentMode === allTypeFilter;
+
+      return matchesSearch && matchesFilter;
+    });
+  }, [combinedHistory, allSearch, allTypeFilter]);
+
   const totalBilled = transactions.reduce((acc: number, t: any) => acc + (parseFloat(t.bill_amount) || 0), 0);
   const totalIncome = totalBilled;
   const totalExpenses = expenses.reduce((acc, exp) => acc + (exp.amount || 0), 0);
   const netProfitLoss = totalIncome - totalExpenses;
   const isProfitable = netProfitLoss >= 0;
 
+  const incomeOnline = transactions
+    .filter((t: any) => t.payment_mode === 'ONLINE/UPI' || t.payment_mode === 'ONLINE' || t.payment_mode === 'CARD' || t.payment_mode === 'UPI')
+    .reduce((acc: number, t: any) => acc + (parseFloat(t.bill_amount) || 0), 0);
+
+  const incomeCash = transactions
+    .filter((t: any) => !t.payment_mode || t.payment_mode === 'CASH')
+    .reduce((acc: number, t: any) => acc + (parseFloat(t.bill_amount) || 0), 0);
+
+  const expenseOnline = expenses
+    .filter((e: any) => e.paymentMode === 'ONLINE' || e.paymentMode === 'ONLINE/UPI' || e.category === 'PORTAL_FEE')
+    .reduce((acc: number, e: any) => acc + (e.amount || 0), 0);
+
+  const expenseCash = expenses
+    .filter((e: any) => e.paymentMode === 'CASH' || (!e.paymentMode && e.category !== 'PORTAL_FEE'))
+    .reduce((acc: number, e: any) => acc + (e.amount || 0), 0);
+
   return (
     <AppShell allowedRoles={['admin', 'employee']}>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 text-xs font-black tracking-wide mb-2">
-            <Coins className="w-3.5 h-3.5" />
-            <span>FINANCIAL LEDGER &amp; ACCOUNTS</span>
-          </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
             {t('transactions_title')}
           </h1>
@@ -231,9 +331,9 @@ export default function TransactionsPage() {
         <div className="flex flex-wrap items-center gap-2.5">
           <Button
             onClick={() => setIsExpenseModalOpen(true)}
-            variant="outline"
             size="sm"
-            leftIcon={<TrendingDown className="w-4 h-4 text-rose-500" />}
+            className="bg-rose-600 hover:bg-rose-500 active:bg-rose-700 text-white font-bold border-0 shadow-md shadow-rose-600/25"
+            leftIcon={<TrendingDown className="w-4 h-4 text-white" />}
           >
             + Add Expense
           </Button>
@@ -243,7 +343,7 @@ export default function TransactionsPage() {
             size="sm"
             leftIcon={<Plus className="w-4 h-4" />}
           >
-            {t('record_transaction')}
+            {language === 'gu' ? 'ઇનવોઇસ ઉમેરો' : 'Add Invoice'}
           </Button>
         </div>
       </div>
@@ -251,24 +351,37 @@ export default function TransactionsPage() {
       {/* Summary Highlights Row: Profit & Loss, Income, Expenses */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard
-          title={isProfitable ? 'Profit (ચોખ્ખો નફો)' : 'Loss (ખોટ)'}
+          title={language === 'gu' ? (isProfitable ? 'ચોખ્ખો નફો' : 'ખોટ') : (isProfitable ? 'Profit' : 'Loss')}
           value={`${isProfitable ? '₹+' : '₹-'}${Math.abs(netProfitLoss).toFixed(2)}`}
-          subtitle={isProfitable ? 'Net operating surplus' : 'Net operating deficit'}
+          subtitle={
+            language === 'gu'
+              ? `ઓનલાઇન = ₹${(incomeOnline - expenseOnline).toFixed(0)} અને કેશ = ₹${(incomeCash - expenseCash).toFixed(0)}`
+              : `online payment = ${(incomeOnline - expenseOnline).toFixed(0)} and Cash Payment = ${(incomeCash - expenseCash).toFixed(0)}`
+          }
           icon={isProfitable ? TrendingUp : TrendingDown}
           colorScheme={isProfitable ? 'emerald' : 'rose'}
+          onClick={() => setActiveLedgerTab('all')}
         />
         <StatCard
-          title="Income (આવક)"
+          title={language === 'gu' ? 'આવક' : 'Income'}
           value={`₹${totalIncome.toFixed(2)}`}
-          subtitle="Customer receipts &amp; collections"
+          subtitle={
+            language === 'gu'
+              ? `ઓનલાઇન પેમેન્ટ = ${incomeOnline.toFixed(0)} અને કેશ પેમેન્ટ = ${incomeCash.toFixed(0)}`
+              : `online payment = ${incomeOnline.toFixed(0)} and Cash Payment = ${incomeCash.toFixed(0)}`
+          }
           icon={TrendingUp}
           colorScheme="emerald"
           onClick={() => setActiveLedgerTab('income')}
         />
         <StatCard
-          title="Expenses (ખર્ચ)"
+          title={language === 'gu' ? 'ખર્ચ' : 'Expenses'}
           value={`₹${totalExpenses.toFixed(2)}`}
-          subtitle="Center &amp; operational costs"
+          subtitle={
+            language === 'gu'
+              ? `ઓનલાઇન પેમેન્ટ = ${expenseOnline.toFixed(0)} અને કેશ પેમેન્ટ = ${expenseCash.toFixed(0)}`
+              : `online payment = ${expenseOnline.toFixed(0)} and Cash Payment = ${expenseCash.toFixed(0)}`
+          }
           icon={TrendingDown}
           colorScheme="rose"
           onClick={() => setActiveLedgerTab('expenses')}
@@ -276,7 +389,20 @@ export default function TransactionsPage() {
       </div>
 
       {/* Ledger History Switcher Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+        <button
+          type="button"
+          onClick={() => setActiveLedgerTab('all')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            activeLedgerTab === 'all'
+              ? 'bg-brand-600 text-white shadow-md shadow-brand-600/20'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+          }`}
+        >
+          <History className="w-4 h-4" />
+          <span>{language === 'gu' ? 'બધો ઇતિહાસ' : 'All History'} ({combinedHistory.length})</span>
+        </button>
+
         <button
           type="button"
           onClick={() => setActiveLedgerTab('income')}
@@ -287,7 +413,7 @@ export default function TransactionsPage() {
           }`}
         >
           <Receipt className="w-4 h-4" />
-          <span>Invoices &amp; Income History ({transactions.length})</span>
+          <span>{language === 'gu' ? 'ઇનવોઇસ અને આવક ઇતિહાસ' : 'Invoices & Income History'} ({transactions.length})</span>
         </button>
 
         <button
@@ -300,9 +426,167 @@ export default function TransactionsPage() {
           }`}
         >
           <TrendingDown className="w-4 h-4" />
-          <span>Expenses History ({expenses.length})</span>
+          <span>{language === 'gu' ? 'ખર્ચ ઇતિહાસ' : 'Expenses History'} ({expenses.length})</span>
         </button>
       </div>
+
+      {/* 0. All History (Combined) View */}
+      {activeLedgerTab === 'all' && (
+        <div className="space-y-4 animate-fade-in">
+          {/* Filter & Search Bar */}
+          <Card variant="elevated" className="p-4 flex flex-col sm:flex-row items-center gap-3">
+            <div className="relative flex-1 w-full">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={allSearch}
+                onChange={(e) => setAllSearch(e.target.value)}
+                placeholder={
+                  language === 'gu'
+                    ? 'બધા ટ્રાન્ઝેક્શન, નાગરિક, ઇનવોઇસ કે ખર્ચ શોધો...'
+                    : 'Search all transactions, customer name, token, or expense...'
+                }
+                className="w-full pl-10 pr-4 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-200"
+              />
+            </div>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <span className="text-xs font-bold text-slate-400 whitespace-nowrap">
+                {language === 'gu' ? 'પ્રકાર / મોડ:' : 'Type / Mode:'}
+              </span>
+              <Select
+                value={allTypeFilter}
+                onChange={(e) => setAllTypeFilter(e.target.value)}
+                className="py-1.5 text-xs font-bold"
+              >
+                <option value="ALL">{language === 'gu' ? 'બધા રેકોર્ડ્સ (All Records)' : 'All Records'}</option>
+                <option value="INCOME">{language === 'gu' ? 'માત્ર આવક (+ Invoices)' : 'Income Only (+ Invoices)'}</option>
+                <option value="EXPENSE">{language === 'gu' ? 'માત્ર ખર્ચ (- Expenses)' : 'Expenses Only (- Center Costs)'}</option>
+                <option value="CASH">CASH</option>
+                <option value="ONLINE/UPI">ONLINE / UPI</option>
+                <option value="CARD">CARD</option>
+              </Select>
+            </div>
+          </Card>
+
+          {/* Combined Data Table */}
+          <Card variant="elevated" className="overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase tracking-wider text-[10px] bg-slate-50/50 dark:bg-slate-900/50">
+                  <tr>
+                    <th className="py-3.5 px-4 font-black">{language === 'gu' ? 'પ્રકાર' : 'Type'}</th>
+                    <th className="py-3.5 px-4 font-black">{language === 'gu' ? 'ટોકન / રેફ' : 'Token / Ref'}</th>
+                    <th className="py-3.5 px-4 font-black">{language === 'gu' ? 'વિગત / નાગરિક' : 'Party / Title'}</th>
+                    <th className="py-3.5 px-4 font-black">{language === 'gu' ? 'સેવા / કેટેગરી' : 'Service / Category'}</th>
+                    <th className="py-3.5 px-4 font-black">{language === 'gu' ? 'મોડ' : 'Payment Mode'}</th>
+                    <th className="py-3.5 px-4 font-black">{language === 'gu' ? 'તારીખ' : 'Date'}</th>
+                    <th className="py-3.5 px-4 font-black text-right">{language === 'gu' ? 'રકમ' : 'Amount'}</th>
+                    <th className="py-3.5 px-4 font-black text-right">{language === 'gu' ? 'ક્રિયા' : 'Actions'}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
+                  {filteredCombinedHistory.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="py-8 text-center text-slate-400 font-bold">
+                        {language === 'gu' ? 'કોઈ રેકોર્ડ મળ્યો નથી' : 'No records found matching criteria'}
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredCombinedHistory.map((item) => (
+                      <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                        <td className="py-3.5 px-4">
+                          {item.type === 'INCOME' ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                              <TrendingUp className="w-3 h-3" />
+                              {language === 'gu' ? 'આવક' : 'Income'}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                              <TrendingDown className="w-3 h-3" />
+                              {language === 'gu' ? 'ખર્ચ' : 'Expense'}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4 font-mono font-black">
+                          <span className={item.type === 'INCOME' ? 'text-brand-600 dark:text-brand-400' : 'text-rose-500'}>
+                            {item.token}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <div className="font-bold text-slate-900 dark:text-white">
+                            {item.title}
+                          </div>
+                          {item.subtitle && (
+                            <div className="text-[11px] text-slate-400 font-mono">
+                              {item.subtitle}
+                            </div>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <div className="font-bold text-slate-800 dark:text-slate-200">
+                            {item.categoryOrService}
+                          </div>
+                          {item.subCategory && (
+                            <div className="text-[10px] text-slate-400">
+                              {item.subCategory}
+                            </div>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <Badge variant={item.paymentMode === 'CASH' ? 'success' : item.paymentMode === 'EXPENSE' ? 'danger' : 'info'}>
+                            {item.paymentMode}
+                          </Badge>
+                        </td>
+                        <td className="py-3.5 px-4 font-mono text-slate-400">
+                          {item.date}
+                        </td>
+                        <td className="py-3.5 px-4 text-right font-black text-sm">
+                          {item.type === 'INCOME' ? (
+                            <span className="text-emerald-600 dark:text-emerald-400 font-mono font-black">
+                              +₹{item.amount.toFixed(2)}
+                            </span>
+                          ) : (
+                            <span className="text-rose-600 dark:text-rose-400 font-mono font-black">
+                              -₹{item.amount.toFixed(2)}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            {item.type === 'INCOME' && item.originalTxn && (
+                              <button
+                                onClick={() => setSelectedReceipt(item.originalTxn)}
+                                className="p-1.5 rounded-xl text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-950/40 transition-colors"
+                                title="View Official Receipt"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                            )}
+                            <button
+                              onClick={() => {
+                                if (item.type === 'INCOME' && item.originalTxn) {
+                                  setTxnToDelete(item.originalTxn);
+                                } else if (item.type === 'EXPENSE' && item.originalExpense) {
+                                  handleDeleteExpense(item.originalExpense.id);
+                                }
+                              }}
+                              className="p-1.5 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                              title={item.type === 'INCOME' ? 'Delete Invoice' : 'Delete Expense'}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </div>
+      )}
 
       {/* 1. Invoices & Income History View */}
       {activeLedgerTab === 'income' && (
@@ -452,6 +736,7 @@ export default function TransactionsPage() {
                     <th className="py-3.5 px-4 font-black">Date</th>
                     <th className="py-3.5 px-4 font-black">Expense Purpose / Title</th>
                     <th className="py-3.5 px-4 font-black">Category</th>
+                    <th className="py-3.5 px-4 font-black">Payment Mode</th>
                     <th className="py-3.5 px-4 font-black">Notes / Remarks</th>
                     <th className="py-3.5 px-4 font-black">Amount</th>
                     <th className="py-3.5 px-4 font-black text-right">Action</th>
@@ -460,7 +745,7 @@ export default function TransactionsPage() {
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
                   {filteredExpenses.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-12 text-center text-slate-400">
+                      <td colSpan={7} className="py-12 text-center text-slate-400">
                         <div className="flex flex-col items-center justify-center">
                           <TrendingDown className="w-8 h-8 text-rose-300 dark:text-rose-600 mb-2" />
                           <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
@@ -485,6 +770,11 @@ export default function TransactionsPage() {
                           <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400">
                             {exp.category}
                           </span>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <Badge variant={exp.paymentMode === 'CASH' ? 'success' : 'info'}>
+                            {exp.paymentMode || 'ONLINE'}
+                          </Badge>
                         </td>
                         <td className="py-3.5 px-4 text-slate-500 text-[11px]">
                           {exp.notes || '—'}
@@ -721,7 +1011,7 @@ export default function TransactionsPage() {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 Category *
@@ -741,6 +1031,20 @@ export default function TransactionsPage() {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                Payment Mode *
+              </label>
+              <select
+                value={expensePaymentMode}
+                onChange={(e) => setExpensePaymentMode(e.target.value as 'ONLINE' | 'CASH')}
+                className="w-full text-xs py-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:outline-none"
+              >
+                <option value="ONLINE">Online / UPI Payment</option>
+                <option value="CASH">Cash Payment</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 Expense Amount (₹) *
               </label>
               <input
@@ -748,7 +1052,7 @@ export default function TransactionsPage() {
                 min="1"
                 step="1"
                 required
-                placeholder="e.g. 500"
+                placeholder="e.g. 50"
                 value={expenseAmount}
                 onChange={(e) => setExpenseAmount(e.target.value)}
                 className="w-full text-xs py-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:outline-none font-mono"
