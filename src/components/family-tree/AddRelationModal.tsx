@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { RelationshipType } from '@/types';
 import { Modal, Input, Select, Button } from '@/components/ui';
 import { Sparkles, UserPlus } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 import { toast } from 'sonner';
 
 interface AddRelationModalProps {
@@ -20,15 +21,15 @@ interface AddRelationModalProps {
   }) => void;
 }
 
-const RELATION_OPTIONS: { label: string; value: RelationshipType; defaultGender: 'MALE' | 'FEMALE' }[] = [
-  { label: 'Son (પુત્ર)', value: 'SON', defaultGender: 'MALE' },
-  { label: 'Daughter (પુત્રી)', value: 'DAUGHTER', defaultGender: 'FEMALE' },
-  { label: 'Wife (પત્ની)', value: 'WIFE', defaultGender: 'FEMALE' },
-  { label: 'Husband (પતિ)', value: 'HUSBAND', defaultGender: 'MALE' },
-  { label: 'Father (પિતા)', value: 'FATHER', defaultGender: 'MALE' },
-  { label: 'Mother (માતા)', value: 'MOTHER', defaultGender: 'FEMALE' },
-  { label: 'Brother (ભાઈ)', value: 'BROTHER', defaultGender: 'MALE' },
-  { label: 'Sister (બહેન)', value: 'SISTER', defaultGender: 'FEMALE' },
+const RELATION_OPTIONS: { labelEn: string; labelGu: string; value: RelationshipType; defaultGender: 'MALE' | 'FEMALE' }[] = [
+  { labelEn: 'Son', labelGu: 'પુત્ર', value: 'SON', defaultGender: 'MALE' },
+  { labelEn: 'Daughter', labelGu: 'પુત્રી', value: 'DAUGHTER', defaultGender: 'FEMALE' },
+  { labelEn: 'Wife', labelGu: 'પત્ની', value: 'WIFE', defaultGender: 'FEMALE' },
+  { labelEn: 'Husband', labelGu: 'પતિ', value: 'HUSBAND', defaultGender: 'MALE' },
+  { labelEn: 'Father', labelGu: 'પિતા', value: 'FATHER', defaultGender: 'MALE' },
+  { labelEn: 'Mother', labelGu: 'માતા', value: 'MOTHER', defaultGender: 'FEMALE' },
+  { labelEn: 'Brother', labelGu: 'ભાઈ', value: 'BROTHER', defaultGender: 'MALE' },
+  { labelEn: 'Sister', labelGu: 'બહેન', value: 'SISTER', defaultGender: 'FEMALE' },
 ];
 
 export const AddRelationModal: React.FC<AddRelationModalProps> = ({
@@ -38,6 +39,9 @@ export const AddRelationModal: React.FC<AddRelationModalProps> = ({
   headName = 'Dineshbhai Changani',
   onAdd,
 }) => {
+  const { language } = useLanguage();
+  const isGu = language === 'gu';
+
   const [name, setName] = useState('');
   const [relationship, setRelationship] = useState<RelationshipType>('SON');
   const [gender, setGender] = useState<'MALE' | 'FEMALE' | 'OTHER'>('MALE');
@@ -57,13 +61,13 @@ export const AddRelationModal: React.FC<AddRelationModalProps> = ({
     setGender('MALE');
     setBirthDate('2003-10-12');
     setMobile('9876501234');
-    toast.success('Sample relation details auto-filled!');
+    toast.success(isGu ? 'નમૂના સભ્યની વિગતો ઓટો-ફિલ થઈ ગઈ!' : 'Sample relation details auto-filled!');
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      toast.error('Please enter family member full name');
+      toast.error(isGu ? 'કૃપા કરીને પૂરું નામ દાખલ કરો' : 'Please enter family member full name');
       return;
     }
 
@@ -77,7 +81,7 @@ export const AddRelationModal: React.FC<AddRelationModalProps> = ({
         birth_date: birthDate,
         mobile_number: mobile.trim() || '9876500000',
       });
-      toast.success(`${name} added to family tree!`);
+      toast.success(`${name} ${isGu ? 'ફેમિલી ટ્રીમાં ઉમેરાઈ ગયા!' : 'added to family tree!'}`);
       onClose();
     }, 500);
   };
@@ -86,8 +90,8 @@ export const AddRelationModal: React.FC<AddRelationModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Add Family Relation to Tree"
-      description={`Adding new connected node to ${headName}'s family (${familyId}).`}
+      title={isGu ? 'ફેમિલી ટ્રીમાં સંબંધ ઉમેરો' : 'Add Family Relation to Tree'}
+      description={isGu ? `${headName} ના પરિવાર (${familyId}) માં નવી કડી ઉમેરી રહ્યા છો.` : `Adding new connected node to ${headName}'s family (${familyId}).`}
       maxWidth="md"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -95,46 +99,46 @@ export const AddRelationModal: React.FC<AddRelationModalProps> = ({
         <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60">
           <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-300">
             <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-            <span>Fast 1-Click Demo Fill:</span>
+            <span>{isGu ? 'ઝડપી નમૂનો:' : 'Fast 1-Click Demo Fill:'}</span>
           </div>
           <button
             type="button"
             onClick={handleQuickDemoFill}
             className="px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs transition-all cursor-pointer active:scale-95"
           >
-            ⚡ Auto-Fill Member
+            {isGu ? '⚡ ઓટો-ફિલ સભ્ય' : '⚡ Auto-Fill Member'}
           </button>
         </div>
 
         <Input
-          label="Full Name *"
+          label={isGu ? 'પૂરું નામ *' : 'Full Name *'}
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. Mayur Changani"
+          placeholder={isGu ? 'દા.ત. મયૂર ચાંગાણી' : 'e.g. Mayur Changani'}
         />
 
         <div className="grid grid-cols-2 gap-3">
           <Select
-            label="Relationship *"
+            label={isGu ? 'સંબંધ *' : 'Relationship *'}
             value={relationship}
             onChange={(e) => handleRelationChange(e.target.value as RelationshipType)}
           >
             {RELATION_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
-                {opt.label}
+                {isGu ? opt.labelGu : opt.labelEn}
               </option>
             ))}
           </Select>
 
           <Select
-            label="Gender *"
+            label={isGu ? 'જાતિ / લિંગ *' : 'Gender *'}
             value={gender}
             onChange={(e) => setGender(e.target.value as any)}
           >
-            <option value="MALE">Male (પુરુષ)</option>
-            <option value="FEMALE">Female (સ્ત્રી)</option>
-            <option value="OTHER">Other</option>
+            <option value="MALE">{isGu ? 'પુરુષ (Male)' : 'Male'}</option>
+            <option value="FEMALE">{isGu ? 'સ્ત્રી (Female)' : 'Female'}</option>
+            <option value="OTHER">{isGu ? 'અન્ય' : 'Other'}</option>
           </Select>
         </div>
 

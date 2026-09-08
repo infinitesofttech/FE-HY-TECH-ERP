@@ -283,7 +283,9 @@ export default function VillageFamilyTreePage() {
               >
                 {talukas.map((taluka) => (
                   <option key={taluka} value={taluka}>
-                    {taluka === 'ALL' ? 'બધા તાલુકા / All Talukas' : taluka}
+                    {taluka === 'ALL'
+                      ? (language === 'gu' ? 'બધા તાલુકા' : language === 'hi' ? 'सभी तालुका' : 'All Talukas')
+                      : taluka}
                   </option>
                 ))}
               </Select>
@@ -296,7 +298,7 @@ export default function VillageFamilyTreePage() {
                 className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2 px-3.5 rounded-xl shadow-xs cursor-pointer flex-shrink-0"
               >
                 <Plus className="w-4 h-4" />
-                <span>{language === 'gu' ? '+ નવું ગામ ઉમેરો' : '+ Create Village'}</span>
+                <span>{language === 'gu' ? '+ નવું ગામ ઉમેરો' : language === 'hi' ? '+ नया गाँव जोड़ें' : '+ Create Village'}</span>
               </Button>
             </div>
           </Card>
@@ -318,11 +320,11 @@ export default function VillageFamilyTreePage() {
                       </div>
                       <div>
                         <h3 className="text-base font-black text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                          {village.name}
+                          {language === 'gu' && village.name_gu ? village.name_gu : village.name}
                         </h3>
-                        {village.name_gu && (
+                        {language === 'gu' && village.name_gu && village.name !== village.name_gu && (
                           <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                            {village.name_gu}
+                            {village.name}
                           </p>
                         )}
                       </div>
@@ -359,7 +361,7 @@ export default function VillageFamilyTreePage() {
                 {/* Card Action Hover Footer */}
                 <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-black text-emerald-600 dark:text-emerald-400">
                   <span className="group-hover:underline">
-                    {language === 'gu' ? 'ગામના સભ્યો જુઓ' : 'View Village Citizens'}
+                    {language === 'gu' ? 'ગામના સભ્યો જુઓ' : language === 'hi' ? 'गाँव के नागरिक देखें' : 'View Village Citizens'}
                   </span>
                   <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
                 </div>
@@ -387,7 +389,9 @@ export default function VillageFamilyTreePage() {
                   </span>
                 </div>
                 <h2 className="text-2xl font-black text-slate-900 dark:text-white">
-                  {selectedVillage.name} Village ({selectedVillage.name_gu})
+                  {language === 'gu' && selectedVillage.name_gu
+                    ? `${selectedVillage.name_gu} ગામ`
+                    : `${selectedVillage.name} Village`}
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   All registered families and citizen profiles under this village panchayat jurisdiction.

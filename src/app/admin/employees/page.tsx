@@ -20,6 +20,7 @@ import { useAuth } from '@/context/AuthContext';
 import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
 import { EmployeeUser } from '@/types';
 import { formatEmpName, getEmpInitial } from '@/i18n';
+import { HRReportsView } from '@/components/office/HRReportsView';
 import { toast } from 'sonner';
 import {
   UserCog,
@@ -1090,80 +1091,7 @@ export default function EmployeesPage() {
 
       {/* VIEW E: HR REPORTS */}
       {activeGroup === 'reports' && (
-        <div className="space-y-6 animate-fade-in">
-          <Card variant="elevated" className="p-5 space-y-4">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
-              <div>
-                <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                  {currentTab.replace('-', ' ')}
-                </h3>
-                <p className="text-xs text-slate-400">
-                  Active Period: 01 Sep 2026 - 08 Sep 2026 &bull; Scope: Entire Center Workforce
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  size="xs"
-                  variant="outline"
-                  onClick={() => toast.success('Report printed to PDF')}
-                  leftIcon={<Printer className="w-3.5 h-3.5" />}
-                >
-                  Print
-                </Button>
-                <Button
-                  size="xs"
-                  variant="primary"
-                  onClick={() => toast.success('Report downloaded to spreadsheet')}
-                  leftIcon={<Download className="w-3.5 h-3.5" />}
-                >
-                  Download Excel
-                </Button>
-              </div>
-            </div>
-
-            {currentTab === 'late-coming-report' ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase text-[10px]">
-                    <tr>
-                      <th className="py-2.5 px-4 font-black">Date</th>
-                      <th className="py-2.5 px-4 font-black">Employee</th>
-                      <th className="py-2.5 px-4 font-black">Punch In</th>
-                      <th className="py-2.5 px-4 font-black">Minutes Late</th>
-                      <th className="py-2.5 px-4 font-black">Reason / Remark</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
-                    <tr>
-                      <td className="py-3 px-4 font-mono">08 Sep 2026</td>
-                      <td className="py-3 px-4 font-bold">Vinesh Sharma</td>
-                      <td className="py-3 px-4 font-mono text-amber-500 font-bold">09:48 AM</td>
-                      <td className="py-3 px-4 font-mono font-black text-rose-500">+18 Mins</td>
-                      <td className="py-3 px-4 text-slate-400">Traffic delay at railway crossing</td>
-                    </tr>
-                    <tr>
-                      <td className="py-3 px-4 font-mono">03 Sep 2026</td>
-                      <td className="py-3 px-4 font-bold">Bhavik Changani</td>
-                      <td className="py-3 px-4 font-mono text-amber-500 font-bold">09:42 AM</td>
-                      <td className="py-3 px-4 font-mono font-black text-rose-500">+12 Mins</td>
-                      <td className="py-3 px-4 text-slate-400">Heavy rain</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="p-8 text-center rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800">
-                <FileCheck className="w-10 h-10 text-emerald-500 mx-auto mb-2" />
-                <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                  Comprehensive {currentTab.replace('-', ' ')} Generated
-                </p>
-                <p className="text-xs text-slate-400 mt-1">
-                  Average Center Attendance: 96.4% &bull; Zero compliance flags detected this month.
-                </p>
-              </div>
-            )}
-          </Card>
-        </div>
+        <HRReportsView currentTab={currentTab} />
       )}
 
       {/* VIEW F: HR SETTINGS */}

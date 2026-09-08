@@ -14,13 +14,13 @@ export const Card: React.FC<CardProps> = ({
 }) => {
   const variants = {
     default:
-      'bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-card-subtle rounded-2xl',
+      'bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-card-subtle rounded-2xl',
     elevated:
-      'bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-card-elevated rounded-2xl',
+      'bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-card-elevated rounded-2xl',
     glass:
-      'bg-white/85 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800 shadow-card-elevated rounded-2xl',
+      'bg-white/90 dark:bg-slate-900/85 backdrop-blur-xl border border-slate-200/90 dark:border-slate-800 shadow-card-elevated rounded-2xl',
     interactive:
-      'bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-card-subtle hover:shadow-card-hover hover:border-brand-500/40 dark:hover:border-brand-400/40 transition-all duration-300 rounded-2xl cursor-pointer',
+      'bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-card-elevated hover:shadow-card-hover hover:border-brand-500/50 dark:hover:border-brand-400/50 hover:-translate-y-0.5 transition-all duration-300 rounded-2xl cursor-pointer',
   };
 
   return (

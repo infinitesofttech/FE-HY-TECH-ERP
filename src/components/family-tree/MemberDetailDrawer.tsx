@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { FamilyTreeNodeData, GovDocumentItem } from '@/types';
 import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
+import { useLanguage } from '@/context/LanguageContext';
 import {
   X,
   User,
@@ -43,6 +44,7 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
   onUploadDocClick,
   onPreviewDoc,
 }) => {
+  const { language } = useLanguage();
   const [activeTab, setActiveTab] = useState<'overview' | 'family' | 'documents' | 'activity'>('documents');
 
   if (!isOpen || !member) return null;
@@ -191,7 +193,7 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
                             <h5 className="text-xs font-black text-slate-900 dark:text-white truncate">
                               {doc.title}
                             </h5>
-                            {doc.title_gu && (
+                            {language === 'gu' && doc.title_gu && (
                               <p className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
                                 {doc.title_gu}
                               </p>

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Modal, Input, Button, Select } from '@/components/ui';
 import { familyMemberService } from '@/api/services/familyMemberService';
 import { useQueryClient } from '@tanstack/react-query';
+import { useLanguage } from '@/context/LanguageContext';
 import { toast } from 'sonner';
 import { RelationshipType } from '@/types';
 import { User, Phone, Calendar, Save } from 'lucide-react';
@@ -20,6 +21,8 @@ export const AddFamilyMemberModal: React.FC<AddFamilyMemberModalProps> = ({
   familyId,
 }) => {
   const queryClient = useQueryClient();
+  const { language } = useLanguage();
+  const isGu = language === 'gu';
   const [isSaving, setIsSaving] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -33,7 +36,7 @@ export const AddFamilyMemberModal: React.FC<AddFamilyMemberModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) {
-      toast.error('Please enter member full name');
+      toast.error(isGu ? 'કૃપા કરીને પૂરું નામ દાખલ કરો' : 'Please enter member full name');
       return;
     }
 
@@ -48,7 +51,7 @@ export const AddFamilyMemberModal: React.FC<AddFamilyMemberModalProps> = ({
       });
 
       await queryClient.invalidateQueries({ queryKey: ['family-members', familyId] });
-      toast.success(`${formData.name} added to family successfully!`);
+      toast.success(isGu ? 'પરિવારના સભ્ય સફળતાપૂર્વક ઉમેરાયા' : 'Family member added successfully');
       onClose();
       setFormData({
         name: '',
@@ -57,8 +60,8 @@ export const AddFamilyMemberModal: React.FC<AddFamilyMemberModalProps> = ({
         birth_date: '2000-01-01',
         is_active: true,
       });
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to add member');
+    } catch {
+      toast.error(isGu ? 'સભ્ય ઉમેરવામાં નિષ્ફળ' : 'Failed to add member');
     } finally {
       setIsSaving(false);
     }
@@ -68,14 +71,14 @@ export const AddFamilyMemberModal: React.FC<AddFamilyMemberModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Add Family Member"
-      description={`Enrolling new member under Family #${familyId}`}
+      title={isGu ? 'પરિવારના સભ્ય ઉમેરો' : 'Add Family Member'}
+      description={isGu ? `પરિવાર #${familyId} હેઠળ નવો સભ્ય નોંધો` : `Enrolling new member under Family #${familyId}`}
       maxWidth="md"
     >
       <form onSubmit={handleSubmit} className="p-6 space-y-4">
         <Input
-          label="Full Name / પૂરું નામ"
-          placeholder="e.g. Priyaben Patel"
+          label={isGu ? 'પૂરું નામ' : 'Full Name'}
+          placeholder={isGu ? 'દા.ત. પ્રિયાબેન પટેલ' : 'e.g. Priyaben Patel'}
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           leftIcon={<User className="w-4 h-4" />}
@@ -84,26 +87,26 @@ export const AddFamilyMemberModal: React.FC<AddFamilyMemberModalProps> = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Select
-            label="Relationship / સંબંધ"
+            label={isGu ? 'સંબંધ' : 'Relationship'}
             value={formData.relationship}
             onChange={(e) =>
               setFormData({ ...formData, relationship: e.target.value as RelationshipType })
             }
             options={[
-              { label: 'Wife / પત્ની', value: 'WIFE' },
-              { label: 'Husband / પતિ', value: 'HUSBAND' },
-              { label: 'Son / પુત્ર', value: 'SON' },
-              { label: 'Daughter / પુત્રી', value: 'DAUGHTER' },
-              { label: 'Father / પિતા', value: 'FATHER' },
-              { label: 'Mother / માતા', value: 'MOTHER' },
-              { label: 'Brother / ભાઈ', value: 'BROTHER' },
-              { label: 'Sister / બહેન', value: 'SISTER' },
-              { label: 'Other / અન્ય', value: 'OTHER' },
+              { label: isGu ? 'પત્ની' : 'Wife', value: 'WIFE' },
+              { label: isGu ? 'પતિ' : 'Husband', value: 'HUSBAND' },
+              { label: isGu ? 'પુત્ર' : 'Son', value: 'SON' },
+              { label: isGu ? 'પુત્રી' : 'Daughter', value: 'DAUGHTER' },
+              { label: isGu ? 'પિતા' : 'Father', value: 'FATHER' },
+              { label: isGu ? 'માતા' : 'Mother', value: 'MOTHER' },
+              { label: isGu ? 'ભાઈ' : 'Brother', value: 'BROTHER' },
+              { label: isGu ? 'બહેન' : 'Sister', value: 'SISTER' },
+              { label: isGu ? 'અન્ય' : 'Other', value: 'OTHER' },
             ]}
           />
 
           <Input
-            label="Mobile Number / મોબાઈલ"
+            label={isGu ? 'મોબાઈલ નંબર' : 'Mobile Number'}
             placeholder="e.g. 9876543210"
             value={formData.mobile_number}
             onChange={(e) => setFormData({ ...formData, mobile_number: e.target.value })}
@@ -112,7 +115,7 @@ export const AddFamilyMemberModal: React.FC<AddFamilyMemberModalProps> = ({
         </div>
 
         <Input
-          label="Birth Date / જન્મ તારીખ"
+          label={isGu ? 'જન્મ તારીખ' : 'Birth Date'}
           type="date"
           value={formData.birth_date}
           onChange={(e) => setFormData({ ...formData, birth_date: e.target.value })}
@@ -121,7 +124,7 @@ export const AddFamilyMemberModal: React.FC<AddFamilyMemberModalProps> = ({
 
         <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
           <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
-            Cancel
+            {isGu ? 'રદ કરો' : 'Cancel'}
           </Button>
           <Button
             type="submit"
@@ -129,7 +132,7 @@ export const AddFamilyMemberModal: React.FC<AddFamilyMemberModalProps> = ({
             isLoading={isSaving}
             leftIcon={<Save className="w-4 h-4" />}
           >
-            Add Member
+            {isGu ? 'સાચવો' : 'Save Member'}
           </Button>
         </div>
       </form>

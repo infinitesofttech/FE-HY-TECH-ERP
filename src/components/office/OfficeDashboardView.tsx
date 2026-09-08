@@ -335,16 +335,28 @@ export const OfficeDashboardView: React.FC = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           {/* 1. ALL */}
-          <div className="group relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm hover:shadow-md transition-all hover:border-brand-500/50 flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <div
+            onClick={() => {
+              const el = document.getElementById('todays-apps-section');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="group relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 p-5 shadow-card-elevated hover:shadow-card-hover hover:border-emerald-500/60 dark:hover:border-emerald-400/60 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between cursor-pointer"
+          >
+            {/* Top accent gradient strip */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-400 opacity-90 group-hover:opacity-100 transition-opacity" />
+            
+            {/* Ambient hover glow */}
+            <div className="absolute -top-10 -right-10 w-28 h-28 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-xl pointer-events-none group-hover:scale-150 transition-transform duration-500" />
+
+            <div className="relative z-10 flex items-center justify-between">
+              <span className="text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                 {t('office.all')}
               </span>
-              <div className="p-2.5 rounded-xl bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400">
+              <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/60 shadow-xs group-hover:scale-110 transition-transform duration-300">
                 <FileCheck className="w-5 h-5" />
               </div>
             </div>
-            <div className="mt-4 flex items-end justify-between">
+            <div className="relative z-10 mt-4 flex items-end justify-between">
               <div>
                 <div className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
                   {totalAppsCount}
@@ -359,7 +371,7 @@ export const OfficeDashboardView: React.FC = () => {
                   e.stopPropagation();
                   setIsIntakeModalOpen(true);
                 }}
-                className="w-8 h-8 rounded-xl flex items-center justify-center bg-brand-600 hover:bg-brand-500 text-white shadow-sm transition-all hover:scale-110 active:scale-95 shrink-0"
+                className="w-8 h-8 rounded-xl flex items-center justify-center bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/25 transition-all hover:scale-110 active:scale-95 shrink-0"
                 title={t('office.add_application')}
               >
                 <Plus className="w-4 h-4 stroke-[3]" />
@@ -368,16 +380,28 @@ export const OfficeDashboardView: React.FC = () => {
           </div>
 
           {/* 2. PENDING */}
-          <div className="group relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm hover:shadow-md transition-all hover:border-amber-500/50 flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+          <div
+            onClick={() => {
+              const el = document.getElementById('pending-apps-section');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="group relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 p-5 shadow-card-elevated hover:shadow-[0_18px_36px_-6px_rgba(245,158,11,0.22),0_8px_16px_-3px_rgba(15,23,42,0.06),0_0_0_1px_rgba(245,158,11,0.35)] hover:border-amber-500/60 dark:hover:border-amber-400/60 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between cursor-pointer"
+          >
+            {/* Top accent gradient strip */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 opacity-90 group-hover:opacity-100 transition-opacity" />
+            
+            {/* Ambient hover glow */}
+            <div className="absolute -top-10 -right-10 w-28 h-28 bg-amber-500/5 dark:bg-amber-500/10 rounded-full blur-xl pointer-events-none group-hover:scale-150 transition-transform duration-500" />
+
+            <div className="relative z-10 flex items-center justify-between">
+              <span className="text-xs font-extrabold uppercase tracking-wider text-amber-600 dark:text-amber-400">
                 {t('office.pending')}
               </span>
-              <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400">
+              <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-800/60 shadow-xs group-hover:scale-110 transition-transform duration-300">
                 <Clock className="w-5 h-5" />
               </div>
             </div>
-            <div className="mt-4">
+            <div className="relative z-10 mt-4">
               <div className="text-3xl font-black tracking-tight text-amber-600 dark:text-amber-400">
                 {pendingApps.length}
               </div>
@@ -388,16 +412,28 @@ export const OfficeDashboardView: React.FC = () => {
           </div>
 
           {/* 3. COMPLETED */}
-          <div className="group relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm hover:shadow-md transition-all hover:border-emerald-500/50 flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+          <div
+            onClick={() => {
+              const el = document.getElementById('completed-apps-section');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="group relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 p-5 shadow-card-elevated hover:shadow-[0_18px_36px_-6px_rgba(16,185,129,0.22),0_8px_16px_-3px_rgba(15,23,42,0.06),0_0_0_1px_rgba(16,185,129,0.35)] hover:border-emerald-500/60 dark:hover:border-emerald-400/60 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between cursor-pointer"
+          >
+            {/* Top accent gradient strip */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 opacity-90 group-hover:opacity-100 transition-opacity" />
+            
+            {/* Ambient hover glow */}
+            <div className="absolute -top-10 -right-10 w-28 h-28 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-xl pointer-events-none group-hover:scale-150 transition-transform duration-500" />
+
+            <div className="relative z-10 flex items-center justify-between">
+              <span className="text-xs font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
                 {t('office.completed')}
               </span>
-              <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
+              <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/60 shadow-xs group-hover:scale-110 transition-transform duration-300">
                 <CheckCircle2 className="w-5 h-5" />
               </div>
             </div>
-            <div className="mt-4">
+            <div className="relative z-10 mt-4">
               <div className="text-3xl font-black tracking-tight text-emerald-600 dark:text-emerald-400">
                 {completedApps.length}
               </div>
@@ -408,16 +444,25 @@ export const OfficeDashboardView: React.FC = () => {
           </div>
 
           {/* 4. TRANSACTION */}
-          <div className="group relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm hover:shadow-md transition-all hover:border-indigo-500/50 flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+          <div
+            onClick={() => setIsTransactionModalOpen(true)}
+            className="group relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 p-5 shadow-card-elevated hover:shadow-[0_18px_36px_-6px_rgba(99,102,241,0.22),0_8px_16px_-3px_rgba(15,23,42,0.06),0_0_0_1px_rgba(99,102,241,0.35)] hover:border-indigo-500/60 dark:hover:border-indigo-400/60 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between cursor-pointer"
+          >
+            {/* Top accent gradient strip */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-400 opacity-90 group-hover:opacity-100 transition-opacity" />
+            
+            {/* Ambient hover glow */}
+            <div className="absolute -top-10 -right-10 w-28 h-28 bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-xl pointer-events-none group-hover:scale-150 transition-transform duration-500" />
+
+            <div className="relative z-10 flex items-center justify-between">
+              <span className="text-xs font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
                 {t('office.transaction')}
               </span>
-              <div className="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400">
+              <div className="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800/60 shadow-xs group-hover:scale-110 transition-transform duration-300">
                 <Receipt className="w-5 h-5" />
               </div>
             </div>
-            <div className="mt-4 flex items-end justify-between">
+            <div className="relative z-10 mt-4 flex items-end justify-between">
               <div>
                 <div className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
                   ₹{totalRevenue.toLocaleString()}
@@ -432,7 +477,7 @@ export const OfficeDashboardView: React.FC = () => {
                   e.stopPropagation();
                   setIsTransactionModalOpen(true);
                 }}
-                className="w-8 h-8 rounded-xl flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition-all hover:scale-110 active:scale-95 shrink-0"
+                className="w-8 h-8 rounded-xl flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/25 transition-all hover:scale-110 active:scale-95 shrink-0"
                 title={isGu ? 'નવો વ્યવહાર નોંધો' : 'Record New Transaction Entry (+)'}
               >
                 <Plus className="w-4 h-4 stroke-[3]" />
@@ -446,8 +491,8 @@ export const OfficeDashboardView: React.FC = () => {
       {/* ========================================================================= */}
       {/* SECTION 1: TODAY'S APPLICATIONS (WITH FILTERS + ADD BUTTON) */}
       {/* ========================================================================= */}
-      <Card variant="elevated" className="overflow-hidden border border-slate-200 dark:border-slate-800">
-        <CardHeader className="bg-slate-50/70 dark:bg-slate-900/60 border-b border-slate-200/70 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4 p-5">
+      <Card id="todays-apps-section" variant="elevated" className="overflow-hidden border border-slate-200/90 dark:border-slate-800 shadow-card-elevated">
+        <CardHeader className="bg-slate-50/80 dark:bg-slate-900/60 border-b border-slate-200/90 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4 p-5">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-brand-600 text-white shadow-md shadow-brand-600/30">
               <LayoutDashboard className="w-5 h-5" />
@@ -689,8 +734,8 @@ export const OfficeDashboardView: React.FC = () => {
       {/* ========================================================================= */}
       {/* SECTION 2: PENDING APPLICATIONS (WITH FILTERS + PROCESS ACTION) */}
       {/* ========================================================================= */}
-      <Card variant="elevated" className="overflow-hidden border border-amber-200/80 dark:border-amber-900/30">
-        <CardHeader className="bg-amber-50/50 dark:bg-amber-950/20 border-b border-amber-200/50 dark:border-amber-900/30 flex flex-col md:flex-row md:items-center justify-between gap-4 p-5">
+      <Card id="pending-apps-section" variant="elevated" className="overflow-hidden border border-amber-200/90 dark:border-amber-900/40 shadow-card-elevated">
+        <CardHeader className="bg-amber-50/60 dark:bg-amber-950/20 border-b border-amber-200/80 dark:border-amber-900/40 flex flex-col md:flex-row md:items-center justify-between gap-4 p-5">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-amber-500 text-white shadow-md shadow-amber-500/30">
               <Clock className="w-5 h-5" />
@@ -712,7 +757,7 @@ export const OfficeDashboardView: React.FC = () => {
         </CardHeader>
 
         {/* Section 2 Filters Bar: Date, Family ID, Service */}
-        <div className="p-4 bg-slate-50/40 dark:bg-slate-900/30 border-b border-slate-200/60 dark:border-slate-800">
+        <div className="p-4 bg-amber-50/30 dark:bg-slate-900/30 border-b border-amber-200/70 dark:border-slate-800">
           <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-3 items-center">
             {/* Filter: Date */}
             <div>
@@ -880,8 +925,8 @@ export const OfficeDashboardView: React.FC = () => {
       {/* ========================================================================= */}
       {/* SECTION 3: COMPLETE APPLICATIONS (WITH FILTERS + RECEIPT ACTION) */}
       {/* ========================================================================= */}
-      <Card variant="elevated" className="overflow-hidden border border-emerald-200/80 dark:border-emerald-900/30">
-        <CardHeader className="bg-emerald-50/50 dark:bg-emerald-950/20 border-b border-emerald-200/50 dark:border-emerald-900/30 flex flex-col md:flex-row md:items-center justify-between gap-4 p-5">
+      <Card id="completed-apps-section" variant="elevated" className="overflow-hidden border border-emerald-200/90 dark:border-emerald-900/40 shadow-card-elevated">
+        <CardHeader className="bg-emerald-50/60 dark:bg-emerald-950/20 border-b border-emerald-200/80 dark:border-emerald-900/40 flex flex-col md:flex-row md:items-center justify-between gap-4 p-5">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-emerald-600 text-white shadow-md shadow-emerald-600/30">
               <CheckCircle2 className="w-5 h-5" />
@@ -903,7 +948,7 @@ export const OfficeDashboardView: React.FC = () => {
         </CardHeader>
 
         {/* Section 3 Filters Bar: Date, Family ID, Service */}
-        <div className="p-4 bg-slate-50/40 dark:bg-slate-900/30 border-b border-slate-200/60 dark:border-slate-800">
+        <div className="p-4 bg-emerald-50/30 dark:bg-slate-900/30 border-b border-emerald-200/70 dark:border-slate-800">
           <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-3 items-center">
             {/* Filter: Date */}
             <div>

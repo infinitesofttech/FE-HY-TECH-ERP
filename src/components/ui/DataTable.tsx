@@ -141,7 +141,7 @@ export function DataTable<T>({
       </div>
 
       {/* Main Table Shell */}
-      <div className="overflow-hidden rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-card-elevated">
         {isLoading ? (
           <div className="p-6">
             <SkeletonTable rows={pageSize} cols={columns.length} />

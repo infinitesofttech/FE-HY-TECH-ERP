@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Modal, Input, Select, Button } from '@/components/ui';
 import { Building2, Sparkles, MapPin, Users, FileText, Plus } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 import { toast } from 'sonner';
 
 interface CreateVillageModalProps {
@@ -21,7 +22,7 @@ interface CreateVillageModalProps {
   }) => Promise<void> | void;
 }
 
-const TALUKA_OPTIONS = [
+const TALUKA_BASE = [
   'Botad',
   'Gadhada',
   'Barwala',
@@ -31,10 +32,9 @@ const TALUKA_OPTIONS = [
   'Vallabhipur',
   'Sihor',
   'Palitana',
-  'Other / અન્ય',
 ];
 
-const DISTRICT_OPTIONS = [
+const DISTRICT_BASE = [
   'Botad',
   'Bhavnagar',
   'Rajkot',
@@ -42,7 +42,6 @@ const DISTRICT_OPTIONS = [
   'Amreli',
   'Surendranagar',
   'Junagadh',
-  'Other / અન્ય',
 ];
 
 export const CreateVillageModal: React.FC<CreateVillageModalProps> = ({
@@ -51,6 +50,9 @@ export const CreateVillageModal: React.FC<CreateVillageModalProps> = ({
   nextVillageCode = 'VIL-007',
   onAddVillage,
 }) => {
+  const { language } = useLanguage();
+  const isGu = language === 'gu';
+
   const [name, setName] = useState('');
   const [nameGu, setNameGu] = useState('');
   const [code, setCode] = useState(nextVillageCode);
@@ -63,6 +65,9 @@ export const CreateVillageModal: React.FC<CreateVillageModalProps> = ({
   const [totalDocuments, setTotalDocuments] = useState('950');
   const [isLoading, setIsLoading] = useState(false);
 
+  const talukaOptions = [...TALUKA_BASE, isGu ? 'અન્ય' : 'Other'];
+  const districtOptions = [...DISTRICT_BASE, isGu ? 'અન્ય' : 'Other'];
+
   // Quick 1-Click Demo Fill
   const handleQuickDemoFill = () => {
     setName('Salangpur');
@@ -73,26 +78,29 @@ export const CreateVillageModal: React.FC<CreateVillageModalProps> = ({
     setTotalFamilies('115');
     setTotalCitizens('510');
     setTotalDocuments('1420');
-    toast.success('નમૂના ગામની વિગતો ઓટો-ફિલ થઈ ગઈ! (Demo data auto-filled)');
+    toast.success(isGu ? 'નમૂના ગામની વિગતો ઓટો-ફિલ થઈ ગઈ!' : 'Demo village details auto-filled!');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!name.trim()) {
-      toast.error('ગામનું અંગ્રેજી નામ દાખલ કરો (Please enter village name)');
+      toast.error(isGu ? 'ગામનું નામ દાખલ કરો' : 'Please enter village name');
       return;
     }
 
-    const finalTaluka = taluka === 'Other / અન્ય' ? customTaluka.trim() : taluka;
-    const finalDistrict = district === 'Other / અન્ય' ? customDistrict.trim() : district;
+    const isOtherTaluka = taluka === 'Other' || taluka === 'અન્ય';
+    const isOtherDistrict = district === 'Other' || district === 'અન્ય';
+
+    const finalTaluka = isOtherTaluka ? customTaluka.trim() : taluka;
+    const finalDistrict = isOtherDistrict ? customDistrict.trim() : district;
 
     if (!finalTaluka) {
-      toast.error('તાલુકો દાખલ કરો (Please select or enter taluka)');
+      toast.error(isGu ? 'તાલુકો દાખલ કરો' : 'Please select or enter taluka');
       return;
     }
     if (!finalDistrict) {
-      toast.error('જિલ્લો દાખલ કરો (Please select or enter district)');
+      toast.error(isGu ? 'જિલ્લો દાખલ કરો' : 'Please select or enter district');
       return;
     }
 
@@ -109,14 +117,12 @@ export const CreateVillageModal: React.FC<CreateVillageModalProps> = ({
         total_documents: parseInt(totalDocuments, 10) || 0,
       });
 
-      // Reset form
       setName('');
       setNameGu('');
-      setCustomTaluka('');
-      setCustomDistrict('');
+      setCode('');
       onClose();
-    } catch {
-      toast.error('ગામ ઉમેરવામાં ભૂલ આવી (Failed to create village)');
+    } catch (err: any) {
+      toast.error(err?.message || (isGu ? 'ગામ ઉમેરવામાં નિષ્ફળ' : 'Failed to create village'));
     } finally {
       setIsLoading(false);
     }
@@ -126,8 +132,8 @@ export const CreateVillageModal: React.FC<CreateVillageModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="નવું ગામ ઉમેરો / Create New Village"
-      description="ERP સિસ્ટમમાં નવું અધિકાર ક્ષેત્ર ધરાવતું ગામ અથવા વસાહત ઉમેરો."
+      title={isGu ? 'નવું ગામ ઉમેરો' : 'Create New Village'}
+      description={isGu ? 'ERP સિસ્ટમમાં નવું અધિકાર ક્ષેત્ર ધરાવતું ગામ ઉમેરો.' : 'Register a new administrative village jurisdiction in the ERP system.'}
       maxWidth="lg"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -135,14 +141,14 @@ export const CreateVillageModal: React.FC<CreateVillageModalProps> = ({
         <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60">
           <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-300">
             <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span>Fast 1-Click Demo Fill (ઝડપી નમૂનો):</span>
+            <span>{isGu ? 'ઝડપી નમૂનો:' : 'Fast 1-Click Demo Fill:'}</span>
           </div>
           <button
             type="button"
             onClick={handleQuickDemoFill}
             className="px-2.5 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-white dark:bg-emerald-900/60 hover:bg-emerald-100 rounded-lg border border-emerald-300 dark:border-emerald-700 shadow-2xs transition-colors cursor-pointer"
           >
-            Auto-Fill "સાળંગપુર / Salangpur"
+            {isGu ? 'ઓટો-ફિલ "સાળંગપુર"' : 'Auto-Fill "Salangpur"'}
           </button>
         </div>
 
@@ -150,7 +156,7 @@ export const CreateVillageModal: React.FC<CreateVillageModalProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              Village Name (English) <span className="text-red-500">*</span>
+              {isGu ? 'ગામનું નામ (અંગ્રેજી)' : 'Village Name'} <span className="text-red-500">*</span>
             </label>
             <Input
               value={name}
@@ -163,12 +169,12 @@ export const CreateVillageModal: React.FC<CreateVillageModalProps> = ({
 
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              ગામનું નામ (ગુજરાતીમાં)
+              {isGu ? 'ગામનું નામ (ગુજરાતીમાં)' : 'Village Name (Gujarati - Optional)'}
             </label>
             <Input
               value={nameGu}
               onChange={(e) => setNameGu(e.target.value)}
-              placeholder="દા.ત. સાળંગપુર, પાળિયાદ"
+              placeholder={isGu ? 'દા.ત. સાળંગપુર, પાળિયાદ' : 'e.g. સાળંગપુર, પાળિયાદ'}
               className="text-xs font-medium"
             />
           </div>
@@ -178,7 +184,7 @@ export const CreateVillageModal: React.FC<CreateVillageModalProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              Village Code (ગામ કોડ)
+              {isGu ? 'ગામ કોડ' : 'Village Code'}
             </label>
             <Input
               value={code}
@@ -190,24 +196,24 @@ export const CreateVillageModal: React.FC<CreateVillageModalProps> = ({
 
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              Taluka (તાલુકો) <span className="text-red-500">*</span>
+              {isGu ? 'તાલુકો' : 'Taluka'} <span className="text-red-500">*</span>
             </label>
             <Select
               value={taluka}
               onChange={(e) => setTaluka(e.target.value)}
               className="text-xs"
             >
-              {TALUKA_OPTIONS.map((t) => (
+              {talukaOptions.map((t) => (
                 <option key={t} value={t}>
                   {t}
                 </option>
               ))}
             </Select>
-            {taluka === 'Other / અન્ય' && (
+            {(taluka === 'Other' || taluka === 'અન્ય') && (
               <Input
                 value={customTaluka}
                 onChange={(e) => setCustomTaluka(e.target.value)}
-                placeholder="તાલુકાનું નામ લખો..."
+                placeholder={isGu ? 'તાલુકાનું નામ લખો...' : 'Enter taluka name...'}
                 className="mt-1.5 text-xs"
                 required
               />
@@ -216,24 +222,24 @@ export const CreateVillageModal: React.FC<CreateVillageModalProps> = ({
 
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              District (જિલ્લો) <span className="text-red-500">*</span>
+              {isGu ? 'જિલ્લો' : 'District'} <span className="text-red-500">*</span>
             </label>
             <Select
               value={district}
               onChange={(e) => setDistrict(e.target.value)}
               className="text-xs"
             >
-              {DISTRICT_OPTIONS.map((d) => (
+              {districtOptions.map((d) => (
                 <option key={d} value={d}>
                   {d}
                 </option>
               ))}
             </Select>
-            {district === 'Other / અન્ય' && (
+            {(district === 'Other' || district === 'અન્ય') && (
               <Input
                 value={customDistrict}
                 onChange={(e) => setCustomDistrict(e.target.value)}
-                placeholder="જિલ્લાનું નામ લખો..."
+                placeholder={isGu ? 'જિલ્લાનું નામ લખો...' : 'Enter district name...'}
                 className="mt-1.5 text-xs"
                 required
               />
@@ -245,13 +251,13 @@ export const CreateVillageModal: React.FC<CreateVillageModalProps> = ({
         <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200/80 dark:border-slate-700/60 space-y-2">
           <p className="text-[11px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
             <Users className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-            પ્રારંભિક અંદાજીત ગણતરી (Initial Counts / Stats)
+            {isGu ? 'પ્રારંભિક અંદાજીત ગણતરી' : 'Initial Counts & Statistics'}
           </p>
 
           <div className="grid grid-cols-3 gap-2.5">
             <div>
               <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">
-                Families (કુટુંબ)
+                {isGu ? 'પરિવારો' : 'Families'}
               </label>
               <Input
                 type="number"
@@ -265,7 +271,7 @@ export const CreateVillageModal: React.FC<CreateVillageModalProps> = ({
 
             <div>
               <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">
-                Citizens (કુલ નાગરિકો)
+                {isGu ? 'નાગરિકો' : 'Citizens'}
               </label>
               <Input
                 type="number"
@@ -279,7 +285,7 @@ export const CreateVillageModal: React.FC<CreateVillageModalProps> = ({
 
             <div>
               <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">
-                Documents (દસ્તાવેજો)
+                {isGu ? 'દસ્તાવેજો' : 'Documents'}
               </label>
               <Input
                 type="number"
@@ -302,7 +308,7 @@ export const CreateVillageModal: React.FC<CreateVillageModalProps> = ({
             onClick={onClose}
             disabled={isLoading}
           >
-            રદ કરો / Cancel
+            {isGu ? 'રદ કરો' : 'Cancel'}
           </Button>
           <Button
             type="submit"
@@ -312,7 +318,7 @@ export const CreateVillageModal: React.FC<CreateVillageModalProps> = ({
             className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
           >
             <Plus className="w-4 h-4" />
-            ગામ ઉમેરો / Create Village
+            {isGu ? 'ગામ ઉમેરો' : 'Create Village'}
           </Button>
         </div>
       </form>

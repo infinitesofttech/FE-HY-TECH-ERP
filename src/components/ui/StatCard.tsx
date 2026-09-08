@@ -71,10 +71,27 @@ export const StatCard: React.FC<StatCardProps> = ({
   return (
     <div
       onClick={onClick}
-      className={`relative overflow-hidden p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-card-hover transition-all duration-300 group ${scheme.borderHover} ${
+      className={`relative overflow-hidden p-5 rounded-2xl bg-white dark:bg-slate-900/95 border border-slate-200/90 dark:border-slate-800 shadow-card-elevated hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-300 group ${scheme.borderHover} ${
         onClick ? 'cursor-pointer' : ''
       }`}
     >
+      {/* Top accent gradient line */}
+      <div
+        className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${
+          colorScheme === 'emerald'
+            ? 'from-emerald-500 to-teal-400'
+            : colorScheme === 'amber'
+            ? 'from-amber-500 to-yellow-400'
+            : colorScheme === 'purple'
+            ? 'from-purple-500 to-indigo-400'
+            : colorScheme === 'sky'
+            ? 'from-sky-500 to-blue-400'
+            : colorScheme === 'rose'
+            ? 'from-rose-500 to-pink-400'
+            : 'from-brand-500 to-emerald-400'
+        } opacity-85 group-hover:opacity-100 transition-opacity`}
+      />
+
       {/* Background ambient accent */}
       <div
         className={`absolute -top-12 -right-12 w-32 h-32 bg-gradient-to-bl ${scheme.accentGlow} rounded-full blur-xl pointer-events-none group-hover:scale-150 transition-transform duration-500`}
