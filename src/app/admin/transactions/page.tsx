@@ -534,18 +534,32 @@ export default function TransactionsPage() {
                           )}
                         </td>
                         <td className="py-3.5 px-4">
-                          <Badge variant={item.paymentMode === 'CASH' ? 'success' : item.paymentMode === 'EXPENSE' ? 'danger' : 'info'}>
-                            {item.paymentMode}
-                          </Badge>
+                          <div className="flex flex-col items-start gap-1">
+                            <Badge variant={item.paymentMode === 'CASH' ? 'success' : item.paymentMode === 'EXPENSE' ? 'danger' : 'info'}>
+                              {item.paymentMode}
+                            </Badge>
+                            {item.originalTxn?.payment_status === 'PARTIAL' && (
+                              <Badge variant="warning">
+                                {language === 'gu' ? 'અંશતઃ' : 'PARTIAL'}
+                              </Badge>
+                            )}
+                          </div>
                         </td>
                         <td className="py-3.5 px-4 font-mono text-slate-400">
                           {item.date}
                         </td>
                         <td className="py-3.5 px-4 text-right font-black text-sm">
                           {item.type === 'INCOME' ? (
-                            <span className="text-emerald-600 dark:text-emerald-400 font-mono font-black">
-                              +₹{item.amount.toFixed(2)}
-                            </span>
+                            <div>
+                              <span className="text-emerald-600 dark:text-emerald-400 font-mono font-black">
+                                +₹{(item.originalTxn?.paid_amount ? parseFloat(item.originalTxn.paid_amount) : item.amount).toFixed(2)}
+                              </span>
+                              {item.originalTxn?.due_amount && parseFloat(item.originalTxn.due_amount) > 0 && (
+                                <div className="text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                                  {language === 'gu' ? 'બાકી: ' : 'Due: '}₹{parseFloat(item.originalTxn.due_amount).toFixed(2)}
+                                </div>
+                              )}
+                            </div>
                           ) : (
                             <span className="text-rose-600 dark:text-rose-400 font-mono font-black">
                               -₹{item.amount.toFixed(2)}

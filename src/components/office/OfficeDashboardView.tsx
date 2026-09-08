@@ -48,6 +48,14 @@ import {
   AlertCircle,
   Layers,
   ArrowRight,
+  Trash2,
+  History,
+  ChevronDown,
+  ChevronUp,
+  AlertTriangle,
+  Wallet,
+  Banknote,
+  Smartphone,
 } from 'lucide-react';
 
 const PENDING_STATUSES: ApplicationStatus[] = [
@@ -101,46 +109,176 @@ export const OfficeDashboardView: React.FC = () => {
     queryFn: () => customerService.getCustomers(),
   });
 
-  // Transaction Modal State & Mutation
+  // ----------------------------------------------------
+  // TRANSACTION MODAL: MULTI-SERVICE & SPLIT/PARTIAL PAYMENT & CUSTOMER LEDGER
+  // ----------------------------------------------------
+  interface TxnServiceItem {
+    id: string;
+    serviceId: number;
+    subServiceId: number;
+    amount: string;
+  }
+
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
   const [txnCustomerId, setTxnCustomerId] = useState<number>(0);
-  const [txnServiceId, setTxnServiceId] = useState<number>(0);
-  const [txnSubServiceId, setTxnSubServiceId] = useState<number>(0);
-  const [txnBillAmount, setTxnBillAmount] = useState<string>('50');
-  const [txnPointsEarned, setTxnPointsEarned] = useState<number>(5);
-  const [txnPaymentMode, setTxnPaymentMode] = useState<PaymentMode>('CASH');
+  const [txnItems, setTxnItems] = useState<TxnServiceItem[]>([
+    {
+      id: 'txn-item-1',
+      serviceId: 3,
+      subServiceId: 3,
+      amount: '50',
+    },
+  ]);
+  const [txnPaidAmount, setTxnPaidAmount] = useState<string>('50');
+  const [isManualPaid, setIsManualPaid] = useState<boolean>(false);
+  const [includePreviousDue, setIncludePreviousDue] = useState<boolean>(false);
+  const [showPastHistory, setShowPastHistory] = useState<boolean>(false);
+  const [txnPaymentMode, setTxnPaymentMode] = useState<PaymentMode>('ONLINE/UPI');
   const [txnRemarks, setTxnRemarks] = useState<string>('');
 
-  const currentTxnService = useMemo(() => {
-    if (txnServiceId) {
-      return servicesList.find((s) => s.id === txnServiceId) || servicesList[0];
-    }
-    return servicesList[0];
-  }, [servicesList, txnServiceId]);
+  // Selected customer (fallback to HTF-000003 or first)
+  const effectiveCustomerId = txnCustomerId || (customers[0]?.id ?? 4);
+  const selectedCustomer = useMemo(() => {
+    return customers.find((c) => c.id === effectiveCustomerId) || customers[0];
+  }, [customers, effectiveCustomerId]);
 
-  const currentTxnSubServices = useMemo(() => {
-    return currentTxnService?.SubServices || [];
-  }, [currentTxnService]);
+  // Customer past transactions & ledger
+  const pastCustomerTxns = useMemo(() => {
+    if (!selectedCustomer) return [];
+    return transactions.filter(
+      (t) => t.customer === selectedCustomer.id || t.family_id === selectedCustomer.family_id
+    );
+  }, [transactions, selectedCustomer]);
+
+  const pastLedgerStats = useMemo(() => {
+    let billed = 0;
+    let paid = 0;
+    let due = 0;
+    pastCustomerTxns.forEach((t) => {
+      const b = parseFloat(t.bill_amount) || 0;
+      const p = t.paid_amount !== undefined ? parseFloat(t.paid_amount) || 0 : b;
+      const d = t.due_amount !== undefined ? parseFloat(t.due_amount) || 0 : 0;
+      billed += b;
+      paid += p;
+      due += d;
+    });
+    return {
+      totalBilled: billed,
+      totalPaid: paid,
+      totalDue: due,
+      hasDue: due > 0,
+      lastTxn: pastCustomerTxns[0] || null,
+    };
+  }, [pastCustomerTxns]);
+
+  // Total services bill from all items
+  const totalServicesBill = useMemo(() => {
+    return txnItems.reduce((acc, it) => acc + (parseFloat(it.amount) || 0), 0);
+  }, [txnItems]);
+
+  // Net total bill (including previous due if selected)
+  const effectiveTotalBill = useMemo(() => {
+    return totalServicesBill + (includePreviousDue && pastLedgerStats.hasDue ? pastLedgerStats.totalDue : 0);
+  }, [totalServicesBill, includePreviousDue, pastLedgerStats]);
+
+  // Auto-sync paid amount when bill changes unless user manually edited it
+  React.useEffect(() => {
+    if (!isManualPaid) {
+      setTxnPaidAmount(effectiveTotalBill.toString());
+    }
+  }, [effectiveTotalBill, isManualPaid]);
+
+  const currentPaid = parseFloat(txnPaidAmount) || 0;
+  const currentDue = Math.max(0, effectiveTotalBill - currentPaid);
+  const currentPaymentStatus: 'PAID' | 'PARTIAL' | 'PENDING' =
+    currentDue === 0 ? 'PAID' : currentPaid === 0 ? 'PENDING' : 'PARTIAL';
+
+  const handleAddServiceItem = () => {
+    const firstService = servicesList[0] || { id: 3, SubServices: [{ id: 3 }] };
+    const firstSub = firstService?.SubServices?.[0] || { id: 3 };
+    setTxnItems((prev) => [
+      ...prev,
+      {
+        id: `txn-item-${Date.now()}-${Math.random()}`,
+        serviceId: firstService.id,
+        subServiceId: firstSub.id,
+        amount: '50',
+      },
+    ]);
+  };
+
+  const handleRemoveServiceItem = (id: string) => {
+    if (txnItems.length <= 1) return;
+    setTxnItems((prev) => prev.filter((it) => it.id !== id));
+  };
+
+  const handleUpdateServiceItem = (
+    id: string,
+    field: 'serviceId' | 'subServiceId' | 'amount',
+    val: string | number
+  ) => {
+    setTxnItems((prev) =>
+      prev.map((it) => {
+        if (it.id !== id) return it;
+        if (field === 'serviceId') {
+          const sId = Number(val);
+          const found = servicesList.find((s) => s.id === sId);
+          const newSubId = found?.SubServices?.[0]?.id || sId;
+          return { ...it, serviceId: sId, subServiceId: newSubId };
+        }
+        if (field === 'subServiceId') {
+          return { ...it, subServiceId: Number(val) };
+        }
+        if (field === 'amount') {
+          return { ...it, amount: String(val) };
+        }
+        return it;
+      })
+    );
+  };
 
   const createTxnMutation = useMutation({
-    mutationFn: () =>
-      transactionService.createTransaction({
-        customer: txnCustomerId || (customers[0]?.id ?? 1),
-        service: txnServiceId || (servicesList[0]?.id ?? 1),
-        sub_service: txnSubServiceId || (currentTxnSubServices[0]?.id ?? 1),
-        bill_amount: txnBillAmount,
-        points_earned: txnPointsEarned,
+    mutationFn: () => {
+      const itemsPayload = txnItems.map((it) => {
+        const s = servicesList.find((x) => x.id === it.serviceId);
+        const sub = s?.SubServices?.find((y) => y.id === it.subServiceId);
+        return {
+          service_id: it.serviceId,
+          service_name: s?.ServiceName || 'Service',
+          sub_service_id: it.subServiceId,
+          sub_service_name: sub?.SubServiceName || 'General',
+          amount: parseFloat(it.amount) || 0,
+        };
+      });
+
+      return transactionService.createTransaction({
+        customer: effectiveCustomerId,
+        service: txnItems[0]?.serviceId || 3,
+        sub_service: txnItems[0]?.subServiceId || 3,
+        bill_amount: effectiveTotalBill.toFixed(2),
+        paid_amount: currentPaid.toFixed(2),
+        due_amount: currentDue.toFixed(2),
+        payment_status: currentPaymentStatus,
+        items: itemsPayload,
+        previous_due_cleared: includePreviousDue ? pastLedgerStats.totalDue.toFixed(2) : undefined,
+        points_earned: Math.round(currentPaid * 0.1),
         payment_mode: txnPaymentMode,
         staff: 1,
-        remarks: txnRemarks,
-      }),
+        remarks:
+          txnRemarks ||
+          (currentDue > 0
+            ? `Partial payment: ₹${currentPaid.toFixed(2)} received, ₹${currentDue.toFixed(2)} pending due`
+            : 'Full payment received'),
+      });
+    },
     onSuccess: (res) => {
       toast.success(res.message || 'Transaction recorded successfully!');
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       setIsTransactionModalOpen(false);
-      setTxnBillAmount('50');
       setTxnRemarks('');
+      setIsManualPaid(false);
+      setIncludePreviousDue(false);
     },
     onError: () => toast.error('Failed to record transaction'),
   });
@@ -1152,9 +1290,9 @@ export const OfficeDashboardView: React.FC = () => {
       <Modal
         isOpen={isTransactionModalOpen}
         onClose={() => setIsTransactionModalOpen(false)}
-        title={isGu ? 'નવો વ્યવહાર નોંધો' : 'Record New Transaction Entry'}
-        description={isGu ? 'પરિવાર માટે સેવા ચુકવણી અથવા રોકડ નોંધ ઉમેરો' : 'Add a service payment or cash collection entry for a family'}
-        maxWidth="lg"
+        title={isGu ? 'નવો વ્યવહાર / બિલિંગ નોંધો' : 'Record Transaction / Billing Entry'}
+        description={isGu ? 'મલ્ટીપલ સેવાઓ, અંશતઃ/હાફ ચુકવણી અને અગાઉના બાકી હિસાબ સાથે' : 'Support for multiple services, partial payment & customer previous ledger'}
+        maxWidth="2xl"
       >
         <form
           onSubmit={(e) => {
@@ -1163,107 +1301,477 @@ export const OfficeDashboardView: React.FC = () => {
           }}
           className="space-y-4 text-xs"
         >
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {isGu ? 'પરિવાર / નાગરિક *' : 'Family / Customer *'}
+          {/* 1. FAMILY / CUSTOMER SELECTOR */}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+              {isGu ? 'પરિવાર / નાગરિક પસંદ કરો *' : 'Select Family / Customer *'}
+            </label>
+            <select
+              value={txnCustomerId || (customers[0]?.id ?? 4)}
+              onChange={(e) => {
+                setTxnCustomerId(Number(e.target.value));
+                setIncludePreviousDue(false);
+                setIsManualPaid(false);
+              }}
+              required
+              className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none shadow-2xs"
+            >
+              {customers.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.family_id} — {c.head_of_family} ({c.mobile_number})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* 2. FAMILY PAST PAYMENT HISTORY & DUE LEDGER */}
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 p-3.5 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400">
+                  <History className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                    {isGu ? 'અગાઉનો ચુકવણી ઇતિહાસ અને હિસાબ' : 'Previous Payment History & Ledger'}
+                    <span className="text-[10px] font-normal text-slate-500">
+                      ({selectedCustomer?.head_of_family})
+                    </span>
+                  </h4>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                    {pastCustomerTxns.length > 0
+                      ? isGu
+                        ? `આ પરિવારના કુલ ${pastCustomerTxns.length} અગાઉના વ્યવહારો મળ્યા છે`
+                        : `${pastCustomerTxns.length} previous transaction record(s) on file`
+                      : isGu
+                      ? 'આ પરિવારનો કોઈ અગાઉનો વ્યવહાર નથી'
+                      : 'No previous transactions found for this family'}
+                  </p>
+                </div>
+              </div>
+
+              {pastCustomerTxns.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShowPastHistory((prev) => !prev)}
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
+                >
+                  <span>{showPastHistory ? (isGu ? 'વિગત છુપાવો' : 'Hide Details') : (isGu ? 'ઇતિહાસ જુઓ' : 'View History')}</span>
+                  {showPastHistory ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                </button>
+              )}
+            </div>
+
+            {/* Quick stats cards: Previous Paid vs Previous Due */}
+            {pastCustomerTxns.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                <div className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-750">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                    {isGu ? 'કુલ અગાઉ બિલ' : 'Total Prev Billed'}
+                  </span>
+                  <span className="font-mono font-black text-xs sm:text-sm text-slate-900 dark:text-white">
+                    ₹{pastLedgerStats.totalBilled.toFixed(2)}
+                  </span>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-900/40">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block">
+                    {isGu ? 'પહેલા ચૂકવેલ રકમ' : 'Previously Paid'}
+                  </span>
+                  <span className="font-mono font-black text-xs sm:text-sm text-emerald-700 dark:text-emerald-300">
+                    ₹{pastLedgerStats.totalPaid.toFixed(2)}
+                  </span>
+                </div>
+
+                <div
+                  className={`p-2.5 rounded-xl border ${
+                    pastLedgerStats.hasDue
+                      ? 'bg-amber-50/90 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800/80'
+                      : 'bg-slate-100/70 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                  }`}
+                >
+                  <span
+                    className={`text-[10px] font-bold uppercase tracking-wider block ${
+                      pastLedgerStats.hasDue ? 'text-amber-700 dark:text-amber-400' : 'text-slate-400'
+                    }`}
+                  >
+                    {isGu ? 'અગાઉનું બાકી (Due)' : 'Outstanding Due'}
+                  </span>
+                  <span
+                    className={`font-mono font-black text-xs sm:text-sm ${
+                      pastLedgerStats.hasDue ? 'text-amber-700 dark:text-amber-300' : 'text-slate-500'
+                    }`}
+                  >
+                    ₹{pastLedgerStats.totalDue.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            ) : null}
+
+            {/* If has pending due: highlighted warning & checkbox to include in current bill */}
+            {pastLedgerStats.hasDue && (
+              <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-amber-800 dark:text-amber-300">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span className="text-[11px] font-semibold">
+                    {isGu
+                      ? `આ પરિવારે અગાઉ ₹${pastLedgerStats.totalPaid.toFixed(2)} ચૂકવ્યા હતા અને ₹${pastLedgerStats.totalDue.toFixed(2)} હજુ બાકી છે!`
+                      : `Family previously paid ₹${pastLedgerStats.totalPaid.toFixed(2)} and has ₹${pastLedgerStats.totalDue.toFixed(2)} outstanding pending balance!`}
+                  </span>
+                </div>
+                <label className="inline-flex items-center gap-1.5 cursor-pointer text-[11px] font-bold text-amber-900 dark:text-amber-200 bg-amber-200/60 dark:bg-amber-900/60 px-2.5 py-1 rounded-lg hover:bg-amber-200 shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={includePreviousDue}
+                    onChange={(e) => {
+                      setIncludePreviousDue(e.target.checked);
+                      setIsManualPaid(false);
+                    }}
+                    className="rounded text-amber-600 focus:ring-amber-500"
+                  />
+                  <span>{isGu ? '+ આ બિલમાં બાકી રકમ સામેલ કરો' : '+ Include Previous Due in this Bill'}</span>
+                </label>
+              </div>
+            )}
+
+            {/* Collapsible previous transactions table */}
+            {showPastHistory && pastCustomerTxns.length > 0 && (
+              <div className="mt-2 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900">
+                <table className="w-full text-left text-[11px]">
+                  <thead className="bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-slate-500">
+                    <tr>
+                      <th className="py-2 px-2.5">{isGu ? 'તારીખ / નંબર' : 'Date / No'}</th>
+                      <th className="py-2 px-2.5">{isGu ? 'સેવા' : 'Service'}</th>
+                      <th className="py-2 px-2.5">{isGu ? 'બિલ' : 'Bill'}</th>
+                      <th className="py-2 px-2.5">{isGu ? 'ચૂકવેલ' : 'Paid'}</th>
+                      <th className="py-2 px-2.5">{isGu ? 'બાકી' : 'Due'}</th>
+                      <th className="py-2 px-2.5">{isGu ? 'સ્થિતિ' : 'Status'}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+                    {pastCustomerTxns.map((pt) => (
+                      <tr key={pt.id}>
+                        <td className="py-2 px-2.5 font-mono text-[10px] text-slate-500">
+                          {pt.transaction_date || pt.created_at.split('T')[0]}
+                          <div className="text-slate-400 font-normal">{pt.transaction_no}</div>
+                        </td>
+                        <td className="py-2 px-2.5 text-slate-800 dark:text-slate-200">
+                          {pt.service_name}
+                        </td>
+                        <td className="py-2 px-2.5 font-mono text-slate-700 dark:text-slate-300">
+                          ₹{parseFloat(pt.bill_amount).toFixed(2)}
+                        </td>
+                        <td className="py-2 px-2.5 font-mono text-emerald-600 dark:text-emerald-400 font-bold">
+                          ₹{parseFloat(pt.paid_amount || pt.bill_amount).toFixed(2)}
+                        </td>
+                        <td className="py-2 px-2.5 font-mono text-amber-600 dark:text-amber-400 font-bold">
+                          ₹{parseFloat(pt.due_amount || '0').toFixed(2)}
+                        </td>
+                        <td className="py-2 px-2.5">
+                          <span
+                            className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                              pt.payment_status === 'PAID' || !pt.due_amount || parseFloat(pt.due_amount) === 0
+                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                                : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                            }`}
+                          >
+                            {pt.payment_status || (parseFloat(pt.due_amount || '0') > 0 ? 'PARTIAL' : 'PAID')}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* 3. MULTIPLE SERVICES SELECTION */}
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                <span>{isGu ? 'સેવાઓ પસંદ કરો (Multiple Services Allowed) *' : 'Select Services (Multiple Services Allowed) *'}</span>
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] font-extrabold bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                  {txnItems.length}
+                </span>
               </label>
-              <select
-                value={txnCustomerId || (customers[0]?.id ?? '')}
-                onChange={(e) => setTxnCustomerId(Number(e.target.value))}
-                required
-                className="w-full text-xs py-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              <button
+                type="button"
+                onClick={handleAddServiceItem}
+                className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 hover:underline cursor-pointer"
               >
-                {customers.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.family_id} — {c.head_of_family} ({c.mobile_number})
-                  </option>
-                ))}
-              </select>
+                <Plus className="w-3.5 h-3.5" />
+                <span>{isGu ? '+ બીજી સેવા ઉમેરો' : '+ Add Another Service'}</span>
+              </button>
+            </div>
+
+            <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+              {txnItems.map((item, index) => {
+                const currentService = servicesList.find((s) => s.id === item.serviceId) || servicesList[0];
+                const subServices = currentService?.SubServices || [];
+
+                return (
+                  <div
+                    key={item.id}
+                    className="p-3 rounded-xl bg-white dark:bg-slate-850 border border-slate-200/90 dark:border-slate-750 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shadow-2xs hover:border-indigo-300 dark:hover:border-indigo-600 transition-colors"
+                  >
+                    <span className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[10px] font-black flex items-center justify-center shrink-0">
+                      {index + 1}
+                    </span>
+
+                    {/* Service selection */}
+                    <div className="flex-1 min-w-[130px]">
+                      <select
+                        value={item.serviceId}
+                        onChange={(e) => handleUpdateServiceItem(item.id, 'serviceId', e.target.value)}
+                        className="w-full text-xs py-1.5 px-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                      >
+                        {servicesList.map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.ServiceName}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Sub-Service selection */}
+                    <div className="flex-1 min-w-[130px]">
+                      <select
+                        value={item.subServiceId}
+                        onChange={(e) => handleUpdateServiceItem(item.id, 'subServiceId', e.target.value)}
+                        className="w-full text-xs py-1.5 px-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                      >
+                        {subServices.map((sub) => (
+                          <option key={sub.id} value={sub.id}>
+                            {sub.SubServiceName}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Amount input */}
+                    <div className="w-28 shrink-0 relative">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">₹</span>
+                      <input
+                        type="number"
+                        min="1"
+                        step="1"
+                        required
+                        value={item.amount}
+                        onChange={(e) => handleUpdateServiceItem(item.id, 'amount', e.target.value)}
+                        className="w-full text-xs font-mono font-bold py-1.5 pl-6 pr-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                        placeholder="Fee"
+                      />
+                    </div>
+
+                    {/* Remove button */}
+                    {txnItems.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveServiceItem(item.id)}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors shrink-0"
+                        title={isGu ? 'સેવા દૂર કરો' : 'Remove service'}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 4. PAYMENT BREAKDOWN: TOTAL, PAID NOW, PENDING DUE */}
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-50/70 via-purple-50/40 to-slate-50/80 dark:from-indigo-950/30 dark:via-purple-950/20 dark:to-slate-900/40 border border-indigo-200/80 dark:border-indigo-900/40 space-y-3 shadow-2xs">
+            {/* Total Services Bill */}
+            <div className="flex items-center justify-between text-xs pb-2 border-b border-indigo-100 dark:border-indigo-900/40">
+              <span className="font-semibold text-slate-600 dark:text-slate-300">
+                {isGu ? 'કુલ સેવા બિલ રકમ:' : 'Total Services Bill Amount:'}
+              </span>
+              <span className="font-mono font-black text-sm text-slate-900 dark:text-white">
+                ₹{totalServicesBill.toFixed(2)}
+              </span>
+            </div>
+
+            {includePreviousDue && pastLedgerStats.hasDue && (
+              <div className="flex items-center justify-between text-xs pb-2 border-b border-indigo-100 dark:border-indigo-900/40 text-amber-700 dark:text-amber-400">
+                <span className="font-semibold">
+                  {isGu ? '+ અગાઉનું બાકી (Previous Due Added):' : '+ Previous Due Added:'}
+                </span>
+                <span className="font-mono font-bold">
+                  +₹{pastLedgerStats.totalDue.toFixed(2)}
+                </span>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between text-xs font-bold text-slate-800 dark:text-slate-200">
+              <span>{isGu ? 'કુલ ચૂકવવાપાત્ર બિલ રકમ (Net Bill):' : 'Net Total Bill Amount:'}</span>
+              <span className="font-mono font-black text-base text-indigo-700 dark:text-indigo-400">
+                ₹{effectiveTotalBill.toFixed(2)}
+              </span>
+            </div>
+
+            {/* Amount Paid / Received Now */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  {isGu ? 'અત્યારે મળેલ રકમ (Amount Paid / Received Now) *' : 'Amount Paid / Received Now (₹) *'}
+                </label>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTxnPaidAmount(effectiveTotalBill.toString());
+                      setIsManualPaid(false);
+                    }}
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors cursor-pointer ${
+                      currentPaid === effectiveTotalBill
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-300'
+                    }`}
+                  >
+                    {isGu ? 'પૂરેપૂરું (100%)' : 'Full (100%)'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTxnPaidAmount(Math.round(effectiveTotalBill / 2).toString());
+                      setIsManualPaid(true);
+                    }}
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors cursor-pointer ${
+                      currentPaid === Math.round(effectiveTotalBill / 2) && effectiveTotalBill > 0
+                        ? 'bg-amber-600 text-white'
+                        : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-300'
+                    }`}
+                  >
+                    {isGu ? 'અડધું (50%)' : 'Half (50%)'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTxnPaidAmount('0');
+                      setIsManualPaid(true);
+                    }}
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors cursor-pointer ${
+                      currentPaid === 0
+                        ? 'bg-rose-600 text-white'
+                        : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-300'
+                    }`}
+                  >
+                    {isGu ? 'બાકી (₹0 Due)' : 'Unpaid (₹0 Due)'}
+                  </button>
+                </div>
+              </div>
+
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">₹</span>
+                <input
+                  type="number"
+                  min="0"
+                  max={effectiveTotalBill}
+                  step="1"
+                  required
+                  value={txnPaidAmount}
+                  onChange={(e) => {
+                    setTxnPaidAmount(e.target.value);
+                    setIsManualPaid(true);
+                  }}
+                  className="w-full text-sm font-mono font-bold py-2 pl-7 pr-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Live Remaining Due & Status Indicator */}
+            <div className="pt-2 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <span className="text-slate-600 dark:text-slate-400 font-medium">
+                  {isGu ? 'બાકી રહેતી રકમ (Remaining Due):' : 'Remaining Due:'}
+                </span>
+                <span
+                  className={`font-mono font-black text-sm ${
+                    currentDue > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'
+                  }`}
+                >
+                  ₹{currentDue.toFixed(2)}
+                </span>
+              </div>
+
+              <div>
+                {currentPaymentStatus === 'PAID' && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    {isGu ? 'સંપૂર્ણ ચૂકવેલ (PAID)' : 'Full Payment (PAID)'}
+                  </span>
+                )}
+                {currentPaymentStatus === 'PARTIAL' && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    {isGu
+                      ? `અંશતઃ ચૂકવેલ (₹${currentDue.toFixed(2)} બાકી)`
+                      : `Half/Partial (₹${currentDue.toFixed(2)} Due)`}
+                  </span>
+                )}
+                {currentPaymentStatus === 'PENDING' && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-800">
+                    <Clock className="w-3.5 h-3.5" />
+                    {isGu ? 'ચુકવણી બાકી (UNPAID)' : 'Pending (UNPAID)'}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* 5. PAYMENT MODE (CASH or ONLINE/UPI - NO DROPDOWN, NO CARD) & REMARKS */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                {isGu ? 'ચુકવણી પદ્ધતિ (Payment Mode) *' : 'Payment Mode *'}
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setTxnPaymentMode('CASH')}
+                  className={`py-2.5 px-3 rounded-xl border flex items-center justify-center gap-2 font-bold text-xs transition-all cursor-pointer ${
+                    txnPaymentMode === 'CASH'
+                      ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/25 ring-2 ring-emerald-500/20'
+                      : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:border-emerald-400 hover:bg-emerald-50/30'
+                  }`}
+                >
+                  <Banknote className="w-4 h-4" />
+                  <span>{isGu ? 'રોકડ (Cash)' : 'Cash'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setTxnPaymentMode('ONLINE/UPI')}
+                  className={`py-2.5 px-3 rounded-xl border flex items-center justify-center gap-2 font-bold text-xs transition-all cursor-pointer ${
+                    txnPaymentMode === 'ONLINE/UPI'
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-600/25 ring-2 ring-indigo-500/20'
+                      : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:border-indigo-400 hover:bg-indigo-50/30'
+                  }`}
+                >
+                  <Smartphone className="w-4 h-4" />
+                  <span>{isGu ? 'ઓનલાઇન / UPI' : 'Online / UPI'}</span>
+                </button>
+              </div>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {isGu ? 'સેવા *' : 'Service *'}
-              </label>
-              <select
-                value={txnServiceId || (servicesList[0]?.id ?? '')}
-                onChange={(e) => {
-                  const sId = Number(e.target.value);
-                  setTxnServiceId(sId);
-                  const found = servicesList.find((s) => s.id === sId);
-                  if (found && found.SubServices?.length) {
-                    setTxnSubServiceId(found.SubServices[0].id);
-                  }
-                }}
-                required
-                className="w-full text-xs py-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-              >
-                {servicesList.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.ServiceName}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {isGu ? 'પેટા-સેવા *' : 'Sub-Service *'}
-              </label>
-              <select
-                value={txnSubServiceId || (currentTxnSubServices[0]?.id ?? '')}
-                onChange={(e) => setTxnSubServiceId(Number(e.target.value))}
-                className="w-full text-xs py-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-              >
-                {currentTxnSubServices.map((sub) => (
-                  <option key={sub.id} value={sub.id}>
-                    {sub.SubServiceName}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {isGu ? 'બિલ રકમ (₹) *' : 'Bill Amount (₹) *'}
-              </label>
-              <input
-                type="number"
-                min="1"
-                step="1"
-                required
-                value={txnBillAmount}
-                onChange={(e) => {
-                  setTxnBillAmount(e.target.value);
-                  setTxnPointsEarned(Math.round((parseFloat(e.target.value) || 0) * 0.1));
-                }}
-                className="w-full text-xs py-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {isGu ? 'ચુકવણી પદ્ધતિ *' : 'Payment Mode *'}
-              </label>
-              <select
-                value={txnPaymentMode}
-                onChange={(e) => setTxnPaymentMode(e.target.value as PaymentMode)}
-                className="w-full text-xs py-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-              >
-                <option value="CASH">{isGu ? 'રોકડ (Cash)' : 'Cash'}</option>
-                <option value="ONLINE/UPI">{isGu ? 'ઓનલાઇન / UPI' : 'Online / UPI'}</option>
-                <option value="CARD">{isGu ? 'કાર્ડ' : 'Card'}</option>
-              </select>
-            </div>
-
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {isGu ? 'નોંધ (મરજિયાત)' : 'Remarks / Note (Optional)'}
+                {isGu ? 'નોંધ / રીમાર્કસ (મરજિયાત)' : 'Remarks / Note (Optional)'}
               </label>
               <input
                 type="text"
-                placeholder={isGu ? 'દા.ત. સેવા ફી, ટોકન #૪, ઝેરોક્ષ ચાર્જ' : 'e.g. Service fee, Token #4, Xerox charge'}
+                placeholder={
+                  isGu
+                    ? currentDue > 0
+                      ? 'દા.ત. અડધી રકમ મળી, બાકી ડિલિવરી સમયે'
+                      : 'દા.ત. સેવા ફી ચુકવણી'
+                    : currentDue > 0
+                    ? 'e.g. ₹50 advance paid, balance on delivery'
+                    : 'e.g. Service fee payment'
+                }
                 value={txnRemarks}
                 onChange={(e) => setTxnRemarks(e.target.value)}
                 className="w-full text-xs py-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
@@ -1271,24 +1779,14 @@ export const OfficeDashboardView: React.FC = () => {
             </div>
           </div>
 
-          {/* Summary preview */}
-          <div className="p-3.5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-200/60 dark:border-indigo-900/40 flex items-center justify-between">
-            <div>
-              <span className="text-slate-500 dark:text-slate-400">
-                {isGu ? 'ચૂકવવાપાત્ર રકમ:' : 'Payable Collection:'}
-              </span>
-              <span className="ml-2 font-mono font-black text-sm text-indigo-700 dark:text-indigo-400">
-                ₹{txnBillAmount || '0'}
-              </span>
-            </div>
-            <div className="text-right">
-              <span className="text-slate-500 dark:text-slate-400">
-                {isGu ? 'પોઈન્ટ્સ:' : 'Loyalty Points:'}
-              </span>
-              <span className="ml-2 font-mono font-bold text-emerald-600">
-                +{txnPointsEarned} Pts
-              </span>
-            </div>
+          {/* Points preview */}
+          <div className="px-3.5 py-2.5 rounded-xl bg-slate-100/70 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs">
+            <span className="text-slate-600 dark:text-slate-400">
+              {isGu ? 'આ ચુકવણી પર ગ્રાહક લોયલ્ટી પોઈન્ટ્સ:' : 'Loyalty Points Earned on this Payment:'}
+            </span>
+            <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+              +{Math.round(currentPaid * 0.1)} Pts
+            </span>
           </div>
 
           <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-slate-800">
@@ -1305,9 +1803,9 @@ export const OfficeDashboardView: React.FC = () => {
               variant="primary"
               size="sm"
               isLoading={createTxnMutation.isPending}
-              className="bg-indigo-600 hover:bg-indigo-500 font-bold"
+              className="bg-indigo-600 hover:bg-indigo-500 font-bold shadow-md shadow-indigo-600/20"
             >
-              {isGu ? 'વ્યવહાર સાચવો' : 'Save Transaction Entry'}
+              {isGu ? 'વ્યવહાર સાચવો (Save Entry)' : 'Save Transaction Entry'}
             </Button>
           </div>
         </form>

@@ -266,6 +266,14 @@ export type PaymentMode =
   | 'BANK_TRANSFER'
   | 'ONLINE';
 
+export interface TransactionItem {
+  service_id: number;
+  service_name: string;
+  sub_service_id: number;
+  sub_service_name: string;
+  amount: number;
+}
+
 export interface Transaction {
   id: number;
   transaction_no: string;
@@ -280,6 +288,11 @@ export interface Transaction {
   sub_service_name: string;
   staff_name: string;
   bill_amount: string;
+  paid_amount?: string;
+  due_amount?: string;
+  payment_status?: 'PAID' | 'PARTIAL' | 'PENDING';
+  items?: TransactionItem[];
+  previous_due_cleared?: string;
   points_earned: number;
   points_redeemed: number;
   wallet_credit: string;
