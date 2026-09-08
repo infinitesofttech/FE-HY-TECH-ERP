@@ -63,7 +63,7 @@ export default function CustomersPage() {
   }>({
     family_id: '',
     name: '',
-    relationship: 'Son',
+    relationship: 'SON',
     mobile_number: '',
     birth_date: '',
   });
@@ -206,7 +206,7 @@ export default function CustomersPage() {
       setMemberForm({
         family_id: customers[0]?.family_id || '',
         name: '',
-        relationship: 'Son',
+        relationship: 'SON',
         mobile_number: '',
         birth_date: '',
       });
@@ -668,15 +668,16 @@ export default function CustomersPage() {
               })
             }
           >
-            <option value="Self">{language === 'gu' ? 'પોતે (Self)' : 'Self'}</option>
-            <option value="Spouse">{language === 'gu' ? 'પતિ/પત્ની (Spouse)' : 'Spouse'}</option>
-            <option value="Son">{language === 'gu' ? 'પુત્ર (Son)' : 'Son'}</option>
-            <option value="Daughter">{language === 'gu' ? 'પુત્રી (Daughter)' : 'Daughter'}</option>
-            <option value="Father">{language === 'gu' ? 'પિતા (Father)' : 'Father'}</option>
-            <option value="Mother">{language === 'gu' ? 'માતા (Mother)' : 'Mother'}</option>
-            <option value="Brother">{language === 'gu' ? 'ભાઈ (Brother)' : 'Brother'}</option>
-            <option value="Sister">{language === 'gu' ? 'બહેન (Sister)' : 'Sister'}</option>
-            <option value="Other">{language === 'gu' ? 'અન્ય (Other)' : 'Other'}</option>
+            <option value="SELF">{language === 'gu' ? 'પોતે (Self)' : 'Self'}</option>
+            <option value="WIFE">{language === 'gu' ? 'પત્ની (Wife)' : 'Wife'}</option>
+            <option value="HUSBAND">{language === 'gu' ? 'પતિ (Husband)' : 'Husband'}</option>
+            <option value="SON">{language === 'gu' ? 'પુત્ર (Son)' : 'Son'}</option>
+            <option value="DAUGHTER">{language === 'gu' ? 'પુત્રી (Daughter)' : 'Daughter'}</option>
+            <option value="FATHER">{language === 'gu' ? 'પિતા (Father)' : 'Father'}</option>
+            <option value="MOTHER">{language === 'gu' ? 'માતા (Mother)' : 'Mother'}</option>
+            <option value="BROTHER">{language === 'gu' ? 'ભાઈ (Brother)' : 'Brother'}</option>
+            <option value="SISTER">{language === 'gu' ? 'બહેન (Sister)' : 'Sister'}</option>
+            <option value="OTHER">{language === 'gu' ? 'અન્ય (Other)' : 'Other'}</option>
           </Select>
 
           <Input
