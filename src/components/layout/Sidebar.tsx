@@ -60,52 +60,53 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const getAdminNavigation = (): NavGroup[] => [
     {
-      group: 'ADMINISTRATION',
+      group: t('group_administration'),
       items: [
-        { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
-        { name: 'Office Dashboard', href: '/admin/office-dashboard', icon: Building2 },
-        { name: 'Services', href: '/admin/services', icon: FolderTree },
-        { name: 'Account & Finance', href: '/admin/transactions', icon: Receipt },
-        { name: 'HRMS', href: '/admin/employees', icon: UserCog },
-        { name: 'Settings', href: '/admin/settings', icon: Settings },
+        { name: t('nav_dashboard'), href: '/admin/dashboard', icon: LayoutDashboard },
+        { name: t('nav_office_dashboard'), href: '/admin/office-dashboard', icon: Building2 },
+        { name: t('nav_village_tree'), href: '/admin/family-tree', icon: Network, badge: 'Tree' },
+        { name: t('nav_services'), href: '/admin/services', icon: FolderTree },
+        { name: t('nav_account_finance'), href: '/admin/transactions', icon: Receipt },
+        { name: t('nav_hrms'), href: '/admin/employees', icon: UserCog },
+        { name: t('nav_settings'), href: '/admin/settings', icon: Settings },
       ],
     },
   ];
 
   const getStaffNavigation = (): NavGroup[] => [
     {
-      group: 'OFFICE OPERATIONS',
+      group: t('group_office_ops'),
       items: [
-        { name: 'Dashboard', href: '/staff/dashboard', icon: LayoutDashboard },
-        { name: 'Family', href: '/staff/customers', icon: Users },
-        { name: 'Services', href: '/staff/services', icon: FolderTree },
-        { name: 'HRMS', href: '/staff/hrms', icon: UserCog },
-        { name: 'Settings', href: '/staff/settings', icon: Settings },
+        { name: t('nav_dashboard'), href: '/staff/dashboard', icon: LayoutDashboard },
+        { name: t('nav_family'), href: '/staff/customers', icon: Users },
+        { name: t('nav_services'), href: '/staff/services', icon: FolderTree },
+        { name: t('nav_hrms'), href: '/staff/hrms', icon: UserCog },
+        { name: t('nav_settings'), href: '/staff/settings', icon: Settings },
       ],
     },
   ];
 
   const getCustomerNavigation = (): NavGroup[] => [
     {
-      group: 'DASHBOARD',
+      group: t('nav_dashboard').toUpperCase(),
       items: [
         { name: t('nav_my_dashboard'), href: '/user/dashboard', icon: LayoutDashboard },
       ],
     },
     {
-      group: 'FAMILY',
+      group: t('nav_family').toUpperCase(),
       items: [
-        { name: 'Family Card', href: '/user/family?tab=card', icon: ShieldCheck },
-        { name: 'Family Member', href: '/user/family?tab=member', icon: Users },
-        { name: 'Wallet Points', href: '/user/family?tab=wallet', icon: Coins },
+        { name: t('nav_family_card'), href: '/user/family?tab=card', icon: ShieldCheck },
+        { name: t('nav_family_members'), href: '/user/family?tab=member', icon: Users },
+        { name: t('nav_wallet_points'), href: '/user/family?tab=wallet', icon: Coins },
       ],
     },
     {
-      group: 'MY APPLICATION',
+      group: t('navigation.applications').toUpperCase(),
       items: [
-        { name: 'All Application', href: '/user/applications', icon: FileText },
-        { name: 'Services', href: '/user/services', icon: FolderTree },
-        { name: 'Settings', href: '/user/settings', icon: Settings },
+        { name: t('navigation.all_applications'), href: '/user/applications', icon: FileText },
+        { name: t('nav_services'), href: '/user/services', icon: FolderTree },
+        { name: t('nav_settings'), href: '/user/settings', icon: Settings },
       ],
     },
   ];
@@ -259,7 +260,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             ) : (
               <>
                 <ChevronLeft className="w-3.5 h-3.5" />
-                <span className="text-[11px]">Collapse</span>
+                <span className="text-[11px]">{t('common.collapse')}</span>
               </>
             )}
           </button>

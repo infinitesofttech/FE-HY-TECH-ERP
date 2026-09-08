@@ -12,9 +12,9 @@ export interface LanguageItem {
 }
 
 export const SUPPORTED_LANGUAGES: LanguageItem[] = [
+  { code: 'en', name: 'English', english: 'English' },
   { code: 'gu', name: 'ગુજરાતી', english: 'Gujarati' },
   { code: 'hi', name: 'हिन्दी', english: 'Hindi' },
-  { code: 'en', name: 'English', english: 'English' },
   { code: 'mr', name: 'मराठी', english: 'Marathi' },
   { code: 'pa', name: 'ਪੰਜਾਬੀ', english: 'Punjabi' },
   { code: 'bn', name: 'বাংলা', english: 'Bengali' },
@@ -110,7 +110,6 @@ export const GoogleLanguageSelector: React.FC = () => {
   const currentLang = useMemo(() => {
     return (
       SUPPORTED_LANGUAGES.find((l) => l.code === language) ||
-      SUPPORTED_LANGUAGES.find((l) => l.code === 'gu') ||
       SUPPORTED_LANGUAGES[0]
     );
   }, [language]);
@@ -131,7 +130,13 @@ export const GoogleLanguageSelector: React.FC = () => {
     setLanguage(lang.code);
     setIsOpen(false);
     setSearchQuery('');
-    toast.success(`ભાષા બદલાઈ: ${lang.name} (${lang.english})`);
+    const msg =
+      lang.code === 'gu'
+        ? `ભાષા બદલાઈ: ${lang.name}`
+        : lang.code === 'hi'
+        ? `भाषा बदली: ${lang.name}`
+        : `Language changed: ${lang.name}`;
+    toast.success(msg);
   };
 
   return (
@@ -140,9 +145,9 @@ export const GoogleLanguageSelector: React.FC = () => {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        title="ભાષા પસંદ કરો / Select Language"
+        title={`ભાષા: ${currentLang.name} (${currentLang.english}) / Select Language`}
         aria-label="Select Language"
-        className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all duration-200 cursor-pointer select-none ${
+        className={`flex items-center gap-1.5 px-2 py-1.5 rounded-xl border transition-all duration-200 cursor-pointer select-none ${
           isOpen
             ? 'bg-brand-50/80 dark:bg-slate-800 border-brand-500 ring-2 ring-brand-500/20 shadow-sm'
             : 'bg-white/80 dark:bg-slate-900/80 border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 shadow-xs'
@@ -151,10 +156,6 @@ export const GoogleLanguageSelector: React.FC = () => {
         <div className="flex items-center justify-center w-5 h-5 rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-400">
           <Globe className="w-3.5 h-3.5" />
         </div>
-
-        <span className="text-xs font-bold text-slate-800 dark:text-slate-100 max-w-[90px] sm:max-w-[120px] truncate">
-          {currentLang.name}
-        </span>
 
         <ChevronDown
           className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${

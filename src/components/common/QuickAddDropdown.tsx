@@ -41,12 +41,18 @@ export const QuickAddDropdown: React.FC<QuickAddDropdownProps> = ({
   onAddEmployee,
   variant = 'button',
   className = '',
-  buttonLabel = '+ Quick Add',
+  buttonLabel,
   align = 'right',
 }) => {
   const { language } = useLanguage();
   const { userRole } = useAuth();
   const isGu = language === 'gu';
+  const finalButtonLabel =
+    buttonLabel && buttonLabel !== 'Quick Add'
+      ? buttonLabel
+      : isGu
+      ? 'ઝડપી ઉમેરો'
+      : 'Quick Add';
   const prefix = userRole === 'employee' ? '/staff' : '/admin';
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -116,7 +122,7 @@ export const QuickAddDropdown: React.FC<QuickAddDropdownProps> = ({
           aria-expanded={isOpen}
         >
           <Plus className="w-3.5 h-3.5 stroke-[3]" />
-          <span>{buttonLabel}</span>
+          <span>{finalButtonLabel}</span>
           <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
         </button>
       ) : (
@@ -132,7 +138,7 @@ export const QuickAddDropdown: React.FC<QuickAddDropdownProps> = ({
           <div className="w-5 h-5 rounded-md bg-white/20 flex items-center justify-center">
             <Plus className="w-3.5 h-3.5 stroke-[3]" />
           </div>
-          <span>{buttonLabel}</span>
+          <span>{finalButtonLabel}</span>
           <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
         </button>
       )}
@@ -166,7 +172,7 @@ export const QuickAddDropdown: React.FC<QuickAddDropdownProps> = ({
             <div className="py-2 first:pt-1">
               <div className="px-2.5 pb-1.5 flex items-center justify-between">
                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                  {isGu ? 'Application (અરજી અને સેવાઓ)' : 'Application (Forms & Services)'}
+                  {isGu ? 'અરજી અને સેવાઓ' : 'Applications & Services'}
                 </span>
                 <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
                   Apps
@@ -184,10 +190,10 @@ export const QuickAddDropdown: React.FC<QuickAddDropdownProps> = ({
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-brand-600 dark:group-hover:text-brand-400">
-                      Add New Application
+                      {isGu ? 'નવી અરજી ઉમેરો' : 'Add New Application'}
                     </div>
                     <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
-                      {isGu ? 'નવી સરકારી અરજી દાખલ કરો (Service Intake)' : 'New citizen service intake & application'}
+                      {isGu ? 'નવી નાગરિક સેવા અરજી દાખલ કરો' : 'New citizen service intake & application'}
                     </div>
                   </div>
                 </button>
@@ -203,10 +209,10 @@ export const QuickAddDropdown: React.FC<QuickAddDropdownProps> = ({
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-brand-600 dark:group-hover:text-brand-400">
-                      Add Family
+                      {isGu ? 'નવો પરિવાર ઉમેરો' : 'Add Family'}
                     </div>
                     <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
-                      {isGu ? 'નવો પરિવાર રજીસ્ટર કરો (Register New Family)' : 'Register new citizen household unit'}
+                      {isGu ? 'નવા નાગરિક પરિવારની નોંધણી કરો' : 'Register new citizen household unit'}
                     </div>
                   </div>
                 </button>
@@ -222,10 +228,10 @@ export const QuickAddDropdown: React.FC<QuickAddDropdownProps> = ({
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-brand-600 dark:group-hover:text-brand-400">
-                      Add Family Member
+                      {isGu ? 'પરિવાર સભ્ય ઉમેરો' : 'Add Family Member'}
                     </div>
                     <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
-                      {isGu ? 'પરિવારના નવા સભ્ય ઉમેરો (Family Member)' : 'Add member under registered family'}
+                      {isGu ? 'પરિવારમાં નવા સભ્યની નોંધણી' : 'Add member under registered family'}
                     </div>
                   </div>
                 </button>
@@ -241,10 +247,10 @@ export const QuickAddDropdown: React.FC<QuickAddDropdownProps> = ({
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-brand-600 dark:group-hover:text-brand-400">
-                      Add Services
+                      {isGu ? 'નવી સેવા ઉમેરો' : 'Add Services'}
                     </div>
                     <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
-                      {isGu ? 'નવી યોજના / સેવા કેટેલોગમાં ઉમેરો (New Service)' : 'Create new government scheme or service'}
+                      {isGu ? 'સરકારી સેવા સૂચિમાં નવી યોજના ઉમેરો' : 'Create new government scheme or service'}
                     </div>
                   </div>
                 </button>
@@ -255,7 +261,7 @@ export const QuickAddDropdown: React.FC<QuickAddDropdownProps> = ({
             <div className="py-2">
               <div className="px-2.5 pb-1.5 flex items-center justify-between">
                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                  {isGu ? 'Finance (નાણાકીય)' : 'Finance (Ledger & Accounts)'}
+                  {isGu ? 'નાણાં અને હિસાબ' : 'Finance & Ledger'}
                 </span>
                 <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400">
                   Accounts
@@ -273,10 +279,10 @@ export const QuickAddDropdown: React.FC<QuickAddDropdownProps> = ({
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-rose-600 dark:group-hover:text-rose-400">
-                      Add Expense
+                      {isGu ? 'નવો ખર્ચ ઉમેરો' : 'Add Expense'}
                     </div>
                     <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
-                      {isGu ? 'ઓફિસ / પોર્ટલ ખર્ચ નોંધો (Office Expense)' : 'Record office utility or portal wallet expense'}
+                      {isGu ? 'ઓફિસ / પોર્ટલ ખર્ચ નોંધો' : 'Record office utility or portal wallet expense'}
                     </div>
                   </div>
                 </button>
@@ -292,10 +298,10 @@ export const QuickAddDropdown: React.FC<QuickAddDropdownProps> = ({
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
-                      Add Income
+                      {isGu ? 'નવી આવક ઉમેરો' : 'Add Income'}
                     </div>
                     <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
-                      {isGu ? 'ગ્રાહક પેમેન્ટ / આવક નોંધો (Billing & Payment)' : 'Record customer payment receipt & bill'}
+                      {isGu ? 'ગ્રાહક પેમેન્ટ અથવા ફી નોંધો' : 'Record customer payment receipt & bill'}
                     </div>
                   </div>
                 </button>
@@ -306,7 +312,7 @@ export const QuickAddDropdown: React.FC<QuickAddDropdownProps> = ({
             <div className="py-2 last:pb-1">
               <div className="px-2.5 pb-1.5 flex items-center justify-between">
                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                  {isGu ? 'HRMS (કર્મચારી વ્યવસ્થાપન)' : 'HRMS (Staff & Payroll)'}
+                  {isGu ? 'સ્ટાફ અને HRMS' : 'Staff & HRMS'}
                 </span>
                 <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400">
                   Staff
@@ -329,12 +335,12 @@ export const QuickAddDropdown: React.FC<QuickAddDropdownProps> = ({
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-purple-600 dark:group-hover:text-purple-400">
-                      {userRole === 'employee' ? (isGu ? 'હાજરી અને રજાઓ (My HRMS)' : 'My HRMS & Attendance') : 'Add Employee'}
+                      {userRole === 'employee' ? (isGu ? 'મારી હાજરી અને રજાઓ' : 'My HRMS & Attendance') : (isGu ? 'નવા કર્મચારી ઉમેરો' : 'Add Employee')}
                     </div>
                     <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
                       {userRole === 'employee'
                         ? (isGu ? 'તમારી દૈનિક હાજરી, હોલિડે અને રજાઓ' : 'Track attendance, holidays & leaves')
-                        : (isGu ? 'નવો સ્ટાફ / કર્મચારી પ્રોફાઇલ ઉમેરો (New Staff)' : 'Provision new staff or operator profile')}
+                        : (isGu ? 'નવા ઓપરેટર સ્ટાફ એકાઉન્ટ બનાવો' : 'Provision new staff or operator profile')}
                     </div>
                   </div>
                 </button>

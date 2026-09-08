@@ -10,7 +10,6 @@ import { serviceVisitService } from '@/api/services/serviceVisitService';
 import { pendingWorkService } from '@/api/services/pendingWorkService';
 import { applicationService } from '@/api/services/applicationService';
 import { ServiceIntakeModal } from '@/components/applications/ServiceIntakeModal';
-import { QuickAddDropdown } from '@/components/common/QuickAddDropdown';
 import { useLanguage } from '@/context/LanguageContext';
 import {
   Users,
@@ -20,7 +19,6 @@ import {
   IndianRupee,
   Coins,
   Receipt,
-  PlusCircle,
   ArrowUpRight,
   TrendingUp,
   Sparkles,
@@ -95,63 +93,12 @@ export default function AdminDashboardPage() {
 
   return (
     <AppShell allowedRoles={['admin']}>
-      {/* 1. Executive Modern Header */}
-      <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 shadow-sm">
-        {/* Ambient subtle tint */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/5 dark:bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-          <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200/80 dark:border-brand-800/80 text-[11px] font-bold tracking-wide">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              <span>HY-TECH ENTERPRISE SUITE</span>
-              <span className="text-slate-300 dark:text-slate-700">&bull;</span>
-              <span className="text-slate-600 dark:text-slate-400 font-semibold">Government Certified Desk</span>
-            </div>
-
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-              {t('exec_overview')}
-            </h1>
-
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed">
-              {t('exec_sub')}
-            </p>
-          </div>
-
-          {/* Action Toolbar */}
-          <div className="flex flex-wrap items-center gap-2">
-            <QuickAddDropdown
-              onAddNewApplication={() => setIsIntakeModalOpen(true)}
-              buttonLabel="+ Quick Add"
-            />
-            <Button
-              onClick={() => router.push('/admin/applications')}
-              variant="secondary"
-              size="sm"
-              leftIcon={<FileCheck2 className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />}
-            >
-              {t('nav_applications')} ({applications.length})
-            </Button>
-            <Button
-              onClick={() => router.push('/admin/visits')}
-              variant="secondary"
-              size="sm"
-              leftIcon={<PlusCircle className="w-3.5 h-3.5 text-slate-500" />}
-            >
-              {t('new_service_visit')}
-            </Button>
-          </div>
-        </div>
-      </div>
-
-
-      {/* 3. Financial & Revenue KPI Grid */}
+      {/* Financial & Revenue KPI Grid */}
       <div className="space-y-3">
         <div className="flex items-center gap-2">
           <IndianRupee className="w-4 h-4 text-emerald-500" />
           <h2 className="text-xs font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-            Financial & Loyalty Points Vault
+            {t('dashboard_page.financial_vault')}
           </h2>
         </div>
 
@@ -159,7 +106,7 @@ export default function AdminDashboardPage() {
           <StatCard
             title={t('today_revenue')}
             value={`₹${dashboard?.financial_kpi?.today_revenue ?? '0.00'}`}
-            subtitle="Collected today"
+            subtitle={t('dashboard_page.collected_today')}
             icon={IndianRupee}
             colorScheme="emerald"
             onClick={() => router.push('/admin/transactions')}
@@ -167,7 +114,7 @@ export default function AdminDashboardPage() {
           <StatCard
             title={t('month_revenue')}
             value={`₹${dashboard?.financial_kpi?.month_revenue ?? '4,850.00'}`}
-            subtitle="MTD Revenue Invoiced"
+            subtitle={t('dashboard_page.mtd_revenue')}
             trend={{ value: '+22.4% MoM', isPositive: true }}
             icon={TrendingUp}
             colorScheme="brand"
@@ -176,7 +123,7 @@ export default function AdminDashboardPage() {
           <StatCard
             title={t('all_time_billed')}
             value={`₹${dashboard?.financial_kpi?.total_revenue ?? '18,400.00'}`}
-            subtitle="All-time gross processing"
+            subtitle={t('dashboard_page.all_time_gross')}
             icon={Receipt}
             colorScheme="purple"
             onClick={() => router.push('/admin/transactions')}
@@ -184,7 +131,7 @@ export default function AdminDashboardPage() {
           <StatCard
             title={t('points_issued')}
             value={`${dashboard?.financial_kpi?.total_points_issued ?? 120} Pts`}
-            subtitle="Circulating citizen wallet credits"
+            subtitle={t('dashboard_page.circulating_credits')}
             icon={Coins}
             colorScheme="amber"
             onClick={() => router.push('/admin/transactions')}
@@ -198,13 +145,13 @@ export default function AdminDashboardPage() {
         <Card variant="elevated" className="lg:col-span-2">
           <CardHeader>
             <div>
-              <CardTitle>Revenue Trajectory & Daily Invoicing</CardTitle>
+              <CardTitle>{t('dashboard_page.revenue_chart_title')}</CardTitle>
               <CardDescription>
-                Day-by-day revenue breakdown from government document processing
+                {t('dashboard_page.revenue_chart_sub')}
               </CardDescription>
             </div>
 
-            <Badge variant="purple">Weekly Trend</Badge>
+            <Badge variant="purple">{t('dashboard_page.weekly_trend')}</Badge>
           </CardHeader>
 
           <CardContent>
@@ -240,7 +187,7 @@ export default function AdminDashboardPage() {
                       fontWeight: 'bold',
                       boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
                     }}
-                    formatter={(value: any) => [`₹${value}`, 'Invoiced']}
+                    formatter={(value: any) => [`₹${value}`, t('dashboard_page.invoiced')]}
                   />
                   <Bar dataKey="revenue" fill="url(#barGradient)" radius={[6, 6, 0, 0]} />
                 </BarChart>
@@ -253,8 +200,8 @@ export default function AdminDashboardPage() {
         <Card variant="elevated" className="flex flex-col justify-between">
           <CardHeader>
             <div>
-              <CardTitle>Service Application Share</CardTitle>
-              <CardDescription>Distribution by government service category</CardDescription>
+              <CardTitle>{t('dashboard_page.service_share_title')}</CardTitle>
+              <CardDescription>{t('dashboard_page.service_share_sub')}</CardDescription>
             </div>
           </CardHeader>
 
@@ -288,7 +235,7 @@ export default function AdminDashboardPage() {
               </ResponsiveContainer>
               <div className="absolute flex flex-col items-center pointer-events-none">
                 <span className="text-xl font-black text-slate-900 dark:text-white">100%</span>
-                <span className="text-[10px] font-bold uppercase text-slate-400">Total Share</span>
+                <span className="text-[10px] font-bold uppercase text-slate-400">{t('dashboard_page.total_share')}</span>
               </div>
             </div>
 
@@ -322,8 +269,8 @@ export default function AdminDashboardPage() {
                 <FileCheck2 className="w-5 h-5" />
               </div>
               <div>
-                <CardTitle>Live Service Visits & Document Desks</CardTitle>
-                <CardDescription>Active citizen verification queues</CardDescription>
+                <CardTitle>{t('dashboard_page.live_visits_title')}</CardTitle>
+                <CardDescription>{t('dashboard_page.live_visits_sub')}</CardDescription>
               </div>
             </div>
 
@@ -333,7 +280,7 @@ export default function AdminDashboardPage() {
               size="xs"
               rightIcon={<ArrowUpRight className="w-4 h-4" />}
             >
-              Manage All Visits
+              {t('dashboard_page.manage_all_visits')}
             </Button>
           </CardHeader>
 
@@ -342,12 +289,12 @@ export default function AdminDashboardPage() {
               <table className="w-full text-left text-xs">
                 <thead className="border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase text-[10px] tracking-wider">
                   <tr>
-                    <th className="py-3 px-3">Visit Token</th>
-                    <th className="py-3 px-3">Citizen & Family</th>
-                    <th className="py-3 px-3">Service</th>
-                    <th className="py-3 px-3">Checklist Readiness</th>
-                    <th className="py-3 px-3">Status</th>
-                    <th className="py-3 px-3 text-right">Date</th>
+                    <th className="py-3 px-3">{t('dashboard_page.visit_token')}</th>
+                    <th className="py-3 px-3">{t('dashboard_page.citizen_family')}</th>
+                    <th className="py-3 px-3">{t('office.service')}</th>
+                    <th className="py-3 px-3">{t('dashboard_page.checklist_readiness')}</th>
+                    <th className="py-3 px-3">{t('office.status')}</th>
+                    <th className="py-3 px-3 text-right">{t('office.date')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
@@ -383,7 +330,7 @@ export default function AdminDashboardPage() {
                         <td className="py-3.5 px-3">
                           <div className="w-32 space-y-1">
                             <div className="flex justify-between text-[10px] font-bold">
-                              <span>{avail}/{total} Docs</span>
+                              <span>{avail}/{total} {t('dashboard_page.docs')}</span>
                               <span>{pct}%</span>
                             </div>
                             <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
@@ -423,8 +370,8 @@ export default function AdminDashboardPage() {
             <div className="flex items-center gap-2">
               <KanbanSquare className="w-5 h-5 text-amber-500" />
               <div>
-                <CardTitle>Government Queue</CardTitle>
-                <CardDescription>Active processing tasks</CardDescription>
+                <CardTitle>{t('dashboard_page.govt_queue_title')}</CardTitle>
+                <CardDescription>{t('dashboard_page.govt_queue_sub')}</CardDescription>
               </div>
             </div>
 
@@ -434,7 +381,7 @@ export default function AdminDashboardPage() {
               size="xs"
               rightIcon={<ArrowRight className="w-4 h-4" />}
             >
-              Board
+              {t('dashboard_page.board')}
             </Button>
           </CardHeader>
 
@@ -459,7 +406,7 @@ export default function AdminDashboardPage() {
                 </p>
 
                 <div className="flex items-center justify-between text-[11px] text-slate-400 font-medium">
-                  <span>Due {item.expected_date}</span>
+                  <span>{t('dashboard_page.due')} {item.expected_date}</span>
                   <Badge
                     variant={
                       item.work_status === 'COMPLETED'

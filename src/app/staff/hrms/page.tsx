@@ -16,6 +16,7 @@ import { hrmsService } from '@/api/services/hrmsService';
 import { employeeService } from '@/api/services/employeeService';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { formatEmpName, getEmpInitial } from '@/i18n';
 import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
 import {
   AttendanceRecord,
@@ -321,12 +322,12 @@ export default function StaffHRMSPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-600 to-emerald-600 text-white flex items-center justify-center font-black text-2xl shadow-lg shadow-brand-500/20 shrink-0">
-                  {currentEmployee.full_name ? currentEmployee.full_name[0].toUpperCase() : 'S'}
+                  {getEmpInitial(currentEmployee.full_name, language, currentEmployee.username, 'S')}
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
                     <h2 className="text-lg font-black text-slate-900 dark:text-white">
-                      {currentEmployee.full_name}
+                      {formatEmpName(currentEmployee.full_name || currentEmployee.username, language)}
                     </h2>
                     <Badge variant="success">{isGu ? 'ઓન ડ્યુટી' : 'Active Staff'}</Badge>
                   </div>
@@ -334,7 +335,7 @@ export default function StaffHRMSPage() {
                     {currentEmployee.designation || 'Front Desk Operator'}
                   </p>
                   <p className="text-[11px] text-slate-400 font-medium">
-                    {currentEmployee.department || 'Citizen Service Center'} &bull; શિફ્ટ:{' '}
+                    {currentEmployee.department || 'Citizen Service Center'} &bull; {isGu ? 'શિફ્ટ: ' : 'Shift: '}
                     {currentEmployee.shift_timing || '09:30 AM - 06:30 PM'}
                   </p>
                 </div>

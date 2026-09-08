@@ -67,6 +67,7 @@ const COMPLETED_STATUSES: ApplicationStatus[] = ['COMPLETED', 'APPROVED'];
 export const OfficeDashboardView: React.FC = () => {
   const router = useRouter();
   const { t, language } = useLanguage();
+  const isGu = language === 'gu';
   const queryClient = useQueryClient();
 
   // Modals state
@@ -286,13 +287,13 @@ export const OfficeDashboardView: React.FC = () => {
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30 text-xs font-semibold mb-3">
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              <span>Office Front Desk & Operations</span>
+              <span>{t('office.front_desk')}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-              Office Dashboard
+              {t('office.title')}
             </h1>
             <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl leading-relaxed">
-              Real-time service intake, pending workflow scrutiny, and completed applications delivery queue.
+              {t('office.subtitle')}
             </p>
           </div>
 
@@ -304,7 +305,7 @@ export const OfficeDashboardView: React.FC = () => {
               leftIcon={<PlusCircle className="w-5 h-5" />}
               className="shadow-lg shadow-brand-600/30 font-semibold"
             >
-              + Add Application
+              {t('office.add_application')}
             </Button>
             <Button
               onClick={() => {
@@ -316,7 +317,7 @@ export const OfficeDashboardView: React.FC = () => {
               size="md"
               leftIcon={<RefreshCw className="w-4 h-4" />}
             >
-              Refresh
+              {t('office.refresh')}
             </Button>
           </div>
         </div>
@@ -327,9 +328,9 @@ export const OfficeDashboardView: React.FC = () => {
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-xs font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 flex items-center gap-2">
             <Layers className="w-4 h-4 text-brand-500" />
-            Overview Summary
+            {t('office.overview_summary')}
           </h2>
-          <span className="text-xs text-slate-400 font-medium">Live sync with backend</span>
+          <span className="text-xs text-slate-400 font-medium">{t('office.live_sync')}</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
@@ -337,7 +338,7 @@ export const OfficeDashboardView: React.FC = () => {
           <div className="group relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm hover:shadow-md transition-all hover:border-brand-500/50 flex flex-col justify-between">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                All
+                {t('office.all')}
               </span>
               <div className="p-2.5 rounded-xl bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400">
                 <FileCheck className="w-5 h-5" />
@@ -349,7 +350,7 @@ export const OfficeDashboardView: React.FC = () => {
                   {totalAppsCount}
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
-                  Total Applications Registered
+                  {t('office.total_apps_registered')}
                 </p>
               </div>
               <button
@@ -359,7 +360,7 @@ export const OfficeDashboardView: React.FC = () => {
                   setIsIntakeModalOpen(true);
                 }}
                 className="w-8 h-8 rounded-xl flex items-center justify-center bg-brand-600 hover:bg-brand-500 text-white shadow-sm transition-all hover:scale-110 active:scale-95 shrink-0"
-                title="Add New Application (+)"
+                title={t('office.add_application')}
               >
                 <Plus className="w-4 h-4 stroke-[3]" />
               </button>
@@ -370,7 +371,7 @@ export const OfficeDashboardView: React.FC = () => {
           <div className="group relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm hover:shadow-md transition-all hover:border-amber-500/50 flex flex-col justify-between">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                Pending
+                {t('office.pending')}
               </span>
               <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400">
                 <Clock className="w-5 h-5" />
@@ -381,7 +382,7 @@ export const OfficeDashboardView: React.FC = () => {
                 {pendingApps.length}
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
-                In Scrutiny / Govt Processing
+                {t('office.in_scrutiny')}
               </p>
             </div>
           </div>
@@ -390,7 +391,7 @@ export const OfficeDashboardView: React.FC = () => {
           <div className="group relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm hover:shadow-md transition-all hover:border-emerald-500/50 flex flex-col justify-between">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                Completed
+                {t('office.completed')}
               </span>
               <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
                 <CheckCircle2 className="w-5 h-5" />
@@ -401,7 +402,7 @@ export const OfficeDashboardView: React.FC = () => {
                 {completedApps.length}
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
-                Delivered &amp; Approved
+                {t('office.delivered_approved')}
               </p>
             </div>
           </div>
@@ -410,7 +411,7 @@ export const OfficeDashboardView: React.FC = () => {
           <div className="group relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm hover:shadow-md transition-all hover:border-indigo-500/50 flex flex-col justify-between">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                Transaction
+                {t('office.transaction')}
               </span>
               <div className="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400">
                 <Receipt className="w-5 h-5" />
@@ -422,7 +423,7 @@ export const OfficeDashboardView: React.FC = () => {
                   ₹{totalRevenue.toLocaleString()}
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
-                  {totalTransactionsCount} Payment Records
+                  {totalTransactionsCount} {t('office.payment_records')}
                 </p>
               </div>
               <button
@@ -432,7 +433,7 @@ export const OfficeDashboardView: React.FC = () => {
                   setIsTransactionModalOpen(true);
                 }}
                 className="w-8 h-8 rounded-xl flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition-all hover:scale-110 active:scale-95 shrink-0"
-                title="Record New Transaction Entry (+)"
+                title={isGu ? 'નવો વ્યવહાર નોંધો' : 'Record New Transaction Entry (+)'}
               >
                 <Plus className="w-4 h-4 stroke-[3]" />
               </button>
@@ -441,6 +442,7 @@ export const OfficeDashboardView: React.FC = () => {
         </div>
       </div>
 
+      {/* ========================================================================= */}
       {/* ========================================================================= */}
       {/* SECTION 1: TODAY'S APPLICATIONS (WITH FILTERS + ADD BUTTON) */}
       {/* ========================================================================= */}
@@ -453,14 +455,14 @@ export const OfficeDashboardView: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <CardTitle className="text-lg font-black text-slate-900 dark:text-white">
-                  Today&apos;s Applications
+                  {t('office.todays_applications')}
                 </CardTitle>
                 <Badge variant="info">
                   {displayTodayApps.length}
                 </Badge>
               </div>
               <CardDescription className="text-xs text-slate-500">
-                Daily intake registry with instant filter and intake wizard
+                {t('office.todays_sub')}
               </CardDescription>
             </div>
           </div>
@@ -473,7 +475,7 @@ export const OfficeDashboardView: React.FC = () => {
               leftIcon={<PlusCircle className="w-4 h-4" />}
               className="shadow-md shadow-brand-600/20"
             >
-              + Add Application
+              {t('office.add_application')}
             </Button>
           </div>
         </CardHeader>
@@ -484,7 +486,7 @@ export const OfficeDashboardView: React.FC = () => {
             {/* Filter: Date */}
             <div>
               <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                Date Filter
+                {t('office.date_filter')}
               </label>
               <div className="flex items-center gap-1.5">
                 <input
@@ -496,18 +498,18 @@ export const OfficeDashboardView: React.FC = () => {
                 {todayDateFilter && (
                   <button
                     onClick={() => setTodayDateFilter('')}
-                    title="Clear date (Show all)"
+                    title={isGu ? 'તારીખ સાફ કરો' : 'Clear date (Show all)'}
                     className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 px-1.5 py-1 rounded hover:bg-slate-200/50"
                   >
-                    Clear
+                    {t('office.clear')}
                   </button>
                 )}
                 <button
                   onClick={() => setTodayDateFilter(todayStr)}
-                  title="Reset to today"
+                  title={isGu ? 'આજની તારીખ પર સેટ કરો' : 'Reset to today'}
                   className="text-[11px] font-semibold text-brand-600 hover:text-brand-700 px-2 py-1 rounded bg-brand-50 dark:bg-brand-950/40 hover:bg-brand-100"
                 >
-                  Today
+                  {t('office.today')}
                 </button>
               </div>
             </div>
@@ -515,34 +517,34 @@ export const OfficeDashboardView: React.FC = () => {
             {/* Filter: Status */}
             <div>
               <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                Status Filter
+                {t('office.status_filter')}
               </label>
               <select
                 value={todayStatusFilter}
                 onChange={(e) => setTodayStatusFilter(e.target.value)}
                 className="w-full text-xs py-1.5 px-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500"
               >
-                <option value="ALL">All Statuses</option>
-                <option value="SUBMITTED">Submitted</option>
-                <option value="SCRUTINY">Scrutiny</option>
-                <option value="GOVERNMENT_PROCESSING">Govt Processing</option>
-                <option value="ACTION_REQUIRED">Action Required</option>
-                <option value="APPROVED">Approved</option>
-                <option value="COMPLETED">Completed</option>
-                <option value="REJECTED">Rejected</option>
+                <option value="ALL">{t('office.all_statuses')}</option>
+                <option value="SUBMITTED">{isGu ? 'સબમિટ થયેલ' : 'Submitted'}</option>
+                <option value="SCRUTINY">{isGu ? 'ચકાસણી' : 'Scrutiny'}</option>
+                <option value="GOVERNMENT_PROCESSING">{isGu ? 'સરકારી પ્રક્રિયા' : 'Govt Processing'}</option>
+                <option value="ACTION_REQUIRED">{isGu ? 'કાર્યવાહી જરૂરી' : 'Action Required'}</option>
+                <option value="APPROVED">{isGu ? 'મંજૂર' : 'Approved'}</option>
+                <option value="COMPLETED">{isGu ? 'પૂર્ણ' : 'Completed'}</option>
+                <option value="REJECTED">{isGu ? 'અસ્વીકાર' : 'Rejected'}</option>
               </select>
             </div>
 
             {/* Filter: Family ID / Name */}
             <div>
               <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                Family ID / Citizen
+                {t('office.family_citizen')}
               </label>
               <div className="relative">
                 <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="e.g. HTF-000001 or Name"
+                  placeholder={isGu ? 'દા.ત. HTF-000001 અથવા નામ' : 'e.g. HTF-000001 or Name'}
                   value={todayFamilyFilter}
                   onChange={(e) => setTodayFamilyFilter(e.target.value)}
                   className="w-full text-xs py-1.5 pl-8 pr-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500"
@@ -562,7 +564,7 @@ export const OfficeDashboardView: React.FC = () => {
                 size="xs"
                 className="text-xs text-slate-500"
               >
-                Reset Filters
+                {t('office.reset_filters')}
               </Button>
             </div>
           </div>
@@ -574,13 +576,13 @@ export const OfficeDashboardView: React.FC = () => {
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-100/60 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 uppercase text-[10px] tracking-wider">
                 <tr>
-                  <th className="py-3.5 px-4">Application ID</th>
-                  <th className="py-3.5 px-4">Family ID & Applicant</th>
-                  <th className="py-3.5 px-4">Service</th>
-                  <th className="py-3.5 px-4">Applied Date</th>
-                  <th className="py-3.5 px-4">Status</th>
-                  <th className="py-3.5 px-4">Payment</th>
-                  <th className="py-3.5 px-4 text-right">Actions</th>
+                  <th className="py-3.5 px-4">{t('office.application_id')}</th>
+                  <th className="py-3.5 px-4">{t('office.family_applicant')}</th>
+                  <th className="py-3.5 px-4">{t('office.service')}</th>
+                  <th className="py-3.5 px-4">{t('office.applied_date')}</th>
+                  <th className="py-3.5 px-4">{t('office.status')}</th>
+                  <th className="py-3.5 px-4">{t('office.payment')}</th>
+                  <th className="py-3.5 px-4 text-right">{t('office.actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
@@ -590,10 +592,10 @@ export const OfficeDashboardView: React.FC = () => {
                       <div className="flex flex-col items-center justify-center">
                         <AlertCircle className="w-8 h-8 text-slate-300 dark:text-slate-600 mb-2" />
                         <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
-                          No applications matched today&apos;s filter criteria
+                          {t('office.no_today_apps')}
                         </p>
                         <p className="text-xs text-slate-400 mt-1">
-                          Click &quot;Reset Filters&quot; or register a new application below.
+                          {t('office.click_reset_or_add')}
                         </p>
                         <Button
                           onClick={() => setIsIntakeModalOpen(true)}
@@ -602,7 +604,7 @@ export const OfficeDashboardView: React.FC = () => {
                           leftIcon={<PlusCircle className="w-3.5 h-3.5" />}
                           className="mt-3"
                         >
-                          + Add Application
+                          {t('office.add_application')}
                         </Button>
                       </div>
                     </td>
@@ -638,7 +640,7 @@ export const OfficeDashboardView: React.FC = () => {
                         )}
                       </td>
                       <td className="py-3.5 px-4 font-mono text-slate-500">
-                        {app.created_at ? app.created_at.split('T')[0] : 'Today'}
+                        {app.created_at ? app.created_at.split('T')[0] : (isGu ? 'આજે' : 'Today')}
                       </td>
                       <td className="py-3.5 px-4">
                         <Badge variant={getStatusBadgeVariant(app.status)}>
@@ -653,7 +655,7 @@ export const OfficeDashboardView: React.FC = () => {
                               : 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400'
                           }`}
                         >
-                          {app.payment_status || 'PAID'} (₹{app.total_fee || 50})
+                          {app.payment_status === 'PAID' ? (isGu ? 'ચૂકવેલ' : 'PAID') : (isGu ? 'બાકી' : 'PENDING')} (₹{app.total_fee || 50})
                         </span>
                       </td>
                       <td className="py-3.5 px-4 text-right">
@@ -664,7 +666,7 @@ export const OfficeDashboardView: React.FC = () => {
                             size="xs"
                             leftIcon={<Eye className="w-3.5 h-3.5" />}
                           >
-                            View
+                            {t('office.view')}
                           </Button>
                           <Button
                             onClick={() => setSelectedAppForReceipt(app)}
@@ -672,7 +674,7 @@ export const OfficeDashboardView: React.FC = () => {
                             size="xs"
                             leftIcon={<Printer className="w-3.5 h-3.5" />}
                           >
-                            Receipt
+                            {t('office.receipt')}
                           </Button>
                         </div>
                       </td>
@@ -684,7 +686,6 @@ export const OfficeDashboardView: React.FC = () => {
           </div>
         </CardContent>
       </Card>
-
       {/* ========================================================================= */}
       {/* SECTION 2: PENDING APPLICATIONS (WITH FILTERS + PROCESS ACTION) */}
       {/* ========================================================================= */}
@@ -697,14 +698,14 @@ export const OfficeDashboardView: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <CardTitle className="text-lg font-black text-slate-900 dark:text-white">
-                  Pending Applications
+                  {t('office.pending_applications')}
                 </CardTitle>
                 <Badge variant="warning">
-                  {filteredPendingApps.length} Pending
+                  {filteredPendingApps.length} {t('office.pending')}
                 </Badge>
               </div>
               <CardDescription className="text-xs text-slate-500">
-                Workload requiring staff scrutiny, documents verification, or government portal submission
+                {t('office.pending_sub')}
               </CardDescription>
             </div>
           </div>
@@ -716,7 +717,7 @@ export const OfficeDashboardView: React.FC = () => {
             {/* Filter: Date */}
             <div>
               <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                Date
+                {t('office.date_filter')}
               </label>
               <div className="flex items-center gap-1.5">
                 <input
@@ -728,10 +729,10 @@ export const OfficeDashboardView: React.FC = () => {
                 {pendingDateFilter && (
                   <button
                     onClick={() => setPendingDateFilter('')}
-                    title="Clear date"
+                    title={isGu ? 'તારીખ સાફ કરો' : 'Clear date'}
                     className="text-xs text-slate-400 hover:text-slate-600 px-1.5 py-1 rounded"
                   >
-                    Clear
+                    {t('office.clear')}
                   </button>
                 )}
               </div>
@@ -740,13 +741,13 @@ export const OfficeDashboardView: React.FC = () => {
             {/* Filter: Family ID */}
             <div>
               <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                Family ID
+                {t('office.family_citizen')}
               </label>
               <div className="relative">
                 <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="Filter by Family ID / Name"
+                  placeholder={isGu ? 'પરિવાર આઈડી અથવા નામ શોધો' : 'Filter by Family ID / Name'}
                   value={pendingFamilyFilter}
                   onChange={(e) => setPendingFamilyFilter(e.target.value)}
                   className="w-full text-xs py-1.5 pl-8 pr-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -757,14 +758,14 @@ export const OfficeDashboardView: React.FC = () => {
             {/* Filter: Service */}
             <div>
               <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                Service
+                {t('office.service')}
               </label>
               <select
                 value={pendingServiceFilter}
                 onChange={(e) => setPendingServiceFilter(e.target.value)}
                 className="w-full text-xs py-1.5 px-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
               >
-                <option value="ALL">All Services</option>
+                <option value="ALL">{t('office.all_services')}</option>
                 {servicesList.map((s) => (
                   <option key={s.id} value={String(s.id)}>
                     {s.ServiceName}
@@ -785,7 +786,7 @@ export const OfficeDashboardView: React.FC = () => {
                 size="xs"
                 className="text-xs text-slate-500"
               >
-                Reset Filters
+                {t('office.reset_filters')}
               </Button>
             </div>
           </div>
@@ -797,13 +798,13 @@ export const OfficeDashboardView: React.FC = () => {
             <table className="w-full text-left text-xs">
               <thead className="bg-amber-50/30 dark:bg-amber-950/10 border-b border-slate-200 dark:border-slate-800 text-slate-500 uppercase text-[10px] tracking-wider">
                 <tr>
-                  <th className="py-3.5 px-4">Application ID</th>
-                  <th className="py-3.5 px-4">Family ID & Applicant</th>
-                  <th className="py-3.5 px-4">Service</th>
-                  <th className="py-3.5 px-4">Applied Date</th>
-                  <th className="py-3.5 px-4">Current Status</th>
-                  <th className="py-3.5 px-4">Assigned Staff</th>
-                  <th className="py-3.5 px-4 text-right">Action</th>
+                  <th className="py-3.5 px-4">{t('office.application_id')}</th>
+                  <th className="py-3.5 px-4">{t('office.family_applicant')}</th>
+                  <th className="py-3.5 px-4">{t('office.service')}</th>
+                  <th className="py-3.5 px-4">{t('office.applied_date')}</th>
+                  <th className="py-3.5 px-4">{t('office.current_status')}</th>
+                  <th className="py-3.5 px-4">{t('office.assigned_staff')}</th>
+                  <th className="py-3.5 px-4 text-right">{t('office.actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
@@ -812,10 +813,10 @@ export const OfficeDashboardView: React.FC = () => {
                     <td colSpan={7} className="py-10 text-center text-slate-400">
                       <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
                       <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                        No pending applications matching these filters!
+                        {t('office.no_pending_apps')}
                       </p>
                       <p className="text-xs text-slate-400 mt-1">
-                        All applications in this queue are clear or handled.
+                        {t('office.pending_all_clear')}
                       </p>
                     </td>
                   </tr>
@@ -855,7 +856,7 @@ export const OfficeDashboardView: React.FC = () => {
                         </Badge>
                       </td>
                       <td className="py-3.5 px-4 text-slate-600 dark:text-slate-300">
-                        {app.assigned_staff_name || 'Front Desk Staff'}
+                        {app.assigned_staff_name || (isGu ? 'ફ્રન્ટ ડેસ્ક સ્ટાફ' : 'Front Desk Staff')}
                       </td>
                       <td className="py-3.5 px-4 text-right">
                         <Button
@@ -864,7 +865,7 @@ export const OfficeDashboardView: React.FC = () => {
                           size="xs"
                           leftIcon={<Eye className="w-3.5 h-3.5" />}
                         >
-                          Process &amp; Scrutiny
+                          {t('office.process_scrutiny')}
                         </Button>
                       </td>
                     </tr>
@@ -888,14 +889,14 @@ export const OfficeDashboardView: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <CardTitle className="text-lg font-black text-slate-900 dark:text-white">
-                  Complete Applications
+                  {t('office.complete_applications')}
                 </CardTitle>
                 <Badge variant="success">
-                  {filteredCompleteApps.length} Completed
+                  {filteredCompleteApps.length} {t('office.completed')}
                 </Badge>
               </div>
               <CardDescription className="text-xs text-slate-500">
-                Successfully approved, processed, and ready for citizen certificate delivery
+                {t('office.complete_sub')}
               </CardDescription>
             </div>
           </div>
@@ -907,7 +908,7 @@ export const OfficeDashboardView: React.FC = () => {
             {/* Filter: Date */}
             <div>
               <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                Date
+                {t('office.date_filter')}
               </label>
               <div className="flex items-center gap-1.5">
                 <input
@@ -919,10 +920,10 @@ export const OfficeDashboardView: React.FC = () => {
                 {completeDateFilter && (
                   <button
                     onClick={() => setCompleteDateFilter('')}
-                    title="Clear date"
+                    title={isGu ? 'તારીખ સાફ કરો' : 'Clear date'}
                     className="text-xs text-slate-400 hover:text-slate-600 px-1.5 py-1 rounded"
                   >
-                    Clear
+                    {t('office.clear')}
                   </button>
                 )}
               </div>
@@ -931,13 +932,13 @@ export const OfficeDashboardView: React.FC = () => {
             {/* Filter: Family ID */}
             <div>
               <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                Family ID
+                {t('office.family_citizen')}
               </label>
               <div className="relative">
                 <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="Filter by Family ID / Name"
+                  placeholder={isGu ? 'પરિવાર આઈડી અથવા નામ શોધો' : 'Filter by Family ID / Name'}
                   value={completeFamilyFilter}
                   onChange={(e) => setCompleteFamilyFilter(e.target.value)}
                   className="w-full text-xs py-1.5 pl-8 pr-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -948,14 +949,14 @@ export const OfficeDashboardView: React.FC = () => {
             {/* Filter: Service */}
             <div>
               <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                Service
+                {t('office.service')}
               </label>
               <select
                 value={completeServiceFilter}
                 onChange={(e) => setCompleteServiceFilter(e.target.value)}
                 className="w-full text-xs py-1.5 px-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
               >
-                <option value="ALL">All Services</option>
+                <option value="ALL">{t('office.all_services')}</option>
                 {servicesList.map((s) => (
                   <option key={s.id} value={String(s.id)}>
                     {s.ServiceName}
@@ -976,7 +977,7 @@ export const OfficeDashboardView: React.FC = () => {
                 size="xs"
                 className="text-xs text-slate-500"
               >
-                Reset Filters
+                {t('office.reset_filters')}
               </Button>
             </div>
           </div>
@@ -988,13 +989,13 @@ export const OfficeDashboardView: React.FC = () => {
             <table className="w-full text-left text-xs">
               <thead className="bg-emerald-50/30 dark:bg-emerald-950/10 border-b border-slate-200 dark:border-slate-800 text-slate-500 uppercase text-[10px] tracking-wider">
                 <tr>
-                  <th className="py-3.5 px-4">Application ID</th>
-                  <th className="py-3.5 px-4">Family ID & Applicant</th>
-                  <th className="py-3.5 px-4">Service</th>
-                  <th className="py-3.5 px-4">Govt Application No</th>
-                  <th className="py-3.5 px-4">Status</th>
-                  <th className="py-3.5 px-4">Fee Paid</th>
-                  <th className="py-3.5 px-4 text-right">Actions</th>
+                  <th className="py-3.5 px-4">{t('office.application_id')}</th>
+                  <th className="py-3.5 px-4">{t('office.family_applicant')}</th>
+                  <th className="py-3.5 px-4">{t('office.service')}</th>
+                  <th className="py-3.5 px-4">{t('office.govt_app_no')}</th>
+                  <th className="py-3.5 px-4">{t('office.status')}</th>
+                  <th className="py-3.5 px-4">{t('office.fee_paid')}</th>
+                  <th className="py-3.5 px-4 text-right">{t('office.actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
@@ -1003,7 +1004,10 @@ export const OfficeDashboardView: React.FC = () => {
                     <td colSpan={7} className="py-10 text-center text-slate-400">
                       <AlertCircle className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
                       <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                        No completed applications match the selected criteria.
+                        {t('office.no_complete_apps')}
+                      </p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        {t('office.complete_empty_hint')}
                       </p>
                     </td>
                   </tr>
@@ -1053,7 +1057,7 @@ export const OfficeDashboardView: React.FC = () => {
                             size="xs"
                             leftIcon={<Eye className="w-3.5 h-3.5" />}
                           >
-                            Details
+                            {t('office.view')}
                           </Button>
                           <Button
                             onClick={() => setSelectedAppForReceipt(app)}
@@ -1061,7 +1065,7 @@ export const OfficeDashboardView: React.FC = () => {
                             size="xs"
                             leftIcon={<Printer className="w-3.5 h-3.5" />}
                           >
-                            Receipt
+                            {t('office.receipt')}
                           </Button>
                         </div>
                       </td>
@@ -1103,8 +1107,8 @@ export const OfficeDashboardView: React.FC = () => {
       <Modal
         isOpen={isTransactionModalOpen}
         onClose={() => setIsTransactionModalOpen(false)}
-        title="Record New Transaction Entry"
-        description="Add a service payment or cash collection entry for a family"
+        title={isGu ? 'નવો વ્યવહાર નોંધો' : 'Record New Transaction Entry'}
+        description={isGu ? 'પરિવાર માટે સેવા ચુકવણી અથવા રોકડ નોંધ ઉમેરો' : 'Add a service payment or cash collection entry for a family'}
         maxWidth="lg"
       >
         <form
@@ -1117,7 +1121,7 @@ export const OfficeDashboardView: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                Family / Customer *
+                {isGu ? 'પરિવાર / નાગરિક *' : 'Family / Customer *'}
               </label>
               <select
                 value={txnCustomerId || (customers[0]?.id ?? '')}
@@ -1135,7 +1139,7 @@ export const OfficeDashboardView: React.FC = () => {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                Service *
+                {isGu ? 'સેવા *' : 'Service *'}
               </label>
               <select
                 value={txnServiceId || (servicesList[0]?.id ?? '')}
@@ -1160,7 +1164,7 @@ export const OfficeDashboardView: React.FC = () => {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                Sub-Service *
+                {isGu ? 'પેટા-સેવા *' : 'Sub-Service *'}
               </label>
               <select
                 value={txnSubServiceId || (currentTxnSubServices[0]?.id ?? '')}
@@ -1177,7 +1181,7 @@ export const OfficeDashboardView: React.FC = () => {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                Bill Amount (₹) *
+                {isGu ? 'બિલ રકમ (₹) *' : 'Bill Amount (₹) *'}
               </label>
               <input
                 type="number"
@@ -1195,26 +1199,26 @@ export const OfficeDashboardView: React.FC = () => {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                Payment Mode *
+                {isGu ? 'ચુકવણી પદ્ધતિ *' : 'Payment Mode *'}
               </label>
               <select
                 value={txnPaymentMode}
                 onChange={(e) => setTxnPaymentMode(e.target.value as PaymentMode)}
                 className="w-full text-xs py-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               >
-                <option value="CASH">CASH (રોકડ)</option>
-                <option value="ONLINE/UPI">ONLINE / UPI (ઓનલાઇન)</option>
-                <option value="CARD">CARD (કાર્ડ)</option>
+                <option value="CASH">{isGu ? 'રોકડ (Cash)' : 'Cash'}</option>
+                <option value="ONLINE/UPI">{isGu ? 'ઓનલાઇન / UPI' : 'Online / UPI'}</option>
+                <option value="CARD">{isGu ? 'કાર્ડ' : 'Card'}</option>
               </select>
             </div>
 
             <div className="sm:col-span-2">
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                Remarks / Note (Optional)
+                {isGu ? 'નોંધ (મરજિયાત)' : 'Remarks / Note (Optional)'}
               </label>
               <input
                 type="text"
-                placeholder="e.g. Service fee, Token #4, Xerox charge"
+                placeholder={isGu ? 'દા.ત. સેવા ફી, ટોકન #૪, ઝેરોક્ષ ચાર્જ' : 'e.g. Service fee, Token #4, Xerox charge'}
                 value={txnRemarks}
                 onChange={(e) => setTxnRemarks(e.target.value)}
                 className="w-full text-xs py-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
@@ -1225,13 +1229,17 @@ export const OfficeDashboardView: React.FC = () => {
           {/* Summary preview */}
           <div className="p-3.5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-200/60 dark:border-indigo-900/40 flex items-center justify-between">
             <div>
-              <span className="text-slate-500 dark:text-slate-400">Payable Collection:</span>
+              <span className="text-slate-500 dark:text-slate-400">
+                {isGu ? 'ચૂકવવાપાત્ર રકમ:' : 'Payable Collection:'}
+              </span>
               <span className="ml-2 font-mono font-black text-sm text-indigo-700 dark:text-indigo-400">
                 ₹{txnBillAmount || '0'}
               </span>
             </div>
             <div className="text-right">
-              <span className="text-slate-500 dark:text-slate-400">Loyalty Points:</span>
+              <span className="text-slate-500 dark:text-slate-400">
+                {isGu ? 'પોઈન્ટ્સ:' : 'Loyalty Points:'}
+              </span>
               <span className="ml-2 font-mono font-bold text-emerald-600">
                 +{txnPointsEarned} Pts
               </span>
@@ -1245,16 +1253,16 @@ export const OfficeDashboardView: React.FC = () => {
               size="sm"
               onClick={() => setIsTransactionModalOpen(false)}
             >
-              Cancel
+              {isGu ? 'રદ કરો' : 'Cancel'}
             </Button>
             <Button
               type="submit"
               variant="primary"
               size="sm"
               isLoading={createTxnMutation.isPending}
-              className="bg-indigo-600 hover:bg-indigo-500"
+              className="bg-indigo-600 hover:bg-indigo-500 font-bold"
             >
-              Save Transaction Entry
+              {isGu ? 'વ્યવહાર સાચવો' : 'Save Transaction Entry'}
             </Button>
           </div>
         </form>

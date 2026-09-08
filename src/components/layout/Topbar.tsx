@@ -127,15 +127,10 @@ export const Topbar: React.FC<TopbarProps> = ({
         {userRole !== 'customer' && (
           <QuickAddDropdown
             variant="compact"
-            buttonLabel="+ Quick Add"
+            buttonLabel={t('quick_add')}
           />
         )}
 
-        {/* Sync Engine Indicator */}
-        <div className="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/80 dark:border-emerald-800/80 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>{t('sync_active')}</span>
-        </div>
 
         {/* Google Translate & Multi-Language Selector */}
         <GoogleLanguageSelector />

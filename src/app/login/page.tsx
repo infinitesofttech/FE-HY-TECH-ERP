@@ -101,7 +101,7 @@ export default function LoginPage() {
               </span>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
-              Citizen Government Document & Workflow Infrastructure
+              {t('auth.login_sub')}
             </p>
           </div>
         </div>
@@ -152,7 +152,7 @@ export default function LoginPage() {
             <>
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Operator Username
+                  {t('auth.username_label')}
                 </label>
                 <div className="relative">
                   <input
@@ -168,7 +168,7 @@ export default function LoginPage() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Security Password
+                  {t('auth.password_label')}
                 </label>
                 <div className="relative">
                   <input
@@ -186,7 +186,7 @@ export default function LoginPage() {
             <>
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Family Identification Token (Family ID)
+                  {t('auth.family_id_label')}
                 </label>
                 <input
                   type="text"
@@ -200,7 +200,7 @@ export default function LoginPage() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Registered Mobile Number
+                  {t('auth.mobile_label')}
                 </label>
                 <input
                   type="tel"
@@ -214,7 +214,7 @@ export default function LoginPage() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Portal Password
+                  {t('auth.password_label')}
                 </label>
                 <input
                   type="password"
@@ -247,7 +247,7 @@ export default function LoginPage() {
         {/* 1-Click Fast Fill Test Buttons */}
         <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block text-center">
-            Fast One-Click Demo Credentials
+            {t('auth.quick_fill_hint')}
           </span>
 
           <div className="grid grid-cols-3 gap-2">

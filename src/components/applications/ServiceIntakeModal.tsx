@@ -73,6 +73,7 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
   initialServiceId = null,
 }) => {
   const { t, language } = useLanguage();
+  const isGu = language === 'gu';
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
@@ -538,13 +539,13 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
       onClose={handleClose}
       title={
         formMode === 'simple'
-          ? (language === 'gu' ? 'સરકારી સેવા નોંધણી (સાદું ફોર્મ)' : 'Government Service Intake (Simple Form)')
-          : (language === 'gu' ? 'સરકારી સેવા નોંધણી પોર્ટલ (All-In-One Form)' : 'Government Service Intake Hub')
+          ? (isGu ? 'સરકારી સેવા અરજી નોંધણી' : 'Government Service Intake')
+          : (isGu ? 'સરકારી સેવા નોંધણી પોર્ટલ' : 'Government Service Intake Hub')
       }
       description={
         formMode === 'simple'
-          ? (language === 'gu' ? 'સરળ ડ્રોપડાઉન સિલેક્શન સાથે ઝડપી અરજી નોંધણી ફોર્મ.' : 'Fast & easy service intake using clean dropdown selectors.')
-          : 'All 5 steps consolidated in a single page for rapid front-desk processing.'
+          ? (isGu ? 'સરળ ડ્રોપડાઉન પસંદગી સાથે ઝડપી અરજી નોંધણી ફોર્મ.' : 'Fast & easy service intake using clean dropdown selectors.')
+          : (isGu ? 'ઝડપી ફ્રન્ટ-ડેસ્ક પ્રોસેસિંગ માટે તમામ પગલાં એક જ પેજ પર ઉપલબ્ધ છે.' : 'All steps consolidated in a single page for rapid front-desk processing.')
       }
       maxWidth="2xl"
     >
@@ -561,7 +562,7 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
             }`}
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>⚡ સાદું ફોર્મ (Simple Dropdown Form)</span>
+            <span>⚡ {isGu ? 'ઝડપી ફોર્મ' : 'Simple Form'}</span>
           </button>
           <button
             type="button"
@@ -573,7 +574,7 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
             }`}
           >
             <FolderTree className="w-3.5 h-3.5" />
-            <span>📋 વિગતવાર ફોર્મ (Detailed Step Flow)</span>
+            <span>📋 {isGu ? 'વિગતવાર ફોર્મ' : 'Detailed Flow'}</span>
           </button>
         </div>
 
@@ -586,7 +587,7 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
             <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2">
               <div className="flex items-center justify-between">
                 <label className="block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                  ૧. પરિવાર / નાગરિક પસંદ કરો (Select Citizen / Family) <span className="text-rose-500">*</span>
+                  {isGu ? '૧. પરિવાર / નાગરિક પસંદ કરો' : '1. Select Citizen / Family'} <span className="text-rose-500">*</span>
                 </label>
                 <button
                   type="button"
@@ -594,29 +595,33 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
                   className="text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline inline-flex items-center gap-1"
                 >
                   <Plus className="w-3 h-3" />
-                  <span>{isQuickRegister ? 'ડ્રોપડાઉન લિસ્ટ (Dropdown)' : '+ નવો નાગરિક નોંધો (Quick Add)'}</span>
+                  <span>{isQuickRegister ? (isGu ? 'યાદીમાંથી પસંદ કરો' : 'Dropdown List') : (isGu ? '+ નવો નાગરિક નોંધો' : '+ Register New Citizen')}</span>
                 </button>
               </div>
 
               {isQuickRegister ? (
                 <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl space-y-3 border border-slate-200 dark:border-slate-700">
-                  <div className="text-xs font-bold text-slate-700 dark:text-slate-300">નવા નાગરિકની ઝડપી નોંધણી:</div>
+                  <div className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    {isGu ? 'નવા નાગરિકની ઝડપી નોંધણી:' : 'Quick Citizen Registration:'}
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <Input
-                      label="મુખીનું નામ (Full Name)"
-                      placeholder="દા.ત. રમેશભાઈ પટેલ"
+                      label={isGu ? 'પરિવારના વડાનું નામ' : 'Head of Family Name'}
+                      placeholder={isGu ? 'દા.ત. રમેશભાઈ પટેલ' : 'e.g. Ramesh Patel'}
                       value={quickCitizen.head_of_family}
                       onChange={(e) => setQuickCitizen({ ...quickCitizen, head_of_family: e.target.value })}
                     />
                     <Input
-                      label="મોબાઈલ નંબર (Mobile Number)"
-                      placeholder="10 અંકનો મોબાઈલ"
+                      label={isGu ? 'મોબાઇલ નંબર' : 'Mobile Number'}
+                      placeholder={isGu ? '૧૦ અંકનો મોબાઇલ નંબર' : '10-digit mobile number'}
                       value={quickCitizen.mobile_number}
                       onChange={(e) => setQuickCitizen({ ...quickCitizen, mobile_number: e.target.value })}
                     />
                   </div>
                   <div className="flex justify-end gap-2 pt-1">
-                    <Button size="sm" variant="outline" onClick={() => setIsQuickRegister(false)}>રદ કરો</Button>
+                    <Button size="sm" variant="outline" onClick={() => setIsQuickRegister(false)}>
+                      {isGu ? 'રદ કરો' : 'Cancel'}
+                    </Button>
                     <Button
                       size="sm"
                       onClick={() => quickRegisterMutation.mutate()}
@@ -624,14 +629,14 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
                       disabled={!quickCitizen.head_of_family || !quickCitizen.mobile_number}
                       className="bg-brand-600 text-white font-bold"
                     >
-                      સેવ કરો અને સિલેક્ટ કરો
+                      {isGu ? 'સાચવો અને પસંદ કરો' : 'Save & Select'}
                     </Button>
                   </div>
                 </div>
               ) : (
                 <Select
                   searchable
-                  placeholder="-- પરિવાર / નાગરિક સિલેક્ટ કરો (Select Family) --"
+                  placeholder={isGu ? '-- પરિવાર / નાગરિક પસંદ કરો --' : '-- Select Citizen / Family --'}
                   options={customerSelectOptions}
                   value={selectedCustomer ? String(selectedCustomer.id) : ''}
                   onChange={(e) => handleCustomerDropdownChange(e.target.value)}
@@ -660,10 +665,10 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
             {/* Field 2: Applicant / Member Dropdown */}
             <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2">
               <label className="block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                ૨. અરજદાર / સભ્ય પસંદ કરો (Select Applicant Member) <span className="text-rose-500">*</span>
+                {isGu ? '૨. અરજદાર / સભ્ય પસંદ કરો' : '2. Select Applicant Member'} <span className="text-rose-500">*</span>
               </label>
               <Select
-                placeholder={selectedCustomer ? "-- અરજદાર સભ્ય સિલેક્ટ કરો --" : "પહેલા ઉપરથી પરિવાર પસંદ કરો..."}
+                placeholder={selectedCustomer ? (isGu ? '-- અરજદાર સભ્ય પસંદ કરો --' : '-- Select Applicant Member --') : (isGu ? 'પહેલા ઉપરથી પરિવાર પસંદ કરો...' : 'Select family first...')}
                 disabled={!selectedCustomer}
                 options={applicantSelectOptions}
                 value={selectedApplicant?.isHead ? 'head' : selectedApplicant ? String(selectedApplicant.id) : ''}
@@ -689,11 +694,11 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
             <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
               <div>
                 <label className="block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-1.5">
-                  ૩. સરકારી સેવા પસંદ કરો (Select Government Service) <span className="text-rose-500">*</span>
+                  {isGu ? '૩. સરકારી સેવા પસંદ કરો' : '3. Select Government Service'} <span className="text-rose-500">*</span>
                 </label>
                 <Select
                   searchable
-                  placeholder="-- સરકારી સેવા સિલેક્ટ કરો (Select Service) --"
+                  placeholder={isGu ? '-- સરકારી સેવા પસંદ કરો --' : '-- Select Government Service --'}
                   options={serviceSelectOptions}
                   value={selectedService ? String(selectedService.id) : ''}
                   onChange={(e) => handleServiceDropdownChange(e.target.value)}
@@ -704,10 +709,10 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
               {subServiceSelectOptions.length > 0 && (
                 <div>
                   <label className="block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-1.5">
-                    સબ-સર્વિસ / સેવા વિકલ્પ (Sub-Service Option)
+                    {isGu ? 'સબ-સર્વિસ / સેવા વિકલ્પ' : 'Sub-Service Option'}
                   </label>
                   <Select
-                    placeholder="-- સબ-સર્વિસ વિકલ્પ સિલેક્ટ કરો --"
+                    placeholder={isGu ? '-- સબ-સર્વિસ વિકલ્પ પસંદ કરો --' : '-- Select Sub-Service Option --'}
                     options={subServiceSelectOptions}
                     value={selectedSubService ? String(selectedSubService.id) : ''}
                     onChange={(e) => handleSubServiceDropdownChange(e.target.value)}
@@ -719,17 +724,14 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
                   <div>
                     <span className="font-bold text-slate-900 dark:text-white">
-                      {selectedService.ServiceName}
+                      {isGu ? (selectedService.ServiceNameGu || selectedService.ServiceName) : selectedService.ServiceName}
                     </span>
-                    {selectedService.ServiceNameGu && (
-                      <span className="text-slate-500 ml-1">({selectedService.ServiceNameGu})</span>
-                    )}
                     <div className="text-[11px] text-slate-500 mt-0.5">
-                      SLA સમયગાળો: {selectedService.SlaDays || 5} દિવસ &bull; કેટેગરી: {selectedService.Category}
+                      {isGu ? `SLA સમયગાળો: ${selectedService.SlaDays || 5} દિવસ` : `SLA Timeline: ${selectedService.SlaDays || 5} Days`} &bull; {isGu ? `કેટેગરી: ${selectedService.Category}` : `Category: ${selectedService.Category}`}
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="text-slate-500 text-[11px]">કુલ સર્વિસ ફી:</span>
+                    <span className="text-slate-500 text-[11px]">{isGu ? 'કુલ સેવા ફી:' : 'Total Service Fee:'}</span>
                     <div className="text-sm font-black text-emerald-600 dark:text-emerald-400">
                       ₹{totalFeeAmount}
                     </div>
@@ -741,20 +743,20 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
             {/* Field 4: Govt Token / Application No. & Priority (2-col) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
               <Input
-                label="સરકારી અરજી / ટોકન નંબર (જો હોય તો)"
-                placeholder="દા.ત. PMK-GUJ-2026-98124"
+                label={isGu ? 'સરકારી અરજી / ટોકન નંબર (જો હોય તો)' : 'Government Application / Token No (Optional)'}
+                placeholder={isGu ? 'દા.ત. PMK-GUJ-2026-98124' : 'e.g. PMK-GUJ-2026-98124'}
                 value={govtAppNo}
                 onChange={(e) => setGovtAppNo(e.target.value)}
               />
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
-                  અગ્રતા (Priority)
+                  {isGu ? 'અગ્રતા' : 'Priority'}
                 </label>
                 <Select
                   options={[
-                    { value: 'NORMAL', label: 'સામાન્ય (Normal)' },
-                    { value: 'HIGH', label: 'ઝડપી (High Priority)' },
-                    { value: 'URGENT', label: 'તાત્કાલિક (Urgent / Tatkal)' },
+                    { value: 'NORMAL', label: isGu ? 'સામાન્ય' : 'Normal' },
+                    { value: 'HIGH', label: isGu ? 'ઝડપી' : 'High Priority' },
+                    { value: 'URGENT', label: isGu ? 'તાત્કાલિક' : 'Urgent / Tatkal' },
                   ]}
                   value={priority}
                   onChange={(e) => setPriority(e.target.value as any)}
@@ -767,10 +769,10 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-bold text-slate-800 dark:text-slate-200">
-                    જરૂરી દસ્તાવેજો (Required Documents Checklist):
+                    {isGu ? 'જરૂરી દસ્તાવેજોની યાદી:' : 'Required Documents Checklist:'}
                   </span>
                   <span className={`font-bold ${allDocsReady ? 'text-emerald-600' : 'text-amber-600'}`}>
-                    {vaultCheckList.filter((d) => d.isAvailable).length} / {vaultCheckList.length} ઉપલબ્ધ
+                    {vaultCheckList.filter((d) => d.isAvailable).length} / {vaultCheckList.length} {isGu ? 'ઉપલબ્ધ' : 'Available'}
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-2 pt-1">
@@ -786,7 +788,7 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
                       {doc.isAvailable ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> : <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />}
                       <span>{doc.DocumentName}</span>
                       <span className="text-[10px] opacity-75">
-                        ({doc.isAvailable ? 'વોલ્ટમાં છે' : 'બાકી છે'})
+                        ({doc.isAvailable ? (isGu ? 'તિજોરીમાં ઉપલબ્ધ' : 'In Vault') : (isGu ? 'બાકી છે' : 'Pending')})
                       </span>
                     </span>
                   ))}
@@ -797,20 +799,20 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
             {/* Field 6: Fee & Payment Details */}
             <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
               <div className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                ૪. ફી અને પેમેન્ટ વિગતો (Fee & Payment Details)
+                {isGu ? '૪. ફી અને ચુકવણી વિગતો' : '4. Fee & Payment Details'}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">
-                    પેમેન્ટ મોડ (Payment Mode)
+                    {isGu ? 'ચુકવણી પદ્ધતિ' : 'Payment Mode'}
                   </label>
                   <Select
                     options={[
-                      { value: 'CASH', label: 'CASH (રોકડ)' },
-                      { value: 'UPI', label: 'UPI / QR કોડ' },
-                      { value: 'WALLET', label: 'WALLET (વોલેટ ક્રેડિટ)' },
-                      { value: 'BANK_TRANSFER', label: 'બેંક ટ્રાન્સફર' },
+                      { value: 'CASH', label: isGu ? 'રોકડ' : 'Cash' },
+                      { value: 'UPI', label: isGu ? 'UPI / QR કોડ' : 'UPI / QR Code' },
+                      { value: 'WALLET', label: isGu ? 'વૉલેટ' : 'Wallet' },
+                      { value: 'BANK_TRANSFER', label: isGu ? 'બેંક ટ્રાન્સફર' : 'Bank Transfer' },
                     ]}
                     value={paymentMode}
                     onChange={(e) => setPaymentMode(e.target.value as PaymentMode)}
@@ -819,13 +821,13 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
 
                 <div>
                   <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">
-                    પેમેન્ટ સ્થિતિ (Payment Status)
+                    {isGu ? 'ચુકવણી સ્થિતિ' : 'Payment Status'}
                   </label>
                   <Select
                     options={[
-                      { value: 'PAID', label: 'PAID (પૂર્ણ ચૂકવાઈ)' },
-                      { value: 'PARTIAL', label: 'PARTIAL (અડધું ચૂકવાઈ)' },
-                      { value: 'UNPAID', label: 'UNPAID (બાકી)' },
+                      { value: 'PAID', label: isGu ? 'પૂર્ણ ચૂકવાઈ' : 'Paid' },
+                      { value: 'PARTIAL', label: isGu ? 'અડધું ચૂકવાઈ' : 'Partial' },
+                      { value: 'UNPAID', label: isGu ? 'બાકી' : 'Unpaid' },
                     ]}
                     value={paymentStatus}
                     onChange={(e) => setPaymentStatus(e.target.value as any)}
@@ -834,20 +836,20 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
 
                 <div>
                   <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">
-                    કુલ રકમ (Total Fee)
+                    {isGu ? 'કુલ રકમ' : 'Total Fee'}
                   </label>
                   <div className="h-10 px-3 flex items-center justify-between rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-black text-emerald-600 dark:text-emerald-400 text-sm">
                     <span>₹{totalFeeAmount}</span>
                     <span className="text-[10px] text-slate-400 font-normal">
-                      (સરકારી: ₹{govtFee} + સેવા: ₹{serviceCharge})
+                      ({isGu ? `સરકારી: ₹${govtFee} + સેવા: ₹${serviceCharge}` : `Govt: ₹${govtFee} + Service: ₹${serviceCharge}`})
                     </span>
                   </div>
                 </div>
               </div>
 
               <Input
-                label="ઓપરેટર નોંધ / રીમાર્કસ (Notes)"
-                placeholder="અરજી સંબંધિત ખાસ નોંધ અથવા રીમાર્ક લખો..."
+                label={isGu ? 'ઓપરેટર નોંધ' : 'Operator Notes'}
+                placeholder={isGu ? 'અરજી સંબંધિત ખાસ નોંધ અથવા રીમાર્ક લખો...' : 'Write any special notes or remarks...'}
                 value={operatorNotes}
                 onChange={(e) => setOperatorNotes(e.target.value)}
               />
@@ -1569,16 +1571,16 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
         <div className="text-xs text-slate-500 truncate">
           {selectedApplicant && selectedService ? (
             <span>
-              For: <strong>{selectedApplicant.name}</strong> &bull; Service: <strong>{selectedService.ServiceName}</strong> &bull; Total: <strong>₹{totalFeeAmount}</strong>
+              {isGu ? 'અરજદાર:' : 'For:'} <strong>{selectedApplicant.name}</strong> &bull; {isGu ? 'સેવા:' : 'Service:'} <strong>{isGu ? (selectedService.ServiceNameGu || selectedService.ServiceName) : selectedService.ServiceName}</strong> &bull; {isGu ? 'કુલ:' : 'Total:'} <strong>₹{totalFeeAmount}</strong>
             </span>
           ) : (
-            <span>Please complete all sections to submit application</span>
+            <span>{isGu ? 'અરજી સબમિટ કરવા માટે તમામ વિભાગો પૂર્ણ કરો' : 'Please complete all sections to submit application'}</span>
           )}
         </div>
 
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={handleClose}>
-            Cancel
+            {isGu ? 'રદ કરો' : 'Cancel'}
           </Button>
           <Button
             size="sm"
@@ -1588,7 +1590,7 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
             leftIcon={<Sparkles className="w-4 h-4" />}
             className="bg-brand-600 hover:bg-brand-500 font-bold"
           >
-            Submit Application &amp; Generate Receipt
+            {isGu ? 'અરજી સબમિટ કરો અને પહોંચ બનાવો' : 'Submit Application & Generate Receipt'}
           </Button>
         </div>
       </div>

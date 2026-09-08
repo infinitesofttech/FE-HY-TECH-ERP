@@ -19,6 +19,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
 import { EmployeeUser } from '@/types';
+import { formatEmpName, getEmpInitial } from '@/i18n';
 import { toast } from 'sonner';
 import {
   UserCog,
@@ -64,21 +65,6 @@ export default function EmployeesPage() {
     }
   }, []);
 
-  // Helper to cleanly format employee names based on selected language
-  const formatEmpName = (name: string) => {
-    if (!name) return '';
-    if (isGu) return name;
-    // For English: extract English name from parentheses if present
-    const match = name.match(/\(([^)]+)\)/);
-    if (match) {
-      const inside = match[1];
-      if (/[A-Za-z]/.test(inside)) {
-        return inside;
-      }
-      return name.replace(/\s*\([^)]+\)/, '').trim();
-    }
-    return name;
-  };
 
   // Form State
   const [form, setForm] = useState({
@@ -270,11 +256,11 @@ export default function EmployeesPage() {
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-500/20 to-emerald-500/20 text-brand-600 dark:text-brand-400 flex items-center justify-center font-black text-base ring-4 ring-brand-500/5 group-hover:scale-105 transition-transform">
-                  {emp.full_name ? emp.full_name[0].toUpperCase() : 'S'}
+                  {getEmpInitial(emp.full_name, language, emp.username, 'S')}
                 </div>
                 <div>
                   <h3 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-                    {formatEmpName(emp.full_name || emp.username)}
+                    {formatEmpName(emp.full_name || emp.username, language)}
                   </h3>
                   <span className="font-mono text-xs text-slate-400">@{emp.username}</span>
                 </div>
@@ -314,18 +300,18 @@ export default function EmployeesPage() {
             <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 flex items-center justify-between text-[11px] font-bold">
               <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
                 <Calendar className="w-3.5 h-3.5" />
-                <span>{isGu ? 'હાજરી: ૯૨.૫%' : 'Attendance: 92.5%'}</span>
+                <span>{language === 'gu' ? 'હાજરી: ૯૨.૫%' : language === 'hi' ? 'उपस्थिति: 92.5%' : 'Attendance: 92.5%'}</span>
               </span>
               <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
                 <Palmtree className="w-3.5 h-3.5" />
-                <span>{isGu ? 'બાકી રજા: ૯ દિવસ' : 'Leaves: 9 Days'}</span>
+                <span>{language === 'gu' ? 'બાકી રજા: ૯ દિવસ' : language === 'hi' ? 'शेष छुट्टियां: 9 दिन' : 'Leaves: 9 Days'}</span>
               </span>
             </div>
 
             {/* Footer Action */}
             <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
               <div className="inline-flex items-center gap-1 font-bold text-brand-600 dark:text-brand-400 group-hover:translate-x-0.5 transition-transform">
-                <span>{isGu ? 'હાજરી અને હોલિડે પ્રોફાઇલ જુઓ' : 'View Attendance & Profile'}</span>
+                <span>{language === 'gu' ? 'હાજરી અને પ્રોફાઇલ જુઓ' : language === 'hi' ? 'उपस्थिति एवं प्रोफ़ाइल देखें' : 'View Attendance & Profile'}</span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </div>
 

@@ -19,6 +19,7 @@ import { hrmsService } from '@/api/services/hrmsService';
 import { applicationService } from '@/api/services/applicationService';
 import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
 import { useLanguage } from '@/context/LanguageContext';
+import { formatEmpName, getEmpInitial } from '@/i18n';
 import {
   EmployeeUser,
   AttendanceRecord,
@@ -60,18 +61,6 @@ export default function EmployeeHRMSDetailPage() {
   const isGu = language === 'gu';
   const empId = Number(params?.id);
 
-  // Helper to cleanly format employee names based on selected language
-  const formatEmpName = (name: string) => {
-    if (!name) return '';
-    if (isGu) return name;
-    const match = name.match(/\(([^)]+)\)/);
-    if (match) {
-      const inside = match[1];
-      if (/[A-Za-z]/.test(inside)) return inside;
-      return name.replace(/\s*\([^)]+\)/, '').trim();
-    }
-    return name;
-  };
 
   // Active HRMS Sub-Tab
   const [activeTab, setActiveTab] = useState<'attendance' | 'holidays' | 'tasks' | 'salary'>('attendance');
@@ -255,7 +244,7 @@ export default function EmployeeHRMSDetailPage() {
             className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>{isGu ? '← કર્મચારી લિસ્ટ પર પાછા જાઓ' : '← Back to Employee Directory'}</span>
+            <span>← {t('hrms.back_to_directory')}</span>
           </Link>
 
           <div className="flex items-center gap-2">
@@ -265,7 +254,7 @@ export default function EmployeeHRMSDetailPage() {
               onClick={() => setIsPunchModalOpen(true)}
               leftIcon={<Clock className="w-4 h-4 text-emerald-600" />}
             >
-              {isGu ? 'આજની હાજરી (Punch In/Out)' : 'Punch Attendance'}
+              {t('hrms.punch_attendance')}
             </Button>
             <Button
               size="sm"
@@ -273,7 +262,7 @@ export default function EmployeeHRMSDetailPage() {
               leftIcon={<Plus className="w-4 h-4" />}
               className="bg-brand-600 text-white font-bold"
             >
-              {isGu ? 'રજા અરજી (Apply Leave)' : 'Apply Leave'}
+              {t('hrms.apply_leave')}
             </Button>
           </div>
         </div>
@@ -284,18 +273,18 @@ export default function EmployeeHRMSDetailPage() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-brand-500 to-emerald-600 text-white flex items-center justify-center font-black text-2xl shadow-lg shadow-brand-500/20 ring-4 ring-white dark:ring-slate-900 shrink-0">
-                {employee.full_name ? employee.full_name[0].toUpperCase() : 'E'}
+                {getEmpInitial(employee.full_name, language, employee.username, 'E')}
               </div>
 
               <div className="space-y-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-                    {formatEmpName(employee.full_name || employee.username)}
+                    {formatEmpName(employee.full_name || employee.username, language)}
                   </h1>
                   <Badge variant={employee.role === 'ADMIN' ? 'purple' : 'info'}>
                     {employee.role}
                   </Badge>
-                  <Badge variant="success">{isGu ? 'સક્રિય કર્મચારી' : 'Active Staff'}</Badge>
+                  <Badge variant="success">{t('hrms.active_staff')}</Badge>
                 </div>
 
                 <p className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
@@ -319,7 +308,7 @@ export default function EmployeeHRMSDetailPage() {
                   <span>&bull;</span>
                   <div className="flex items-center gap-1 text-slate-500">
                     <Clock className="w-3.5 h-3.5" />
-                    <span>{isGu ? 'શિફ્ટ:' : 'Shift:'} {employee.shift_timing || '09:30 AM - 06:30 PM'}</span>
+                    <span>{t('hrms.shift')}: {employee.shift_timing || '09:30 AM - 06:30 PM'}</span>
                   </div>
                 </div>
               </div>
@@ -328,16 +317,16 @@ export default function EmployeeHRMSDetailPage() {
             {/* Quick Summary Pill */}
             <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 text-center sm:text-right">
               <div>
-                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{isGu ? 'હાજરી દર' : 'Attendance Rate'}</div>
+                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{t('hrms.attendance_rate')}</div>
                 <div className="text-xl font-black text-emerald-600 dark:text-emerald-400">
                   {attendanceMetrics.percentage}%
                 </div>
               </div>
               <div className="w-px h-8 bg-slate-200 dark:bg-slate-700" />
               <div>
-                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{isGu ? 'બાકી રજા' : 'Remaining Leaves'}</div>
+                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{t('hrms.remaining_leaves')}</div>
                 <div className="text-xl font-black text-brand-600 dark:text-brand-400">
-                  {leaveBalance ? (leaveBalance.casual_total - leaveBalance.casual_used) + (leaveBalance.sick_total - leaveBalance.sick_used) : 11} {isGu ? 'દિવસ' : 'Days'}
+                  {leaveBalance ? (leaveBalance.casual_total - leaveBalance.casual_used) + (leaveBalance.sick_total - leaveBalance.sick_used) : 11} {t('hrms.days')}
                 </div>
               </div>
             </div>
@@ -364,8 +353,8 @@ export default function EmployeeHRMSDetailPage() {
               <Calendar className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <div className="text-xs font-bold truncate">{isGu ? 'અટેન્ડન્સ અને હાજરી' : 'Attendance & Logs'}</div>
-              <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">{isGu ? 'હાજરી અને બાયોમેટ્રિક' : 'Punch Logs & Metrics'}</div>
+              <div className="text-xs font-bold truncate">{t('hrms.tab_attendance')}</div>
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">{t('hrms.tab_attendance_sub')}</div>
             </div>
           </button>
 
@@ -387,8 +376,8 @@ export default function EmployeeHRMSDetailPage() {
               <Palmtree className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <div className="text-xs font-bold truncate">{isGu ? 'હોલિડે અને રજાઓ' : 'Holidays & Leaves'}</div>
-              <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">{isGu ? 'કેલેન્ડર અને બેલેન્સ' : 'Leave Balance & 2026 Cal'}</div>
+              <div className="text-xs font-bold truncate">{t('hrms.tab_holidays')}</div>
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">{t('hrms.tab_holidays_sub')}</div>
             </div>
           </button>
 
@@ -410,8 +399,8 @@ export default function EmployeeHRMSDetailPage() {
               <FileText className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <div className="text-xs font-bold truncate">{isGu ? 'કામગીરી અને અરજીઓ' : 'Assigned Applications'}</div>
-              <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">{isGu ? 'સોંપાયેલ કામગીરી' : 'Tasks & Desk Applications'}</div>
+              <div className="text-xs font-bold truncate">{t('hrms.tab_tasks')}</div>
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">{t('hrms.tab_tasks_sub')}</div>
             </div>
           </button>
 
@@ -433,8 +422,8 @@ export default function EmployeeHRMSDetailPage() {
               <DollarSign className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <div className="text-xs font-bold truncate">{isGu ? 'પગાર અને સ્લિપ' : 'Salary & Ledger'}</div>
-              <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">{isGu ? 'પેરોલ અને હિસાબ' : 'Payroll & Pay Slips'}</div>
+              <div className="text-xs font-bold truncate">{t('hrms.tab_salary')}</div>
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">{t('hrms.tab_salary_sub')}</div>
             </div>
           </button>
         </div>
@@ -447,51 +436,51 @@ export default function EmployeeHRMSDetailPage() {
             {/* Attendance Overview Stats */}
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
               <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">કાર્યકારી દિવસો</div>
+                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{t('hrms.working_days')}</div>
                 <div className="text-2xl font-black text-slate-900 dark:text-white mt-1">
                   {attendanceMetrics.totalWorkingDays}
                 </div>
-                <span className="text-[11px] text-slate-400">સપ્ટેમ્બર ૨૦૨૬</span>
+                <span className="text-[11px] text-slate-400">2026</span>
               </div>
 
               <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800/50 shadow-xs">
                 <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                  હાજર દિવસો (Present)
+                  {t('hrms.present_days')}
                 </div>
                 <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
                   {attendanceMetrics.presentCount}
                 </div>
-                <span className="text-[11px] text-emerald-600/80">સંપૂર્ણ હાજરી</span>
+                <span className="text-[11px] text-emerald-600/80">{t('hrms.full_attendance')}</span>
               </div>
 
               <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-800/50 shadow-xs">
                 <div className="text-[11px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">
-                  ગેરહાજર (Absent)
+                  {t('hrms.absent_days')}
                 </div>
                 <div className="text-2xl font-black text-rose-600 dark:text-rose-400 mt-1">
                   {attendanceMetrics.absentCount}
                 </div>
-                <span className="text-[11px] text-rose-600/80">અનઅધિકૃત રજા</span>
+                <span className="text-[11px] text-rose-600/80">{t('hrms.unauthorized_leave')}</span>
               </div>
 
               <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800/50 shadow-xs">
                 <div className="text-[11px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                  અડધો દિવસ (Half Day)
+                  {t('hrms.half_day')}
                 </div>
                 <div className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">
                   {attendanceMetrics.halfDayCount}
                 </div>
-                <span className="text-[11px] text-amber-600/80">હાફ-ડે લોગ</span>
+                <span className="text-[11px] text-amber-600/80">{t('hrms.half_day_log')}</span>
               </div>
 
               <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-800/50 shadow-xs">
                 <div className="text-[11px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
-                  હોલિડે / રજા (Holidays)
+                  {t('hrms.holidays')}
                 </div>
                 <div className="text-2xl font-black text-blue-600 dark:text-blue-400 mt-1">
                   {attendanceMetrics.holidayCount}
                 </div>
-                <span className="text-[11px] text-blue-600/80">સરકારી/સાપ્તાહિક રજા</span>
+                <span className="text-[11px] text-blue-600/80">{t('hrms.public_holiday')}</span>
               </div>
             </div>
 
@@ -501,10 +490,10 @@ export default function EmployeeHRMSDetailPage() {
                 <div>
                   <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
                     <CalendarDays className="w-4 h-4 text-brand-600" />
-                    <span>દૈનિક હાજરી અને બાયોમેટ્રિક લોગ (Daily Punch Logs)</span>
+                    <span>{t('hrms.daily_punch_logs')}</span>
                   </h3>
                   <p className="text-xs text-slate-500">
-                    આ મહિનાના તમામ પંચ-ઇન, પંચ-આઉટ અને કાર્ય કલાકોનું વિગતવાર રજિસ્ટર.
+                    {t('hrms.daily_punch_logs_desc')}
                   </p>
                 </div>
 
@@ -514,7 +503,7 @@ export default function EmployeeHRMSDetailPage() {
                   onClick={() => setIsPunchModalOpen(true)}
                   leftIcon={<Plus className="w-3.5 h-3.5 text-emerald-600" />}
                 >
-                  મેન્યુઅલ પંચ ઉમેરો
+                  {t('hrms.manual_punch')}
                 </Button>
               </div>
 
@@ -522,13 +511,13 @@ export default function EmployeeHRMSDetailPage() {
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-50 dark:bg-slate-800/60 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                     <tr>
-                      <th className="px-4 py-3">તારીખ (Date)</th>
-                      <th className="px-4 py-3">વાર (Day)</th>
-                      <th className="px-4 py-3">પંચ ઇન (In-Time)</th>
-                      <th className="px-4 py-3">પંચ આઉટ (Out-Time)</th>
-                      <th className="px-4 py-3">કુલ કલાકો (Hours)</th>
-                      <th className="px-4 py-3">સ્થિતિ (Status)</th>
-                      <th className="px-4 py-3">નોંધ (Remarks)</th>
+                      <th className="px-4 py-3">{t('hrms.date')}</th>
+                      <th className="px-4 py-3">{t('hrms.day')}</th>
+                      <th className="px-4 py-3">{t('hrms.in_time')}</th>
+                      <th className="px-4 py-3">{t('hrms.out_time')}</th>
+                      <th className="px-4 py-3">{t('hrms.hours')}</th>
+                      <th className="px-4 py-3">{t('hrms.status')}</th>
+                      <th className="px-4 py-3">{t('hrms.remarks')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
@@ -552,16 +541,16 @@ export default function EmployeeHRMSDetailPage() {
                           </td>
                           <td className="px-4 py-3">
                             {rec.status === 'PRESENT' && (
-                              <Badge variant="success">PRESENT (હાજર)</Badge>
+                              <Badge variant="success">{t('hrms.status_present')}</Badge>
                             )}
                             {rec.status === 'ABSENT' && (
-                              <Badge variant="danger">ABSENT (ગેરહાજર)</Badge>
+                              <Badge variant="danger">{t('hrms.status_absent')}</Badge>
                             )}
                             {rec.status === 'HALF_DAY' && (
-                              <Badge variant="warning">HALF DAY (અડધો દિવસ)</Badge>
+                              <Badge variant="warning">{t('hrms.status_half_day')}</Badge>
                             )}
                             {rec.status === 'HOLIDAY' && (
-                              <Badge variant="info">HOLIDAY (રજા)</Badge>
+                              <Badge variant="info">{t('hrms.status_holiday')}</Badge>
                             )}
                           </td>
                           <td className="px-4 py-3 text-slate-500 dark:text-slate-400 text-[11px]">
@@ -572,7 +561,11 @@ export default function EmployeeHRMSDetailPage() {
                     ) : (
                       <tr>
                         <td colSpan={7} className="px-4 py-8 text-center text-slate-400">
-                          આ કર્મચારી માટે કોઈ હાજરી રેકોર્ડ મળ્યો નથી.
+                          {language === 'gu'
+                            ? 'આ કર્મચારી માટે કોઈ હાજરી રેકોર્ડ મળ્યો નથી.'
+                            : language === 'hi'
+                            ? 'इस कर्मचारी के लिए कोई उपस्थिति रिकॉर्ड नहीं मिला।'
+                            : 'No attendance records found for this staff member.'}
                         </td>
                       </tr>
                     )}
@@ -594,7 +587,7 @@ export default function EmployeeHRMSDetailPage() {
               <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black uppercase tracking-wider text-slate-500">
-                    કેઝ્યુઅલ રજા (Casual Leave - CL)
+                    {t('hrms.casual_leave')}
                   </span>
                   <Badge variant="info">CL</Badge>
                 </div>
@@ -603,7 +596,7 @@ export default function EmployeeHRMSDetailPage() {
                     {leaveBalance ? leaveBalance.casual_total - leaveBalance.casual_used : 9}
                   </span>
                   <span className="text-xs text-slate-400">
-                    / {leaveBalance?.casual_total || 12} દિવસ બાકી
+                    / {leaveBalance?.casual_total || 12} {t('hrms.days_remaining')}
                   </span>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
@@ -619,7 +612,7 @@ export default function EmployeeHRMSDetailPage() {
                   />
                 </div>
                 <div className="text-[11px] text-slate-400 pt-1">
-                  વપરાયેલી: {leaveBalance?.casual_used || 3} દિવસ &bull; કુલ મંજૂર: {leaveBalance?.casual_total || 12} દિવસ
+                  {t('hrms.used')}: {leaveBalance?.casual_used || 3} {t('hrms.days')} &bull; {t('hrms.total_approved')}: {leaveBalance?.casual_total || 12} {t('hrms.days')}
                 </div>
               </div>
 
@@ -627,7 +620,7 @@ export default function EmployeeHRMSDetailPage() {
               <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black uppercase tracking-wider text-slate-500">
-                    માંદગી રજા (Sick Leave - SL)
+                    {t('hrms.sick_leave')}
                   </span>
                   <Badge variant="warning">SL</Badge>
                 </div>
@@ -636,7 +629,7 @@ export default function EmployeeHRMSDetailPage() {
                     {leaveBalance ? leaveBalance.sick_total - leaveBalance.sick_used : 6}
                   </span>
                   <span className="text-xs text-slate-400">
-                    / {leaveBalance?.sick_total || 7} દિવસ બાકી
+                    / {leaveBalance?.sick_total || 7} {t('hrms.days_remaining')}
                   </span>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
@@ -652,7 +645,7 @@ export default function EmployeeHRMSDetailPage() {
                   />
                 </div>
                 <div className="text-[11px] text-slate-400 pt-1">
-                  વપરાયેલી: {leaveBalance?.sick_used || 1} દિવસ &bull; કુલ મંજૂર: {leaveBalance?.sick_total || 7} દિવસ
+                  {t('hrms.used')}: {leaveBalance?.sick_used || 1} {t('hrms.days')} &bull; {t('hrms.total_approved')}: {leaveBalance?.sick_total || 7} {t('hrms.days')}
                 </div>
               </div>
 
@@ -660,7 +653,7 @@ export default function EmployeeHRMSDetailPage() {
               <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black uppercase tracking-wider text-slate-500">
-                    પેઇડ રજા (Paid Leave - PL)
+                    {t('hrms.paid_leave')}
                   </span>
                   <Badge variant="success">PL</Badge>
                 </div>
@@ -669,7 +662,7 @@ export default function EmployeeHRMSDetailPage() {
                     {leaveBalance ? leaveBalance.paid_total - leaveBalance.paid_used : 3}
                   </span>
                   <span className="text-xs text-slate-400">
-                    / {leaveBalance?.paid_total || 5} દિવસ બાકી
+                    / {leaveBalance?.paid_total || 5} {t('hrms.days_remaining')}
                   </span>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
@@ -685,7 +678,7 @@ export default function EmployeeHRMSDetailPage() {
                   />
                 </div>
                 <div className="text-[11px] text-slate-400 pt-1">
-                  વપરાયેલી: {leaveBalance?.paid_used || 2} દિવસ &bull; કુલ મંજૂર: {leaveBalance?.paid_total || 5} દિવસ
+                  {t('hrms.used')}: {leaveBalance?.paid_used || 2} {t('hrms.days')} &bull; {t('hrms.total_approved')}: {leaveBalance?.paid_total || 5} {t('hrms.days')}
                 </div>
               </div>
             </div>
@@ -696,10 +689,10 @@ export default function EmployeeHRMSDetailPage() {
                 <div>
                   <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
                     <Palmtree className="w-4 h-4 text-brand-600" />
-                    <span>રજા અરજીઓ અને હિસ્ટ્રી (Leave Requests History)</span>
+                    <span>{t('hrms.leave_history')}</span>
                   </h3>
                   <p className="text-xs text-slate-500">
-                    આ કર્મચારી દ્વારા મૂકવામાં આવેલ તમામ રજાઓની વિગતો અને મંજૂરી સ્થિતિ.
+                    {t('hrms.leave_history_desc')}
                   </p>
                 </div>
                 <Button
@@ -708,7 +701,7 @@ export default function EmployeeHRMSDetailPage() {
                   leftIcon={<Plus className="w-3.5 h-3.5" />}
                   className="bg-brand-600 text-white font-bold"
                 >
-                  + નવી રજા અરજી
+                  {t('hrms.new_leave_req')}
                 </Button>
               </div>
 
@@ -716,13 +709,13 @@ export default function EmployeeHRMSDetailPage() {
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-50 dark:bg-slate-800/60 text-[11px] font-black uppercase tracking-wider text-slate-500 border-b border-slate-200 dark:border-slate-800">
                     <tr>
-                      <th className="px-4 py-3">પ્રકાર (Leave Type)</th>
-                      <th className="px-4 py-3">તારીખ (Dates)</th>
-                      <th className="px-4 py-3">દિવસો (Days)</th>
-                      <th className="px-4 py-3">કારણ (Reason)</th>
-                      <th className="px-4 py-3">સ્થિતિ (Status)</th>
-                      <th className="px-4 py-3">મંજૂર કરનાર (Approved By)</th>
-                      <th className="px-4 py-3 text-right">ક્રિયા (Action)</th>
+                      <th className="px-4 py-3">{t('hrms.leave_type')}</th>
+                      <th className="px-4 py-3">{t('hrms.dates')}</th>
+                      <th className="px-4 py-3">{t('hrms.days_count')}</th>
+                      <th className="px-4 py-3">{t('hrms.reason')}</th>
+                      <th className="px-4 py-3">{t('hrms.status')}</th>
+                      <th className="px-4 py-3">{t('hrms.approved_by')}</th>
+                      <th className="px-4 py-3 text-right">{t('hrms.action')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
