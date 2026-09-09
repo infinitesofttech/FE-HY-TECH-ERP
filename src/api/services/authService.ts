@@ -3,7 +3,7 @@ import { ENDPOINTS } from '../endpoints';
 import { LoginResponse } from '@/types';
 
 export const authService = {
-  async staffLogin(credentials: { username: string; password: string }): Promise<LoginResponse> {
+  async staffLogin(credentials: { username: string; password: string; portal_type?: string }): Promise<LoginResponse> {
     const response = await apiClient.post<LoginResponse>(
       ENDPOINTS.AUTH.STAFF_LOGIN,
       credentials

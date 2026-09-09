@@ -13,7 +13,7 @@ interface AuthContextType {
   user: UserProfile | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  loginStaff: (creds: { username: string; password: string }) => Promise<LoginResponse>;
+  loginStaff: (creds: { username: string; password: string; portal_type?: string }) => Promise<LoginResponse>;
   loginCustomer: (creds: { family_id: string; mobile_number: string; password: string }) => Promise<LoginResponse>;
   logout: () => Promise<void>;
 }
@@ -38,7 +38,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(false);
   }, []);
 
-  const loginStaff = async (creds: { username: string; password: string }): Promise<LoginResponse> => {
+  const loginStaff = async (creds: { username: string; password: string; portal_type?: string }): Promise<LoginResponse> => {
     setIsLoading(true);
     try {
       const res = await authService.staffLogin(creds);
