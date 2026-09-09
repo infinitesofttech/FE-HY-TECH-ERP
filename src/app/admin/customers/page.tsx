@@ -39,6 +39,16 @@ import {
   Plus,
 } from 'lucide-react';
 
+const DISTRICT_VILLAGES: Record<string, string[]> = {
+  Rajkot: ['Varna', 'Gondal', 'Jetpur', 'Jasdan', 'Dhoraji', 'Kotda Sangani', 'Lodhika', 'Upleta'],
+  Ahmedabad: ['Sanand', 'Dholka', 'Viramgam', 'Bavla', 'Daskroi', 'Mandal', 'Detroj'],
+  Surat: ['Bardoli', 'Mandvi', 'Olpad', 'Kamrej', 'Mahuva', 'Chorasi', 'Palsana'],
+  Junagadh: ['Keshod', 'Mangrol', 'Manavadar', 'Visavadar', 'Malia', 'Mendarda', 'Bhesan'],
+  Jamnagar: ['Dhrol', 'Jodiya', 'Kalavad', 'Lalpur', 'Jamjodhpur'],
+  Bhavnagar: ['Palitana', 'Sihor', 'Gariadhar', 'Talaja', 'Mahuva', 'Gadhada'],
+  Amreli: ['Babra', 'Baghsara', 'Dhari', 'Jafrabad', 'Khambha', 'Lathi', 'Rajula'],
+};
+
 export default function CustomersPage() {
   const router = useRouter();
   const pathname = usePathname();
@@ -50,6 +60,7 @@ export default function CustomersPage() {
     isStaffRoute ? `/staff/customers/${familyId}` : `/admin/customers/${familyId}`;
 
   const [selectedCity, setSelectedCity] = useState('ALL');
+  const [selectedDistrict, setSelectedDistrict] = useState<string>('Rajkot');
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
@@ -107,6 +118,7 @@ export default function CustomersPage() {
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       setIsRegisterOpen(false);
       setFormErrors({});
+      setSelectedDistrict('Rajkot');
       setFormData({
         head_of_family: '',
         village_city: 'Varna',
@@ -136,23 +148,6 @@ export default function CustomersPage() {
     onError: () => toast.error('Failed to remove customer'),
   });
 
-  const handleFillDemoData = () => {
-    setFormData({
-      head_of_family: 'Rameshbhai Patel',
-      village_city: 'Rajkot',
-      birth_date: '1985-06-15',
-      mobile_number: '9825012345',
-      whatsapp_number: '9825012345',
-      family_member_count: 4,
-      referral_family_id: 'HTF-000001',
-      document_consent: true,
-      password: 'Ramesh@123',
-      notes: 'Verified citizen registration with full documents',
-    });
-    setFormErrors({});
-    toast.success(language === 'gu' ? 'સેમ્પલ ડેટા સફળતાપૂર્વક ભરાયો!' : 'Sample demo data auto-filled!');
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const errors: { head_of_family?: string; mobile_number?: string; whatsapp_number?: string } = {};
@@ -161,22 +156,22 @@ export default function CustomersPage() {
       errors.head_of_family = language === 'gu' ? 'પરિવારનું નામ જરૂરી છે' : 'Family Name is required';
     }
 
-    if (!formData.mobile_number.trim()) {
-      errors.mobile_number = t('mobile_required') || '10-digit Mobile Number is required';
-    } else if (!/^\d{10}$/.test(formData.mobile_number.trim())) {
+    if (formData.mobile_number.trim() && !/^\d{10}$/.test(formData.mobile_number.trim())) {
       errors.mobile_number = language === 'gu' ? '૧૦ અંકનો સાચો મોબાઇલ નંબર દાખલ કરો' : 'Please enter a valid 10-digit mobile number';
     }
 
     if (!formData.whatsapp_number.trim()) {
       errors.whatsapp_number = language === 'gu' ? 'વોટ્સએપ નંબર જરૂરી છે' : 'WhatsApp Number is required';
+    } else if (!/^\d{10}$/.test(formData.whatsapp_number.trim())) {
+      errors.whatsapp_number = language === 'gu' ? '૧૦ અંકનો સાચો વોટ્સએપ નંબર દાખલ કરો' : 'Please enter a valid 10-digit WhatsApp number';
     }
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
       toast.error(
         language === 'gu'
-          ? 'કૃપા કરીને પરિવારનું નામ, મોબાઇલ અને વોટ્સએપ નંબર દાખલ કરો'
-          : 'Please enter Family Name, Mobile and WhatsApp Number'
+          ? 'કૃપા કરીને પરિવારનું નામ અને વોટ્સએપ નંબર દાખલ કરો'
+          : 'Please enter Family Name and WhatsApp Number'
       );
       return;
     }
@@ -484,21 +479,6 @@ export default function CustomersPage() {
         maxWidth="2xl"
       >
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Quick Demo Fill Bar */}
-          <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60">
-            <div className="flex items-center gap-2 text-xs font-bold text-emerald-800 dark:text-emerald-300">
-              <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
-              <span>{language === 'gu' ? 'ટેસ્ટિંગ માટે ૧-ક્લિક ડેમો ડેટા:' : 'Quick 1-Click Test Data:'}</span>
-            </div>
-            <button
-              type="button"
-              onClick={handleFillDemoData}
-              className="px-3 py-1.5 rounded-lg text-xs font-black bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs transition-all active:scale-95 cursor-pointer"
-            >
-              ⚡ {t('auto_fill_sample') || 'Auto-Fill Sample Data'}
-            </button>
-          </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label={language === 'gu' ? 'પરિવારનું નામ (Family Name) *' : 'Family Name *'}
@@ -530,9 +510,8 @@ export default function CustomersPage() {
             />
 
             <Input
-              label={language === 'gu' ? 'મોબાઇલ નંબર *' : 'Mobile Number *'}
+              label={language === 'gu' ? 'મોબાઇલ નંબર' : 'Mobile Number'}
               type="tel"
-              required
               value={formData.mobile_number}
               onChange={(e) => {
                 const mob = e.target.value;
@@ -546,16 +525,40 @@ export default function CustomersPage() {
                 }
               }}
               error={formErrors.mobile_number}
-              placeholder="10-digit mobile"
+              placeholder={language === 'gu' ? '૧૦ અંકનો વૈકલ્પિક મોબાઇલ' : '10-digit mobile (optional)'}
             />
 
-            <Input
-              label={language === 'gu' ? 'ગામ / શહેર *' : 'Village / City *'}
-              required
+            <Select
+              label={language === 'gu' ? 'જિલ્લો (District) *' : 'District *'}
+              value={selectedDistrict}
+              onChange={(e) => {
+                const dist = e.target.value;
+                setSelectedDistrict(dist);
+                const villages = DISTRICT_VILLAGES[dist] || [];
+                setFormData({
+                  ...formData,
+                  village_city: villages[0] || 'Varna',
+                });
+              }}
+            >
+              {Object.keys(DISTRICT_VILLAGES).map((d) => (
+                <option key={d} value={d}>
+                  {d}
+                </option>
+              ))}
+            </Select>
+
+            <Select
+              label={language === 'gu' ? 'ગામ / શહેર (Village / City) *' : 'Village / City *'}
               value={formData.village_city}
               onChange={(e) => setFormData({ ...formData, village_city: e.target.value })}
-              placeholder="e.g. Varna"
-            />
+            >
+              {(DISTRICT_VILLAGES[selectedDistrict] || ['Varna']).map((v) => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
+            </Select>
 
             <Input
               label="Birth Date"
