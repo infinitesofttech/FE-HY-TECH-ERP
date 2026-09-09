@@ -26,6 +26,7 @@ import { ReceiptModal } from '@/components/applications/ReceiptModal';
 import { ApplicationDetailDrawer } from '@/components/applications/ApplicationDetailDrawer';
 import { QuickAddDropdown } from '@/components/common/QuickAddDropdown';
 import { useLanguage } from '@/context/LanguageContext';
+import { useAuth } from '@/context/AuthContext';
 import { Application, ApplicationStatus, PaymentMode } from '@/types';
 import { toast } from 'sonner';
 import {
@@ -109,6 +110,10 @@ export const OfficeDashboardView: React.FC = () => {
     queryFn: () => customerService.getCustomers(),
   });
 
+  const { user } = useAuth();
+  const currentEmployeeName =
+    (user as any)?.full_name || (user as any)?.username || 'Admin Operator';
+
   // ----------------------------------------------------
   // TRANSACTION MODAL: MULTI-SERVICE & SPLIT/PARTIAL PAYMENT & CUSTOMER LEDGER
   // ----------------------------------------------------
@@ -117,9 +122,11 @@ export const OfficeDashboardView: React.FC = () => {
     serviceId: number;
     subServiceId: number;
     amount: string;
+    date?: string;
   }
 
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
+  const [customerFilterMode, setCustomerFilterMode] = useState<'ALL' | 'PENDING'>('ALL');
   const [txnCustomerId, setTxnCustomerId] = useState<number>(0);
   const [txnItems, setTxnItems] = useState<TxnServiceItem[]>([
     {
@@ -136,11 +143,79 @@ export const OfficeDashboardView: React.FC = () => {
   const [txnPaymentMode, setTxnPaymentMode] = useState<PaymentMode>('ONLINE/UPI');
   const [txnRemarks, setTxnRemarks] = useState<string>('');
 
+  // Identify customers with pending balances or pending applications
+  const pendingCustomersList = useMemo(() => {
+    const dueCustomerIds = new Set<number>();
+    transactions.forEach((t) => {
+      if (parseFloat(t.due_amount || '0') > 0) {
+        dueCustomerIds.add(t.customer);
+      }
+    });
+    applications.forEach((a) => {
+      if (PENDING_STATUSES.includes(a.status)) {
+        dueCustomerIds.add(a.customer);
+      }
+    });
+    return customers.filter((c) => dueCustomerIds.has(c.id));
+  }, [customers, transactions, applications]);
+
+  const displayedModalCustomers = useMemo(() => {
+    if (customerFilterMode === 'PENDING') {
+      return pendingCustomersList.length > 0 ? pendingCustomersList : customers;
+    }
+    return customers;
+  }, [customerFilterMode, pendingCustomersList, customers]);
+
   // Selected customer (fallback to HTF-000003 or first)
-  const effectiveCustomerId = txnCustomerId || (customers[0]?.id ?? 4);
+  const effectiveCustomerId = txnCustomerId || (displayedModalCustomers[0]?.id ?? 4);
   const selectedCustomer = useMemo(() => {
     return customers.find((c) => c.id === effectiveCustomerId) || customers[0];
   }, [customers, effectiveCustomerId]);
+
+  // Auto-fetch all pending services, sub-services, amounts, and dates for selected customer
+  const handleAutoFetchCustomerServices = (custId: number) => {
+    const cust = customers.find((c) => c.id === custId);
+    const custApps = applications.filter(
+      (a) =>
+        (a.customer === custId || (cust && a.customer_family_id === cust.family_id)) &&
+        (PENDING_STATUSES.includes(a.status) || a.payment_status === 'UNPAID' || a.payment_status === 'PARTIAL')
+    );
+
+    if (custApps.length > 0) {
+      const items: TxnServiceItem[] = custApps.map((a, idx) => {
+        const sFound =
+          servicesList.find((s) => s.id === a.service || s.ServiceName.toLowerCase() === (a.service_name || '').toLowerCase()) ||
+          servicesList[0] ||
+          { id: 3, SubServices: [{ id: 3 }] };
+        const subFound =
+          sFound?.SubServices?.find(
+            (sb) => sb.id === a.sub_service || sb.SubServiceName.toLowerCase() === (a.sub_service_name || '').toLowerCase()
+          ) || sFound?.SubServices?.[0] || { id: 3 };
+
+        return {
+          id: `auto-app-${a.id}-${idx}`,
+          serviceId: sFound.id,
+          subServiceId: subFound.id,
+          amount: (a.total_fee || (sFound.GovernmentFee || 0) + (sFound.ServiceCharge || 50)).toString(),
+          date: a.created_at ? a.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
+        };
+      });
+
+      setTxnItems(items);
+      setIsManualPaid(false);
+      toast.success(
+        isGu
+          ? `${custApps.length} બાકી સેવાઓ અને રકમ આપમેળે ફેચ થઈ ગઈ!`
+          : `Auto-fetched ${custApps.length} pending service(s), amounts & dates!`
+      );
+    } else {
+      toast.info(
+        isGu
+          ? 'આ ગ્રાહક માટે કોઈ નવી બાકી અરજી નથી, ડિફોલ્ટ સર્વિસ રાખી છે.'
+          : 'No pending unpaid applications found for this customer; default service retained.'
+      );
+    }
+  };
 
   // Customer past transactions & ledger
   const pastCustomerTxns = useMemo(() => {
@@ -262,8 +337,10 @@ export const OfficeDashboardView: React.FC = () => {
         items: itemsPayload,
         previous_due_cleared: includePreviousDue ? pastLedgerStats.totalDue.toFixed(2) : undefined,
         points_earned: Math.round(currentPaid * 0.1),
+        employee_points: Math.round(currentPaid * 0.1),
         payment_mode: txnPaymentMode,
         staff: 1,
+        staff_name: currentEmployeeName,
         remarks:
           txnRemarks ||
           (currentDue > 0
@@ -1301,27 +1378,85 @@ export const OfficeDashboardView: React.FC = () => {
           }}
           className="space-y-4 text-xs"
         >
-          {/* 1. FAMILY / CUSTOMER SELECTOR */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              {isGu ? 'પરિવાર / નાગરિક પસંદ કરો *' : 'Select Family / Customer *'}
-            </label>
-            <select
-              value={txnCustomerId || (customers[0]?.id ?? 4)}
-              onChange={(e) => {
-                setTxnCustomerId(Number(e.target.value));
-                setIncludePreviousDue(false);
-                setIsManualPaid(false);
-              }}
-              required
-              className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none shadow-2xs"
-            >
-              {customers.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.family_id} — {c.head_of_family} ({c.mobile_number})
-                </option>
-              ))}
-            </select>
+          {/* 1. FAMILY / CUSTOMER SELECTOR WITH PENDING CUSTOMER LIST TAB & AUTO FETCH */}
+          <div className="space-y-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                {isGu ? 'પરિવાર / ગ્રાહક પસંદ કરો *' : 'Select Family / Customer *'}
+              </label>
+
+              {/* Toggle Tab between All Customers and Pending Customer List */}
+              <div className="flex items-center gap-1 p-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => setCustomerFilterMode('ALL')}
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${
+                    customerFilterMode === 'ALL'
+                      ? 'bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 shadow-xs'
+                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+                  }`}
+                >
+                  {isGu ? `બધા (${customers.length})` : `All (${customers.length})`}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCustomerFilterMode('PENDING');
+                    if (pendingCustomersList.length > 0) {
+                      setTxnCustomerId(pendingCustomersList[0].id);
+                      handleAutoFetchCustomerServices(pendingCustomersList[0].id);
+                    }
+                  }}
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all flex items-center gap-1 ${
+                    customerFilterMode === 'PENDING'
+                      ? 'bg-amber-500 text-white shadow-xs'
+                      : 'text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40'
+                  }`}
+                >
+                  <Clock className="w-3 h-3" />
+                  <span>{isGu ? `બાકી ગ્રાહક લિસ્ટ (${pendingCustomersList.length})` : `Pending Customer List (${pendingCustomersList.length})`}</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <select
+                value={effectiveCustomerId}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  setTxnCustomerId(val);
+                  setIncludePreviousDue(false);
+                  setIsManualPaid(false);
+                  handleAutoFetchCustomerServices(val);
+                }}
+                required
+                className="flex-1 text-xs py-2.5 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none shadow-2xs"
+              >
+                {displayedModalCustomers.map((c) => {
+                  const hasDue = transactions.some((t) => t.customer === c.id && parseFloat(t.due_amount || '0') > 0);
+                  const hasPendingApp = applications.some(
+                    (a) => (a.customer === c.id || a.customer_family_id === c.family_id) && PENDING_STATUSES.includes(a.status)
+                  );
+                  return (
+                    <option key={c.id} value={c.id}>
+                      {c.family_id} — {c.head_of_family} ({c.mobile_number}) {hasDue ? '⚠️ [DUE]' : hasPendingApp ? '⏳ [PENDING SERVICE]' : ''}
+                    </option>
+                  );
+                })}
+              </select>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => handleAutoFetchCustomerServices(effectiveCustomerId)}
+                title="Auto fetch pending services, sub services, amounts and dates"
+                className="shrink-0 bg-indigo-50/70 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800 font-bold"
+                leftIcon={<Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />}
+              >
+                {isGu ? 'ઓટો-ફેચ' : 'Auto Fetch'}
+              </Button>
+            </div>
           </div>
 
           {/* 2. FAMILY PAST PAYMENT HISTORY & DUE LEDGER */}
@@ -1686,14 +1821,7 @@ export const OfficeDashboardView: React.FC = () => {
             <div className="pt-2 flex items-center justify-between text-xs">
               <div className="flex items-center gap-2">
                 <span className="text-slate-600 dark:text-slate-400 font-medium">
-                  {isGu ? 'બાકી રહેતી રકમ (Remaining Due):' : 'Remaining Due:'}
-                </span>
-                <span
-                  className={`font-mono font-black text-sm ${
-                    currentDue > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'
-                  }`}
-                >
-                  ₹{currentDue.toFixed(2)}
+                  {isGu ? 'સ્થિતિ:' : 'Status:'}
                 </span>
               </div>
 
@@ -1718,6 +1846,36 @@ export const OfficeDashboardView: React.FC = () => {
                     {isGu ? 'ચુકવણી બાકી (UNPAID)' : 'Pending (UNPAID)'}
                   </span>
                 )}
+              </div>
+            </div>
+
+            {/* 3 Prominent Calculation Cards: 1) Amount (Paid), 2) Pending Amount, 3) Total (e.g. 300) */}
+            <div className="grid grid-cols-3 gap-2 text-center pt-2">
+              <div className="p-2.5 sm:p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 shadow-2xs">
+                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-300 block">
+                  1) {isGu ? 'ચૂકવેલ રકમ' : 'Amount'}
+                </span>
+                <span className="text-xs sm:text-base font-mono font-black text-emerald-700 dark:text-emerald-200 mt-0.5 block">
+                  ₹{currentPaid.toFixed(2)}
+                </span>
+              </div>
+
+              <div className="p-2.5 sm:p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 shadow-2xs">
+                <span className="text-[10px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-300 block">
+                  2) {isGu ? 'બાકી રકમ' : 'Pending Amount'}
+                </span>
+                <span className="text-xs sm:text-base font-mono font-black text-amber-700 dark:text-amber-200 mt-0.5 block">
+                  ₹{currentDue.toFixed(2)}
+                </span>
+              </div>
+
+              <div className="p-2.5 sm:p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 shadow-2xs">
+                <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-300 block">
+                  3) {isGu ? 'કુલ રકમ' : 'Total'}
+                </span>
+                <span className="text-xs sm:text-base font-mono font-black text-indigo-700 dark:text-indigo-200 mt-0.5 block">
+                  ₹{effectiveTotalBill.toFixed(2)}
+                </span>
               </div>
             </div>
           </div>
@@ -1779,14 +1937,24 @@ export const OfficeDashboardView: React.FC = () => {
             </div>
           </div>
 
-          {/* Points preview */}
-          <div className="px-3.5 py-2.5 rounded-xl bg-slate-100/70 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs">
-            <span className="text-slate-600 dark:text-slate-400">
-              {isGu ? 'આ ચુકવણી પર ગ્રાહક લોયલ્ટી પોઈન્ટ્સ:' : 'Loyalty Points Earned on this Payment:'}
-            </span>
-            <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
-              +{Math.round(currentPaid * 0.1)} Pts
-            </span>
+          {/* Employee Profile 10% Points (Amount 10% points, with Emp profile) */}
+          <div className="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/30 border border-emerald-200 dark:border-emerald-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <div>
+                <span className="font-black text-slate-800 dark:text-slate-200">
+                  {isGu ? 'એમ્પ્લોયી પ્રોફાઇલ ૧૦% પોઈન્ટ્સ:' : 'Amount 10% Points (with Emp Profile):'}
+                </span>
+                <span className="text-[11px] text-slate-500 block sm:inline sm:ml-1.5">
+                  ({isGu ? 'ઓપરેટર:' : 'Emp:'} <strong className="text-slate-800 dark:text-slate-200">{currentEmployeeName}</strong>)
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-mono font-black text-emerald-700 dark:text-emerald-300 text-xs sm:text-sm bg-white dark:bg-slate-900 px-2.5 py-0.5 rounded-lg border border-emerald-300 dark:border-emerald-800">
+                +{Math.round(currentPaid * 0.1)} Points
+              </span>
+            </div>
           </div>
 
           <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-slate-800">

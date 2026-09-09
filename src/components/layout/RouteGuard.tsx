@@ -80,9 +80,21 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({ allowedRoles, children }
       }
     }
 
+    if (userRole === 'hr') {
+      if (!pathname.startsWith('/admin/employees') && !pathname.startsWith('/admin/services')) {
+        router.replace('/admin/employees');
+        return;
+      }
+    }
+
     if (!allowedRoles.includes(userRole)) {
+      if (userRole === 'hr' && (pathname.startsWith('/admin/employees') || pathname.startsWith('/admin/services'))) {
+        // HR allowed on employees and services
+        return;
+      }
       // Redirect to authorized portal
       if (userRole === 'admin') router.replace('/admin/dashboard');
+      else if (userRole === 'hr') router.replace('/admin/employees');
       else if (userRole === 'employee') router.replace('/staff/dashboard');
       else if (userRole === 'customer') router.replace('/user/dashboard');
       else router.replace('/login');
@@ -91,7 +103,8 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({ allowedRoles, children }
 
   // If role is mismatch or URL is currently being transitioned, render loader briefly
   const isUrlMismatched =
-    (userRole === 'employee' && !pathname.startsWith('/staff')) ||
+    (userRole === 'employee' && !pathname.startsWith('/staff') && !pathname.startsWith('/admin')) ||
+    (userRole === 'hr' && !pathname.startsWith('/admin/employees') && !pathname.startsWith('/admin/services')) ||
     (userRole === 'admin' && !pathname.startsWith('/admin')) ||
     (userRole === 'customer' && !pathname.startsWith('/user'));
 
@@ -99,7 +112,7 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({ allowedRoles, children }
     isLoading ||
     !isAuthenticated ||
     !userRole ||
-    !allowedRoles.includes(userRole) ||
+    (!allowedRoles.includes(userRole) && !(userRole === 'hr' && (pathname.startsWith('/admin/employees') || pathname.startsWith('/admin/services')))) ||
     isUrlMismatched
   ) {
     return (

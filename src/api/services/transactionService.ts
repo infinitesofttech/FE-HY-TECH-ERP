@@ -45,11 +45,13 @@ export const transactionService = {
     }>;
     previous_due_cleared?: string;
     points_earned?: number;
+    employee_points?: number;
     points_redeemed?: number;
     wallet_credit?: string;
     wallet_used?: string;
     payment_mode: PaymentMode;
     staff: number;
+    staff_name?: string;
     remarks?: string;
   }): Promise<{ message: string; data: Transaction }> {
     try {
@@ -89,7 +91,7 @@ export const transactionService = {
         sub_service_name: payload.items && payload.items.length > 1
           ? `${payload.items.length} Services`
           : subServ?.SubServiceName || payload.items?.[0]?.sub_service_name || 'New Aadhaar Card',
-        staff_name: 'MITALI CHANGANI',
+        staff_name: payload.staff_name || 'MITALI CHANGANI',
         bill_amount: bill.toFixed(2),
         paid_amount: paid.toFixed(2),
         due_amount: due.toFixed(2),
@@ -97,6 +99,7 @@ export const transactionService = {
         items: payload.items,
         previous_due_cleared: payload.previous_due_cleared,
         points_earned: payload.points_earned ?? Math.round(paid * 0.1),
+        employee_points: payload.employee_points ?? Math.round(paid * 0.1),
         points_redeemed: payload.points_redeemed ?? 0,
         wallet_credit: walletCredit.toFixed(2),
         wallet_used: walletUsed.toFixed(2),

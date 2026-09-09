@@ -53,7 +53,7 @@ export default function CustomersPage() {
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
-  const [formErrors, setFormErrors] = useState<{ head_of_family?: string; mobile_number?: string }>({});
+  const [formErrors, setFormErrors] = useState<{ head_of_family?: string; mobile_number?: string; whatsapp_number?: string }>({});
   const [memberForm, setMemberForm] = useState<{
     family_id: string;
     name: string;
@@ -155,10 +155,10 @@ export default function CustomersPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const errors: { head_of_family?: string; mobile_number?: string } = {};
+    const errors: { head_of_family?: string; mobile_number?: string; whatsapp_number?: string } = {};
 
     if (!formData.head_of_family.trim()) {
-      errors.head_of_family = t('head_of_family_required') || 'Head of Family is required';
+      errors.head_of_family = language === 'gu' ? 'પરિવારનું નામ જરૂરી છે' : 'Family Name is required';
     }
 
     if (!formData.mobile_number.trim()) {
@@ -167,12 +167,16 @@ export default function CustomersPage() {
       errors.mobile_number = language === 'gu' ? '૧૦ અંકનો સાચો મોબાઇલ નંબર દાખલ કરો' : 'Please enter a valid 10-digit mobile number';
     }
 
+    if (!formData.whatsapp_number.trim()) {
+      errors.whatsapp_number = language === 'gu' ? 'વોટ્સએપ નંબર જરૂરી છે' : 'WhatsApp Number is required';
+    }
+
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
       toast.error(
         language === 'gu'
-          ? 'કૃપા કરીને પરિવારના વડાનું નામ અને ૧૦ અંકનો મોબાઇલ નંબર દાખલ કરો'
-          : 'Please enter Head of Family and a valid 10-digit Mobile Number'
+          ? 'કૃપા કરીને પરિવારનું નામ, મોબાઇલ અને વોટ્સએપ નંબર દાખલ કરો'
+          : 'Please enter Family Name, Mobile and WhatsApp Number'
       );
       return;
     }
@@ -497,7 +501,7 @@ export default function CustomersPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
-              label={language === 'gu' ? 'પરિવારના વડાનું નામ *' : 'Head of Family *'}
+              label={language === 'gu' ? 'પરિવારનું નામ (Family Name) *' : 'Family Name *'}
               required
               value={formData.head_of_family}
               onChange={(e) => {
@@ -511,11 +515,18 @@ export default function CustomersPage() {
             />
 
             <Input
-              label={language === 'gu' ? 'ગામ / શહેર *' : 'Village / City *'}
+              label={language === 'gu' ? 'વોટ્સએપ નંબર (WhatsApp Number) *' : 'WhatsApp Number *'}
+              type="tel"
               required
-              value={formData.village_city}
-              onChange={(e) => setFormData({ ...formData, village_city: e.target.value })}
-              placeholder="e.g. Varna"
+              value={formData.whatsapp_number}
+              onChange={(e) => {
+                setFormData({ ...formData, whatsapp_number: e.target.value });
+                if (formErrors.whatsapp_number) {
+                  setFormErrors((prev) => ({ ...prev, whatsapp_number: undefined }));
+                }
+              }}
+              error={formErrors.whatsapp_number}
+              placeholder="10-digit WhatsApp number"
             />
 
             <Input
@@ -524,7 +535,12 @@ export default function CustomersPage() {
               required
               value={formData.mobile_number}
               onChange={(e) => {
-                setFormData({ ...formData, mobile_number: e.target.value });
+                const mob = e.target.value;
+                setFormData({
+                  ...formData,
+                  mobile_number: mob,
+                  whatsapp_number: formData.whatsapp_number ? formData.whatsapp_number : mob,
+                });
                 if (formErrors.mobile_number) {
                   setFormErrors((prev) => ({ ...prev, mobile_number: undefined }));
                 }
@@ -534,11 +550,11 @@ export default function CustomersPage() {
             />
 
             <Input
-              label="WhatsApp Contact"
-              type="tel"
-              value={formData.whatsapp_number}
-              onChange={(e) => setFormData({ ...formData, whatsapp_number: e.target.value })}
-              placeholder="Defaults to mobile"
+              label={language === 'gu' ? 'ગામ / શહેર *' : 'Village / City *'}
+              required
+              value={formData.village_city}
+              onChange={(e) => setFormData({ ...formData, village_city: e.target.value })}
+              placeholder="e.g. Varna"
             />
 
             <Input

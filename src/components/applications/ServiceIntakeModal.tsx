@@ -91,7 +91,24 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<ServiceCategory | 'ALL'>('ALL');
   const [serviceSearch, setServiceSearch] = useState('');
   const [selectedService, setSelectedService] = useState<BaseService | null>(null);
+  const [selectedServices, setSelectedServices] = useState<BaseService[]>([]);
   const [selectedSubService, setSelectedSubService] = useState<SubService | null>(null);
+
+  // Notification Mobile Selection
+  const [notificationMobileType, setNotificationMobileType] = useState<'HEAD' | 'WHATSAPP' | 'CUSTOM'>('HEAD');
+  const [customNotificationMobile, setCustomNotificationMobile] = useState('');
+
+  // District-wise Village Selection
+  const DISTRICT_VILLAGES: Record<string, string[]> = {
+    Rajkot: ['Varna', 'Gondal', 'Jetpur', 'Jasdan', 'Dhoraji', 'Kotda Sangani', 'Lodhika', 'Upleta'],
+    Ahmedabad: ['Sanand', 'Dholka', 'Viramgam', 'Bavla', 'Daskroi', 'Mandal', 'Detroj'],
+    Surat: ['Bardoli', 'Mandvi', 'Olpad', 'Kamrej', 'Mahuva', 'Chorasi', 'Palsana'],
+    Junagadh: ['Keshod', 'Mangrol', 'Manavadar', 'Visavadar', 'Malia', 'Mendarda', 'Bhesan'],
+    Jamnagar: ['Dhrol', 'Jodiya', 'Kalavad', 'Lalpur', 'Jamjodhpur'],
+    Bhavnagar: ['Palitana', 'Sihor', 'Gariadhar', 'Talaja', 'Mahuva', 'Gadhada'],
+    Amreli: ['Babra', 'Baghsara', 'Dhari', 'Jafrabad', 'Khambha', 'Lathi', 'Rajula'],
+  };
+  const [selectedDistrict, setSelectedDistrict] = useState<string>('Rajkot');
 
   // Search
   const [citizenQuery, setCitizenQuery] = useState('');
@@ -316,13 +333,17 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
     },
   });
 
-  // Dropdown Select Options & Handlers for Simple Form
+  // Dropdown Select Options & Handlers with Surname / Name / Mobile match
   const customerSelectOptions = useMemo(() => {
-    return customers.map((c) => ({
-      value: String(c.id),
-      label: `${c.head_of_family} (${c.family_id})`,
-      sublabel: `📱 ${c.mobile_number} • 📍 ${c.village_city || 'Varna'}`,
-    }));
+    return customers.map((c) => {
+      const parts = c.head_of_family.trim().split(/\s+/);
+      const surname = parts.length > 1 ? parts[parts.length - 1] : '';
+      return {
+        value: String(c.id),
+        label: `${c.head_of_family} ${surname ? `(${surname})` : ''} • 📱 ${c.mobile_number} • 📍 ${c.village_city || 'Varna'} (${c.family_id})`,
+        sublabel: `📱 ${c.mobile_number} • 📍 ${c.village_city || 'Varna'} • Family: ${c.family_id}`,
+      };
+    });
   }, [customers]);
 
   const applicantSelectOptions = useMemo(() => {
@@ -407,10 +428,26 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
     const svc = services.find((s) => String(s.id) === serviceId);
     if (svc) {
       handleSelectService(svc);
-    } else {
-      setSelectedService(null);
-      setSelectedSubService(null);
+      setSelectedServices((prev) => {
+        if (prev.some((it) => it.id === svc.id)) return prev;
+        return [...prev, svc];
+      });
     }
+  };
+
+  const handleRemoveSelectedService = (serviceId: number) => {
+    setSelectedServices((prev) => {
+      const next = prev.filter((s) => s.id !== serviceId);
+      if (next.length > 0) {
+        setSelectedService(next[0]);
+        setGovtFee(next[0].GovernmentFee ?? 0);
+        setServiceCharge(next[0].ServiceCharge ?? 50);
+      } else {
+        setSelectedService(null);
+        setSelectedSubService(null);
+      }
+      return next;
+    });
   };
 
   const handleSubServiceDropdownChange = (subId: string) => {
@@ -425,53 +462,64 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
   };
 
   // Create Application Mutation
+  const currentEmployeeName = (user as any)?.full_name || (user as any)?.username || 'Admin Operator';
+  const activeServicesList = selectedServices.length > 0 ? selectedServices : (selectedService ? [selectedService] : []);
+  const totalGovtFee = activeServicesList.reduce((sum, s) => sum + (s.GovernmentFee || 0), 0);
+  const totalDeskFee = activeServicesList.reduce((sum, s) => sum + (s.ServiceCharge || 50), 0);
+  const totalFeeAmount = totalGovtFee + totalDeskFee;
+
+  // Create Application Mutation
   const createApplicationMutation = useMutation({
     mutationFn: async () => {
       if (!selectedCustomer) {
-        throw new Error('Please select a Citizen / Family in Section 1');
+        throw new Error('Please select a Family in Section 1');
       }
-      if (!selectedApplicant) {
-        throw new Error('Please select an Applicant in Section 2');
-      }
-      if (!selectedService) {
-        throw new Error('Please select a Service in Section 3');
+      if (!selectedService && selectedServices.length === 0) {
+        throw new Error('Please select a Service in Section 2');
       }
 
-      const totalAmount = Number(govtFee) + Number(serviceCharge);
-      const days = selectedService.SlaDays || 5;
+      const activeSvc = selectedService || selectedServices[0];
+      const days = activeSvc?.SlaDays || 5;
       const expectedDate = new Date();
       expectedDate.setDate(expectedDate.getDate() + days);
+
+      const notificationMobile =
+        notificationMobileType === 'HEAD'
+          ? selectedCustomer.mobile_number
+          : notificationMobileType === 'WHATSAPP'
+          ? selectedCustomer.whatsapp_number || selectedCustomer.mobile_number
+          : customNotificationMobile || selectedCustomer.mobile_number;
 
       const payload: Partial<Application> = {
         customer: selectedCustomer.id,
         customer_name: selectedCustomer.head_of_family,
         customer_mobile: selectedCustomer.mobile_number,
         customer_family_id: selectedCustomer.family_id,
-        applicant_member_id: selectedApplicant.isHead ? undefined : Number(selectedApplicant.id),
-        applicant_name: selectedApplicant.name,
-        applicant_mobile: selectedApplicant.mobile,
-        family_member: selectedApplicant.isHead ? null : Number(selectedApplicant.id),
-        family_member_name: selectedApplicant.isHead ? null : selectedApplicant.name,
-        service: selectedService.id,
-        service_name: selectedService.ServiceName,
-        service_name_gu: selectedService.ServiceNameGu || selectedService.ServiceName,
+        applicant_member_id: undefined,
+        applicant_name: selectedCustomer.head_of_family,
+        applicant_mobile: notificationMobile,
+        family_member: null,
+        family_member_name: null,
+        service: activeSvc.id,
+        service_name: activeServicesList.map((s) => s.ServiceName).join(', '),
+        service_name_gu: activeServicesList.map((s) => s.ServiceNameGu || s.ServiceName).join(', '),
         sub_service: selectedSubService ? selectedSubService.id : undefined,
         sub_service_name: selectedSubService ? selectedSubService.SubServiceName : undefined,
-        category: selectedService.Category || 'GOVT_FORMS',
+        category: activeSvc.Category || 'GOVT_FORMS',
         government_app_no: govtAppNo || undefined,
         status: allDocsReady ? 'SCRUTINY' : 'DOCS_PENDING',
         priority,
-        govt_fee: Number(govtFee),
-        service_charge: Number(serviceCharge),
-        total_fee: totalAmount,
+        govt_fee: totalGovtFee,
+        service_charge: totalDeskFee,
+        total_fee: totalFeeAmount,
         payment_status: paymentStatus,
         payment_mode: paymentMode,
         sla_days: days,
         expected_date: expectedDate.toISOString().split('T')[0],
         assigned_staff: (user as any)?.id || 1,
-        assigned_staff_name: (user as any)?.username || (user as any)?.full_name || 'Front Desk Staff',
+        assigned_staff_name: currentEmployeeName,
         created_by: (user as any)?.id || 1,
-        created_by_name: (user as any)?.username || (user as any)?.full_name || 'Admin',
+        created_by_name: currentEmployeeName,
         documents: vaultCheckList.map((req) => ({
           id: req.id,
           document_name: req.DocumentName,
@@ -482,7 +530,7 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
         form_data: {
           ...dynamicAnswers,
           citizen_village: selectedCustomer.village_city,
-          relationship: selectedApplicant.relationship,
+          notification_mobile: notificationMobile,
         },
         notes: operatorNotes,
       };
@@ -493,7 +541,7 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
         'APPLICATION_CREATED',
         'Application',
         result.application_no,
-        `Intake application for ${selectedApplicant.name} - ${selectedService.ServiceName}`
+        `Intake application for ${selectedCustomer.head_of_family} - ${payload.service_name}`
       );
 
       return result;
@@ -518,12 +566,15 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
     setSelectedCustomer(null);
     setSelectedApplicant(null);
     setSelectedService(null);
+    setSelectedServices([]);
     setSelectedSubService(null);
     setDynamicAnswers({});
     setOperatorNotes('');
     setIsQuickRegister(false);
     setIsChangingCustomer(false);
     setGovtAppNo('');
+    setNotificationMobileType('HEAD');
+    setCustomNotificationMobile('');
   };
 
   const handleClose = () => {
@@ -531,51 +582,33 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
     onClose();
   };
 
-  const totalFeeAmount = Number(govtFee) + Number(serviceCharge);
-
   return (
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title={
-        formMode === 'simple'
-          ? (isGu ? 'સરકારી સેવા અરજી નોંધણી' : 'Government Service Intake')
-          : (isGu ? 'સરકારી સેવા નોંધણી પોર્ટલ' : 'Government Service Intake Hub')
-      }
+      title={isGu ? 'નવી અરજી' : 'New Application'}
       description={
-        formMode === 'simple'
-          ? (isGu ? 'સરળ ડ્રોપડાઉન પસંદગી સાથે ઝડપી અરજી નોંધણી ફોર્મ.' : 'Fast & easy service intake using clean dropdown selectors.')
-          : (isGu ? 'ઝડપી ફ્રન્ટ-ડેસ્ક પ્રોસેસિંગ માટે તમામ પગલાં એક જ પેજ પર ઉપલબ્ધ છે.' : 'All steps consolidated in a single page for rapid front-desk processing.')
+        isGu
+          ? 'ઝડપી સેવા અરજી નોંધણી ફોર્મ.'
+          : 'Quick and easy service intake application form.'
       }
       maxWidth="2xl"
     >
       <div className="space-y-4 max-h-[76vh] overflow-y-auto pr-1 pb-4">
-        {/* Form Mode Switcher Pill */}
-        <div className="flex items-center justify-between p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-          <button
-            type="button"
-            onClick={() => setFormMode('simple')}
-            className={`flex-1 py-2 px-3 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
-              formMode === 'simple'
-                ? 'bg-brand-600 text-white shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>⚡ {isGu ? 'ઝડપી ફોર્મ' : 'Simple Form'}</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setFormMode('detailed')}
-            className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-              formMode === 'detailed'
-                ? 'bg-brand-600 text-white shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <FolderTree className="w-3.5 h-3.5" />
-            <span>📋 {isGu ? 'વિગતવાર ફોર્મ' : 'Detailed Flow'}</span>
-          </button>
+        {/* Employee Profile Session Banner */}
+        <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 text-xs">
+          <div className="flex items-center gap-2">
+            <UserCheck className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />
+            <span className="text-slate-600 dark:text-slate-400">
+              {isGu ? 'અરજી દાખલ કરનાર ઓપરેટર:' : 'Entering Employee Profile:'}
+            </span>
+            <span className="font-bold text-slate-900 dark:text-white">
+              {currentEmployeeName}
+            </span>
+          </div>
+          <Badge variant="info">
+            {isGu ? 'સક્રિય સત્ર' : 'Active Session'}
+          </Badge>
         </div>
 
         {formMode === 'simple' ? (
@@ -583,11 +616,11 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
           /* SIMPLE FORM MODE (CLEAN DROPDOWNS)                                        */
           /* ========================================================================= */
           <div className="space-y-4">
-            {/* Field 1: Citizen / Family Dropdown */}
+            {/* Field 1: Family Dropdown */}
             <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2">
               <div className="flex items-center justify-between">
                 <label className="block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                  {isGu ? '૧. પરિવાર / નાગરિક પસંદ કરો' : '1. Select Citizen / Family'} <span className="text-rose-500">*</span>
+                  {isGu ? '૧. પરિવાર પસંદ કરો' : '1. Select Family'} <span className="text-rose-500">*</span>
                 </label>
                 <button
                   type="button"
@@ -595,29 +628,78 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
                   className="text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline inline-flex items-center gap-1"
                 >
                   <Plus className="w-3 h-3" />
-                  <span>{isQuickRegister ? (isGu ? 'યાદીમાંથી પસંદ કરો' : 'Dropdown List') : (isGu ? '+ નવો નાગરિક નોંધો' : '+ Register New Citizen')}</span>
+                  <span>{isQuickRegister ? (isGu ? 'યાદીમાંથી પસંદ કરો' : 'Dropdown List') : (isGu ? '+ નવો પરિવાર નોંધો' : '+ Register New Family')}</span>
                 </button>
               </div>
 
               {isQuickRegister ? (
                 <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl space-y-3 border border-slate-200 dark:border-slate-700">
                   <div className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    {isGu ? 'નવા નાગરિકની ઝડપી નોંધણી:' : 'Quick Citizen Registration:'}
+                    {isGu ? 'નવા પરિવારની ઝડપી નોંધણી:' : 'Quick Family Registration:'}
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <Input
-                      label={isGu ? 'પરિવારના વડાનું નામ' : 'Head of Family Name'}
+                      label={isGu ? 'પરિવારના વડાનું નામ *' : 'Head of Family Name *'}
                       placeholder={isGu ? 'દા.ત. રમેશભાઈ પટેલ' : 'e.g. Ramesh Patel'}
                       value={quickCitizen.head_of_family}
                       onChange={(e) => setQuickCitizen({ ...quickCitizen, head_of_family: e.target.value })}
+                      required
                     />
                     <Input
-                      label={isGu ? 'મોબાઇલ નંબર' : 'Mobile Number'}
+                      label={isGu ? 'મોબાઇલ નંબર *' : 'Mobile Number *'}
                       placeholder={isGu ? '૧૦ અંકનો મોબાઇલ નંબર' : '10-digit mobile number'}
                       value={quickCitizen.mobile_number}
                       onChange={(e) => setQuickCitizen({ ...quickCitizen, mobile_number: e.target.value })}
+                      required
                     />
                   </div>
+
+                  {/* District Wise Village Selector */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        {isGu ? 'જિલ્લો (District) *' : 'District *'}
+                      </label>
+                      <select
+                        value={selectedDistrict}
+                        onChange={(e) => {
+                          const d = e.target.value;
+                          setSelectedDistrict(d);
+                          setQuickCitizen({ ...quickCitizen, village_city: DISTRICT_VILLAGES[d]?.[0] || 'Varna' });
+                        }}
+                        className="w-full text-xs py-2 px-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                      >
+                        {Object.keys(DISTRICT_VILLAGES).map((d) => (
+                          <option key={d} value={d}>{d}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        {isGu ? 'ગામ / શહેર (Village) *' : 'Village / City *'}
+                      </label>
+                      <select
+                        value={quickCitizen.village_city}
+                        onChange={(e) => setQuickCitizen({ ...quickCitizen, village_city: e.target.value })}
+                        className="w-full text-xs py-2 px-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                      >
+                        {(DISTRICT_VILLAGES[selectedDistrict] || ['Varna']).map((v) => (
+                          <option key={v} value={v}>{v}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <Input
+                        label={isGu ? 'વોટ્સએપ નંબર' : 'WhatsApp Number'}
+                        placeholder="WhatsApp contact"
+                        value={quickCitizen.whatsapp_number}
+                        onChange={(e) => setQuickCitizen({ ...quickCitizen, whatsapp_number: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
                   <div className="flex justify-end gap-2 pt-1">
                     <Button size="sm" variant="outline" onClick={() => setIsQuickRegister(false)}>
                       {isGu ? 'રદ કરો' : 'Cancel'}
@@ -636,7 +718,7 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
               ) : (
                 <Select
                   searchable
-                  placeholder={isGu ? '-- પરિવાર / નાગરિક પસંદ કરો --' : '-- Select Citizen / Family --'}
+                  placeholder={isGu ? '-- મોબાઇલ, સરનેમ અથવા નામ દ્વારા પરિવાર પસંદ કરો --' : '-- Search Family by Mobile, Surname or Name --'}
                   options={customerSelectOptions}
                   value={selectedCustomer ? String(selectedCustomer.id) : ''}
                   onChange={(e) => handleCustomerDropdownChange(e.target.value)}
@@ -644,68 +726,78 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
               )}
 
               {selectedCustomer && !isQuickRegister && (
-                <div className="flex items-center justify-between p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 text-xs">
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 text-xs">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span className="font-bold text-emerald-900 dark:text-emerald-200">
-                      {selectedCustomer.head_of_family}
-                    </span>
-                    <span className="text-emerald-700 dark:text-emerald-400 font-mono text-[11px]">
-                      ({selectedCustomer.family_id})
-                    </span>
-                    <span className="text-emerald-600 dark:text-emerald-400 hidden sm:inline">
-                      • 📱 {selectedCustomer.mobile_number}
-                    </span>
+                    <div>
+                      <span className="font-bold text-emerald-900 dark:text-emerald-200">
+                        {selectedCustomer.head_of_family}
+                      </span>
+                      <span className="text-emerald-700 dark:text-emerald-400 font-mono text-[11px] ml-1.5">
+                        ({selectedCustomer.family_id})
+                      </span>
+                      <div className="text-emerald-600 dark:text-emerald-400 text-[11px] font-medium">
+                        📱 {selectedCustomer.mobile_number} • 📍 {selectedCustomer.village_city || 'Varna'}
+                      </div>
+                    </div>
                   </div>
                   <Badge variant="success">પસંદ કરેલ</Badge>
                 </div>
               )}
             </div>
 
-            {/* Field 2: Applicant / Member Dropdown */}
-            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2">
-              <label className="block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                {isGu ? '૨. અરજદાર / સભ્ય પસંદ કરો' : '2. Select Applicant Member'} <span className="text-rose-500">*</span>
-              </label>
+            {/* Field 2: Service Selection Dropdown (Multiple Service Add Allowed) */}
+            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                  {isGu ? '૨. સરકારી સેવાઓ પસંદ કરો (Multiple Allowed)' : '2. Select Government Services (Multiple Allowed)'} <span className="text-rose-500">*</span>
+                </label>
+                {activeServicesList.length > 0 && (
+                  <span className="text-[11px] font-bold text-brand-600 dark:text-brand-400">
+                    {isGu ? `${activeServicesList.length} સેવાઓ પસંદ કરી` : `${activeServicesList.length} services selected`}
+                  </span>
+                )}
+              </div>
+
               <Select
-                placeholder={selectedCustomer ? (isGu ? '-- અરજદાર સભ્ય પસંદ કરો --' : '-- Select Applicant Member --') : (isGu ? 'પહેલા ઉપરથી પરિવાર પસંદ કરો...' : 'Select family first...')}
-                disabled={!selectedCustomer}
-                options={applicantSelectOptions}
-                value={selectedApplicant?.isHead ? 'head' : selectedApplicant ? String(selectedApplicant.id) : ''}
-                onChange={(e) => handleApplicantDropdownChange(e.target.value)}
+                searchable
+                placeholder={isGu ? '+ વધુ સરકારી સેવા ઉમેરો...' : '+ Add Government Service...'}
+                options={serviceSelectOptions}
+                value={selectedService ? String(selectedService.id) : ''}
+                onChange={(e) => handleServiceDropdownChange(e.target.value)}
               />
-              {selectedApplicant && (
-                <div className="flex items-center justify-between p-2 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/40 text-xs">
-                  <div className="flex items-center gap-2">
-                    <UserCheck className="w-4 h-4 text-blue-600 shrink-0" />
-                    <span className="font-bold text-blue-900 dark:text-blue-200">
-                      {selectedApplicant.name}
-                    </span>
-                    <Badge variant="info">{selectedApplicant.relationship}</Badge>
-                    <span className="text-blue-600 dark:text-blue-400 hidden sm:inline">
-                      • 📱 {selectedApplicant.mobile}
-                    </span>
+
+              {/* Multi-Service Selected Chips */}
+              {selectedServices.length > 0 && (
+                <div className="space-y-2 pt-1">
+                  <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                    {isGu ? `પસંદ કરેલ સેવાઓ (${selectedServices.length}):` : `Selected Services (${selectedServices.length}):`}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedServices.map((srv) => (
+                      <span
+                        key={srv.id}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-xs font-bold text-indigo-900 dark:text-indigo-200 shadow-2xs"
+                      >
+                        <span>{isGu && srv.ServiceNameGu ? srv.ServiceNameGu : srv.ServiceName}</span>
+                        <span className="text-[10px] opacity-75 font-mono">
+                          ₹{(srv.GovernmentFee || 0) + (srv.ServiceCharge || 50)}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveSelectedService(srv.id)}
+                          className="ml-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 font-bold cursor-pointer"
+                          title="Remove service"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
                   </div>
                 </div>
               )}
-            </div>
 
-            {/* Field 3: Service Selection Dropdown */}
-            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
-              <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-1.5">
-                  {isGu ? '૩. સરકારી સેવા પસંદ કરો' : '3. Select Government Service'} <span className="text-rose-500">*</span>
-                </label>
-                <Select
-                  searchable
-                  placeholder={isGu ? '-- સરકારી સેવા પસંદ કરો --' : '-- Select Government Service --'}
-                  options={serviceSelectOptions}
-                  value={selectedService ? String(selectedService.id) : ''}
-                  onChange={(e) => handleServiceDropdownChange(e.target.value)}
-                />
-              </div>
-
-              {/* Sub-Service Dropdown if exists */}
+              {/* Sub-Service Dropdown if exists for current active service */}
               {subServiceSelectOptions.length > 0 && (
                 <div>
                   <label className="block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-1.5">
@@ -740,63 +832,88 @@ export const ServiceIntakeModal: React.FC<ServiceIntakeModalProps> = ({
               )}
             </div>
 
-            {/* Field 4: Govt Token / Application No. & Priority (2-col) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
-              <Input
-                label={isGu ? 'સરકારી અરજી / ટોકન નંબર (જો હોય તો)' : 'Government Application / Token No (Optional)'}
-                placeholder={isGu ? 'દા.ત. PMK-GUJ-2026-98124' : 'e.g. PMK-GUJ-2026-98124'}
-                value={govtAppNo}
-                onChange={(e) => setGovtAppNo(e.target.value)}
-              />
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
-                  {isGu ? 'અગ્રતા' : 'Priority'}
+            {/* Field 3: Select Mobile Number for Notification */}
+            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+              <label className="block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                {isGu ? '૩. નોટિફિકેશન માટે મોબાઇલ નંબર પસંદ કરો' : '3. Select Mobile Number for Notification'} <span className="text-rose-500">*</span>
+              </label>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <label
+                  className={`p-3 rounded-xl border flex items-center gap-2 cursor-pointer transition-all ${
+                    notificationMobileType === 'HEAD'
+                      ? 'bg-brand-50 dark:bg-brand-950/40 border-brand-500 text-brand-900 dark:text-brand-200 ring-2 ring-brand-500/20'
+                      : 'bg-slate-50/60 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="notif_mobile"
+                    checked={notificationMobileType === 'HEAD'}
+                    onChange={() => setNotificationMobileType('HEAD')}
+                    className="text-brand-600 focus:ring-brand-500"
+                  />
+                  <div className="text-xs">
+                    <span className="font-bold block">{isGu ? 'પરિવાર વડા મોબાઇલ' : 'Head Mobile'}</span>
+                    <span className="font-mono text-[11px] opacity-75">{selectedCustomer?.mobile_number || '9825...'}</span>
+                  </div>
                 </label>
-                <Select
-                  options={[
-                    { value: 'NORMAL', label: isGu ? 'સામાન્ય' : 'Normal' },
-                    { value: 'HIGH', label: isGu ? 'ઝડપી' : 'High Priority' },
-                    { value: 'URGENT', label: isGu ? 'તાત્કાલિક' : 'Urgent / Tatkal' },
-                  ]}
-                  value={priority}
-                  onChange={(e) => setPriority(e.target.value as any)}
-                />
+
+                <label
+                  className={`p-3 rounded-xl border flex items-center gap-2 cursor-pointer transition-all ${
+                    notificationMobileType === 'WHATSAPP'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-900 dark:text-emerald-200 ring-2 ring-emerald-500/20'
+                      : 'bg-slate-50/60 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="notif_mobile"
+                    checked={notificationMobileType === 'WHATSAPP'}
+                    onChange={() => setNotificationMobileType('WHATSAPP')}
+                    className="text-emerald-600 focus:ring-emerald-500"
+                  />
+                  <div className="text-xs">
+                    <span className="font-bold block">WhatsApp Number</span>
+                    <span className="font-mono text-[11px] opacity-75">{selectedCustomer?.whatsapp_number || selectedCustomer?.mobile_number || 'N/A'}</span>
+                  </div>
+                </label>
+
+                <label
+                  className={`p-3 rounded-xl border flex items-center gap-2 cursor-pointer transition-all ${
+                    notificationMobileType === 'CUSTOM'
+                      ? 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-500 text-indigo-900 dark:text-indigo-200 ring-2 ring-indigo-500/20'
+                      : 'bg-slate-50/60 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="notif_mobile"
+                    checked={notificationMobileType === 'CUSTOM'}
+                    onChange={() => setNotificationMobileType('CUSTOM')}
+                    className="text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <div className="text-xs">
+                    <span className="font-bold block">{isGu ? 'અન્ય / કસ્ટમ નંબર' : 'Custom Number'}</span>
+                    <span className="text-[11px] opacity-75">{isGu ? 'નવો નંબર દાખલ કરો' : 'Enter mobile'}</span>
+                  </div>
+                </label>
               </div>
+
+              {notificationMobileType === 'CUSTOM' && (
+                <div className="pt-1">
+                  <Input
+                    label={isGu ? 'નોટિફિકેશન મોબાઇલ નંબર (SMS/WhatsApp) *' : 'Notification Mobile Number *'}
+                    placeholder="10-digit mobile number"
+                    value={customNotificationMobile}
+                    onChange={(e) => setCustomNotificationMobile(e.target.value)}
+                    required
+                  />
+                </div>
+              )}
             </div>
 
-            {/* Field 5: Smart Document Checklist Badges */}
-            {selectedService && vaultCheckList.length > 0 && (
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-slate-800 dark:text-slate-200">
-                    {isGu ? 'જરૂરી દસ્તાવેજોની યાદી:' : 'Required Documents Checklist:'}
-                  </span>
-                  <span className={`font-bold ${allDocsReady ? 'text-emerald-600' : 'text-amber-600'}`}>
-                    {vaultCheckList.filter((d) => d.isAvailable).length} / {vaultCheckList.length} {isGu ? 'ઉપલબ્ધ' : 'Available'}
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {vaultCheckList.map((doc, idx) => (
-                    <span
-                      key={idx}
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold ${
-                        doc.isAvailable
-                          ? 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
-                          : 'bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
-                      }`}
-                    >
-                      {doc.isAvailable ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> : <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />}
-                      <span>{doc.DocumentName}</span>
-                      <span className="text-[10px] opacity-75">
-                        ({doc.isAvailable ? (isGu ? 'તિજોરીમાં ઉપલબ્ધ' : 'In Vault') : (isGu ? 'બાકી છે' : 'Pending')})
-                      </span>
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Field 6: Fee & Payment Details */}
+            {/* Field 4: Fee & Payment Details */}
             <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
               <div className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
                 {isGu ? '૪. ફી અને ચુકવણી વિગતો' : '4. Fee & Payment Details'}

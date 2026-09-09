@@ -19,6 +19,7 @@ import {
   ExternalLink,
   ChevronDown,
   Sparkles,
+  Globe,
 } from 'lucide-react';
 import { QuickAddDropdown } from '@/components/common/QuickAddDropdown';
 import { toast } from 'sonner';
@@ -131,6 +132,18 @@ export const Topbar: React.FC<TopbarProps> = ({
           />
         )}
 
+        {/* Website Button */}
+        <a
+          href="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          title={language === 'gu' ? 'વેબસાઇટ જુઓ' : 'Visit Public Website'}
+          className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-brand-200 dark:border-brand-900/60 bg-brand-50/70 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 hover:bg-brand-100 dark:hover:bg-brand-900/60 text-xs font-bold transition-all shadow-xs"
+        >
+          <Globe className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+          <span>{language === 'gu' ? 'વેબસાઇટ' : 'Website'}</span>
+          <ExternalLink className="w-3 h-3 opacity-60" />
+        </a>
 
         {/* Google Translate & Multi-Language Selector */}
         <GoogleLanguageSelector />

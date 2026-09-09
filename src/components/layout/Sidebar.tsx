@@ -39,6 +39,8 @@ import {
   Sliders,
   Bell,
   TrendingUp,
+  Mail,
+  Globe,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -77,7 +79,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const pathname = usePathname();
   const { user, userRole, logout } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const [openDropdowns, setOpenDropdowns] = React.useState<Record<string, boolean>>({});
 
@@ -171,20 +173,59 @@ export const Sidebar: React.FC<SidebarProps> = ({
             },
           ],
         },
+        { name: language === 'gu' ? 'કોન્ટેક્ટ લિસ્ટ' : 'Contact Us List', href: '/admin/contact-us', icon: Mail },
         { name: t('nav_settings'), href: '/admin/settings', icon: Settings },
       ],
     },
   ];
 
+  // HR Navigation: HRMS + Services
+  const getHrNavigation = (): NavGroup[] => [
+    {
+      group: language === 'gu' ? 'HR મેનેજમેન્ટ' : 'HR MANAGEMENT',
+      items: [
+        {
+          name: t('nav_hrms'),
+          href: '/admin/employees',
+          icon: UserCog,
+          children: [
+            { name: 'Employees', href: '/admin/employees?tab=employees', icon: Users },
+            { name: 'Attendance', href: '/admin/employees?tab=attendance', icon: Calendar },
+            { name: 'Leave', href: '/admin/employees?tab=leave', icon: CalendarDays },
+            {
+              name: 'Payroll',
+              icon: Banknote,
+              children: [
+                { name: 'Salary Structure', href: '/admin/employees?tab=salary-structure', icon: FileSpreadsheet },
+                { name: 'Payroll', href: '/admin/employees?tab=payroll', icon: DollarSign },
+                { name: 'Salary Slips', href: '/admin/employees?tab=salary-slips', icon: Receipt },
+                { name: 'Payroll Reports', href: '/admin/employees?tab=payroll-reports', icon: BarChart3 },
+              ],
+            },
+            {
+              name: 'Reports',
+              icon: BarChart2,
+              children: [
+                { name: 'Attendance Report', href: '/admin/employees?tab=attendance-report', icon: FileCheck },
+                { name: 'Leave Report', href: '/admin/employees?tab=leave-report', icon: FileText },
+                { name: 'Employee Report', href: '/admin/employees?tab=employee-report', icon: Users },
+              ],
+            },
+          ],
+        },
+        { name: t('nav_services'), href: '/admin/services', icon: FolderTree },
+      ],
+    },
+  ];
+
+  // Employee (Staff) Navigation: Family + Front Desk
   const getStaffNavigation = (): NavGroup[] => [
     {
-      group: t('group_office_ops'),
+      group: language === 'gu' ? 'ફેમિલી અને સર્વિસ' : 'FAMILY & DESK',
       items: [
-        { name: t('nav_dashboard'), href: '/staff/dashboard', icon: LayoutDashboard },
-        { name: t('nav_family'), href: '/staff/customers', icon: Users },
-        { name: t('nav_services'), href: '/staff/services', icon: FolderTree },
-        { name: t('nav_hrms'), href: '/staff/hrms', icon: UserCog },
-        { name: t('nav_settings'), href: '/staff/settings', icon: Settings },
+        { name: t('nav_office_dashboard'), href: '/admin/office-dashboard', icon: Building2 },
+        { name: t('nav_family'), href: '/admin/customers', icon: Users },
+        { name: language === 'gu' ? 'અરજીઓ' : 'Applications', href: '/admin/applications', icon: FileText },
       ],
     },
   ];
@@ -217,6 +258,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const navGroups =
     userRole === 'admin'
       ? getAdminNavigation()
+      : userRole === 'hr'
+      ? getHrNavigation()
       : userRole === 'employee'
       ? getStaffNavigation()
       : getCustomerNavigation();

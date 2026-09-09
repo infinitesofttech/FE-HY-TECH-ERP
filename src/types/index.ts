@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'employee' | 'customer';
+export type UserRole = 'admin' | 'hr' | 'employee' | 'customer';
 
 export interface AdminUser {
   id: number;
@@ -294,6 +294,7 @@ export interface Transaction {
   items?: TransactionItem[];
   previous_due_cleared?: string;
   points_earned: number;
+  employee_points?: number;
   points_redeemed: number;
   wallet_credit: string;
   wallet_used: string;
@@ -302,6 +303,20 @@ export interface Transaction {
   remarks?: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface ContactInquiry {
+  id: number;
+  full_name: string;
+  mobile_number: string;
+  email?: string;
+  subject?: string;
+  service_interest?: string;
+  message: string;
+  created_at: string;
+  status: 'NEW' | 'CONTACTED' | 'RESOLVED';
+  assigned_to?: string;
+  notes?: string;
 }
 
 export type ReminderPriority = 'HIGH' | 'MEDIUM' | 'LOW';

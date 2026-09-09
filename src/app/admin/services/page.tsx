@@ -21,6 +21,7 @@ import {
 import { baseServiceService } from '@/api/services/baseServiceService';
 import { subServiceService } from '@/api/services/subServiceService';
 import { requiredDocumentService } from '@/api/services/requiredDocumentService';
+import { ServiceIntakeModal } from '@/components/applications/ServiceIntakeModal';
 import { useLanguage } from '@/context/LanguageContext';
 import { BaseService, SubService, RequiredDocument, DocumentType } from '@/types';
 import { toast } from 'sonner';
@@ -38,6 +39,8 @@ import {
   Search,
   LayoutGrid,
   List,
+  Users,
+  Send,
 } from 'lucide-react';
 
 const DOC_TYPES: DocumentType[] = [
@@ -65,6 +68,8 @@ export default function ServiceCatalogPage() {
   const [isDocModalOpen, setIsDocModalOpen] = useState(false);
   const [isBuilderModalOpen, setIsBuilderModalOpen] = useState(false);
   const [editingService, setEditingService] = useState<BaseService | null>(null);
+  const [isIntakeModalOpen, setIsIntakeModalOpen] = useState(false);
+  const [selectedServiceForIntake, setSelectedServiceForIntake] = useState<BaseService | null>(null);
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -635,6 +640,51 @@ export default function ServiceCatalogPage() {
                             </span>
                           </div>
 
+                          {/* Required Documents preview chips */}
+                          {(() => {
+                            const reqDocs: string[] = Array.from(
+                              new Set(
+                                (service.SubServices || []).flatMap((sub) =>
+                                  (sub.RequiredDocuments || []).map((d) => d.DocumentName)
+                                )
+                              )
+                            );
+                            if (reqDocs.length === 0) return null;
+                            return (
+                              <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80">
+                                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 flex items-center gap-1">
+                                  <FileCheck2 className="w-3 h-3 text-purple-500" />
+                                  <span>{language === 'gu' ? 'જરૂરી પુરાવા / દસ્તાવેજ:' : 'Required Documents:'}</span>
+                                </div>
+                                <div className="flex flex-wrap gap-1">
+                                  {reqDocs.slice(0, 3).map((doc, idx) => (
+                                    <span
+                                      key={idx}
+                                      className="text-[10px] px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 font-medium truncate max-w-[150px]"
+                                      title={doc}
+                                    >
+                                      {doc}
+                                    </span>
+                                  ))}
+                                  {reqDocs.length > 3 && (
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold">
+                                      +{reqDocs.length - 3}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })()}
+
+                          {/* Assigned Staff */}
+                          <div className="flex items-center gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-xs text-slate-500 dark:text-slate-400">
+                            <Users className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                            <span className="text-[11px] truncate">
+                              <strong className="text-slate-700 dark:text-slate-300">{language === 'gu' ? 'સ્ટાફ' : 'Staff'}:</strong>{' '}
+                              {service.StaffInstructions ? (service.StaffInstructions.length > 25 ? service.StaffInstructions.slice(0, 25) + '...' : service.StaffInstructions) : (language === 'gu' ? 'સહાયક ઓપરેટર' : 'Desk Operator')}
+                            </span>
+                          </div>
+
                           {/* Expanded Sub-services Drawer inside card */}
                           {isExpanded && (
                             <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2 animate-fade-in">
@@ -663,7 +713,7 @@ export default function ServiceCatalogPage() {
                         </div>
 
                         {/* Card Actions Footer */}
-                        <div className="p-3 bg-slate-50/75 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-1.5">
+                        <div className="p-3 bg-slate-50/75 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-1.5 flex-wrap">
                           <button
                             onClick={() => toggleExpand(service.id)}
                             className="flex items-center gap-1 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 px-2 py-1 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer"
@@ -673,6 +723,18 @@ export default function ServiceCatalogPage() {
                           </button>
 
                           <div className="flex items-center gap-1">
+                            <Button
+                              onClick={() => {
+                                setSelectedServiceForIntake(service);
+                                setIsIntakeModalOpen(true);
+                              }}
+                              variant="primary"
+                              size="xs"
+                              leftIcon={<Send className="w-3 h-3" />}
+                              className="bg-brand-600 hover:bg-brand-700 text-white font-bold shadow-xs"
+                            >
+                              {language === 'gu' ? 'અરજી કરો' : 'Apply'}
+                            </Button>
                             <Button
                               onClick={() => openBuilder(service)}
                               variant="outline"
@@ -803,6 +865,18 @@ export default function ServiceCatalogPage() {
                           </div>
 
                           <div className="flex items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
+                            <Button
+                              onClick={() => {
+                                setSelectedServiceForIntake(service);
+                                setIsIntakeModalOpen(true);
+                              }}
+                              variant="primary"
+                              size="xs"
+                              leftIcon={<Send className="w-3 h-3" />}
+                              className="bg-brand-600 hover:bg-brand-700 text-white font-bold shadow-xs"
+                            >
+                              {language === 'gu' ? 'અરજી કરો' : 'Apply Service'}
+                            </Button>
                             <Button
                               onClick={() => openBuilder(service)}
                               variant="outline"
@@ -1223,6 +1297,16 @@ export default function ServiceCatalogPage() {
           deleteSubServiceMutation.isPending ||
           deleteDocMutation.isPending
         }
+      />
+
+      {/* Service Intake Modal triggered directly from Catalog */}
+      <ServiceIntakeModal
+        isOpen={isIntakeModalOpen}
+        onClose={() => {
+          setIsIntakeModalOpen(false);
+          setSelectedServiceForIntake(null);
+        }}
+        initialServiceId={selectedServiceForIntake?.id}
       />
     </AppShell>
   );
