@@ -77,20 +77,23 @@ export default function AdminDashboardPage() {
 
   const queryClient = useQueryClient();
 
-  const { data: applications = [] } = useQuery({
+  const { data: rawApps = [] } = useQuery({
     queryKey: ['applications'],
     queryFn: () => applicationService.getApplications(),
   });
+  const applications = Array.isArray(rawApps) ? rawApps : ((rawApps as any)?.results || []);
 
-  const { data: leaves = [], refetch: refetchLeaves } = useQuery({
+  const { data: rawLeaves = [], refetch: refetchLeaves } = useQuery({
     queryKey: ['admin-leaves'],
     queryFn: () => hrmsService.getAllLeaves(),
   });
+  const leaves = Array.isArray(rawLeaves) ? rawLeaves : ((rawLeaves as any)?.results || []);
 
-  const { data: employees = [] } = useQuery({
+  const { data: rawEmployees = [] } = useQuery({
     queryKey: ['employees'],
     queryFn: () => employeeService.getEmployees(),
   });
+  const employees = Array.isArray(rawEmployees) ? rawEmployees : ((rawEmployees as any)?.results || []);
 
   const leaveMutation = useMutation({
     mutationFn: ({ leaveId, status }: { leaveId: number; status: 'APPROVED' | 'REJECTED' }) =>
@@ -110,7 +113,7 @@ export default function AdminDashboardPage() {
   });
 
   const pendingLeaves = React.useMemo(() => {
-    return leaves.filter((l) => l.status === 'PENDING');
+    return Array.isArray(leaves) ? leaves.filter((l) => l.status === 'PENDING') : [];
   }, [leaves]);
 
   const [isIntakeModalOpen, setIsIntakeModalOpen] = React.useState(false);
@@ -156,7 +159,7 @@ export default function AdminDashboardPage() {
     return chartData.reduce((acc, curr) => acc + curr.revenue, 0);
   }, [chartData]);
 
-  const categoryData = dashboard?.category_distribution || [
+  const categoryData = Array.isArray(dashboard?.category_distribution) ? dashboard.category_distribution : [
     { name: 'Aadhaar Card', count: 42, percentage: 38 },
     { name: 'Ayushman Card', count: 28, percentage: 25 },
     { name: 'Election Card', count: 18, percentage: 16 },

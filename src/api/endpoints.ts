@@ -136,4 +136,20 @@ export const ENDPOINTS = {
     SEND: '/notifications/send/',
     MARK_READ: (id: number | string) => `/notifications/${id}/read/`,
   },
+
+  // HRMS
+  HRMS: {
+    ATTENDANCE: '/hrms/attendance/',
+    LEAVES: '/hrms/leaves/',
+    LEAVE_BALANCE: (id: number | string) => `/hrms/leave-balance/${id}/`,
+    HOLIDAYS: '/hrms/holidays/',
+  },
+
+  // Villages & Demographics
+  VILLAGES: {
+    LIST: '/villages/',
+    CREATE: '/villages/',
+    DETAIL: (id: number | string) => `/villages/${id}/`,
+    FAMILY_TREE: (familyId: string) => `/villages/family-tree/${familyId}/`,
+  },
 };

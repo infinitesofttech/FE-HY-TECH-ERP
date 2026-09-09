@@ -61,13 +61,13 @@ export default function LoginPage() {
     setPortalType(role);
     if (role === 'admin') {
       setUsername('admin');
-      setPassword('admin@123');
+      setPassword('Admin@123');
     } else if (role === 'employee') {
-      setUsername('operator');
-      setPassword('operator@123');
+      setUsername('staff');
+      setPassword('Staff@123');
     } else {
-      setFamilyId('HTF-000002');
-      setMobileNumber('9876543210');
+      setFamilyId('HTF-000001');
+      setMobileNumber('6789012345');
       setPassword('Patel@123');
     }
     toast.info(`Pre-filled ${role.toUpperCase()} test credentials`);

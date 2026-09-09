@@ -4,55 +4,11 @@ import { LoginResponse } from '@/types';
 
 export const authService = {
   async staffLogin(credentials: { username: string; password: string }): Promise<LoginResponse> {
-    try {
-      const response = await apiClient.post<LoginResponse>(
-        ENDPOINTS.AUTH.STAFF_LOGIN,
-        credentials
-      );
-      return response.data;
-    } catch (err: unknown) {
-      // Fallback for demo testing if server is offline or misconfigured (e.g. redirecting to HTML)
-      const isHtmlErr = (err as Error)?.message?.includes('Expected JSON but received HTML');
-      const isNetworkErr = (err as { code?: string })?.code === 'ERR_NETWORK' || !(err as { response?: unknown })?.response;
-      const isCsrfOrRedirect = (err as { response?: { status?: number } })?.response?.status === 403;
-
-      if (isNetworkErr || isHtmlErr || isCsrfOrRedirect) {
-        if (credentials.username === 'admin') {
-          return {
-            message: 'Admin login successful (Demo Mode).',
-            user_type: 'admin',
-            tokens: {
-              access: 'mock-admin-access-token',
-              refresh: 'mock-admin-refresh-token',
-            },
-            user: {
-              id: 1,
-              username: 'admin',
-              email: 'admin@hytech.com',
-              is_staff: true,
-              is_superuser: true,
-            },
-          };
-        } else {
-          return {
-            message: 'Employee login successful (Demo Mode).',
-            user_type: 'employee',
-            tokens: {
-              access: 'mock-staff-access-token',
-              refresh: 'mock-staff-refresh-token',
-            },
-            employee: {
-              id: 2,
-              username: credentials.username || 'staff01',
-              full_name: 'Staff One',
-              email: 'staff1@hytech.com',
-              role: 'STAFF',
-            },
-          };
-        }
-      }
-      throw err;
-    }
+    const response = await apiClient.post<LoginResponse>(
+      ENDPOINTS.AUTH.STAFF_LOGIN,
+      credentials
+    );
+    return response.data;
   },
 
   async customerLogin(credentials: {
@@ -60,37 +16,11 @@ export const authService = {
     mobile_number: string;
     password: string;
   }): Promise<LoginResponse> {
-    try {
-      const response = await apiClient.post<LoginResponse>(
-        ENDPOINTS.AUTH.CUSTOMER_LOGIN,
-        credentials
-      );
-      return response.data;
-    } catch (err: unknown) {
-      const isHtmlErr = (err as Error)?.message?.includes('Expected JSON but received HTML');
-      const isNetworkErr = (err as { code?: string })?.code === 'ERR_NETWORK' || !(err as { response?: unknown })?.response;
-      const isCsrfOrRedirect = (err as { response?: { status?: number } })?.response?.status === 403;
-
-      if (isNetworkErr || isHtmlErr || isCsrfOrRedirect) {
-        return {
-          message: 'Customer login successful (Demo Mode).',
-          user_type: 'customer',
-          tokens: {
-            access: 'mock-customer-access-token',
-            refresh: 'mock-customer-refresh-token',
-          },
-          customer: {
-            id: 3,
-            family_id: credentials.family_id || 'HTF-000002',
-            head_of_family: 'Dineshbhai Changani',
-            mobile_number: credentials.mobile_number || '8000231125',
-            current_points: 20,
-            wallet_balance: '0.00',
-          },
-        };
-      }
-      throw err;
-    }
+    const response = await apiClient.post<LoginResponse>(
+      ENDPOINTS.AUTH.CUSTOMER_LOGIN,
+      credentials
+    );
+    return response.data;
   },
 
   async logout(): Promise<{ message: string }> {
