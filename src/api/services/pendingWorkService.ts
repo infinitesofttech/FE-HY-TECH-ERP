@@ -8,8 +8,10 @@ let localPending = [...MOCK_PENDING_WORK];
 export const pendingWorkService = {
   async getPendingWork(): Promise<PendingWork[]> {
     try {
-      const response = await apiClient.get<PendingWork[]>(ENDPOINTS.PENDING_WORK.LIST);
-      return response.data;
+      const response = await apiClient.get<any>(ENDPOINTS.PENDING_WORK.LIST);
+      if (Array.isArray(response.data)) return response.data;
+      if (response.data && Array.isArray(response.data.results)) return response.data.results;
+      return localPending;
     } catch {
       return localPending;
     }

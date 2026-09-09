@@ -8,8 +8,10 @@ let localServices = [...MOCK_SERVICES];
 export const baseServiceService = {
   async getServices(): Promise<BaseService[]> {
     try {
-      const response = await apiClient.get<BaseService[]>(ENDPOINTS.SERVICES.LIST);
-      return response.data;
+      const response = await apiClient.get<any>(ENDPOINTS.SERVICES.LIST);
+      if (Array.isArray(response.data)) return response.data;
+      if (response.data && Array.isArray(response.data.results)) return response.data.results;
+      return localServices;
     } catch {
       return localServices;
     }

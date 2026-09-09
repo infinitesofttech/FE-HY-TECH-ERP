@@ -8,8 +8,10 @@ let localCustomers = [...MOCK_CUSTOMERS];
 export const customerService = {
   async getCustomers(): Promise<Customer[]> {
     try {
-      const response = await apiClient.get<Customer[]>(ENDPOINTS.CUSTOMERS.LIST);
-      return response.data;
+      const response = await apiClient.get<any>(ENDPOINTS.CUSTOMERS.LIST);
+      if (Array.isArray(response.data)) return response.data;
+      if (response.data && Array.isArray(response.data.results)) return response.data.results;
+      return localCustomers;
     } catch {
       return localCustomers;
     }

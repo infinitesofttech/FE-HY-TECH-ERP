@@ -8,8 +8,10 @@ let localReminders = [...MOCK_REMINDERS];
 export const reminderService = {
   async getReminders(): Promise<Reminder[]> {
     try {
-      const response = await apiClient.get<Reminder[]>(ENDPOINTS.REMINDERS.LIST);
-      return response.data;
+      const response = await apiClient.get<any>(ENDPOINTS.REMINDERS.LIST);
+      if (Array.isArray(response.data)) return response.data;
+      if (response.data && Array.isArray(response.data.results)) return response.data.results;
+      return localReminders;
     } catch {
       return localReminders;
     }

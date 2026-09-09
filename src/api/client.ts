@@ -46,9 +46,22 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response Interceptor: Handle 401 & Silent Refresh
+// Response Interceptor: Handle HTML responses, 401 & Silent Refresh
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // If backend returns HTML (e.g. redirected to Django login or 404/500 HTML page)
+    if (
+      typeof response.data === 'string' &&
+      (response.data.trim().startsWith('<!DOCTYPE') ||
+       response.data.trim().startsWith('<html') ||
+       String(response.headers['content-type'] || '').includes('text/html'))
+    ) {
+      return Promise.reject(
+        new Error('Invalid API response: Expected JSON but received HTML. The backend may be redirecting to a login page or misconfigured.')
+      );
+    }
+    return response;
+  },
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
