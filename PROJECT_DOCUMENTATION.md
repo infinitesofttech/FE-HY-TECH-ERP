@@ -44,7 +44,7 @@
 The application follows a **zero-hardcoding, swap-safe API architecture**. Switching between a local Django development server and a remote live production backend requires changing exactly **one environment variable**:
 
 ```env
-NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000
+NEXT_PUBLIC_API_BASE_URL=https://hytechepr.pythonanywhere.com
 ```
 
 ### Architecture Breakdown:

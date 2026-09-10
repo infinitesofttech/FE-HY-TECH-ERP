@@ -24,8 +24,8 @@ interface UserHeaderProps {
 
 export const UserHeader: React.FC<UserHeaderProps> = ({
   onOpenMobileSidebar,
-  familyId = 'HTF-000002',
-  headOfFamily = 'Rajesh Patel',
+  familyId = '',
+  headOfFamily = 'Customer',
 }) => {
   const router = useRouter();
   const { user, logout } = useAuth();

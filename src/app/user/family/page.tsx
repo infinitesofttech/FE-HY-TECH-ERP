@@ -236,7 +236,7 @@ export default function UserFamilyPage() {
                         Head of Family Name
                       </span>
                       <span className="font-bold text-slate-900 dark:text-white text-sm">
-                        {customer?.head_of_family || 'Rajesh Patel'}
+                        {customer?.head_of_family || '—'}
                       </span>
                     </div>
 
@@ -254,7 +254,7 @@ export default function UserFamilyPage() {
                         Primary Mobile
                       </span>
                       <span className="font-mono font-bold text-slate-900 dark:text-white">
-                        {customer?.mobile_number || '9876543210'}
+                        {customer?.mobile_number || '—'}
                       </span>
                     </div>
 
@@ -263,7 +263,7 @@ export default function UserFamilyPage() {
                         WhatsApp Updates
                       </span>
                       <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                        {customer?.whatsapp_number || customer?.mobile_number || '9876543210'}
+                        {customer?.whatsapp_number || customer?.mobile_number || '—'}
                       </span>
                     </div>
 
@@ -272,7 +272,7 @@ export default function UserFamilyPage() {
                         Residential Address
                       </span>
                       <span className="font-medium text-slate-800 dark:text-slate-200">
-                        {customer?.village_city || '123, Shanti Nagar, Ahmedabad'}, Gujarat - 380015
+                        {customer?.village_city ? `${customer.village_city}, Gujarat` : '—'}
                       </span>
                     </div>
                   </div>

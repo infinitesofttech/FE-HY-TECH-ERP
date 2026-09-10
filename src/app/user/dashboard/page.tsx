@@ -106,76 +106,8 @@ export default function UserDashboardPage() {
     (app) => app.customer_family_id === familyId
   );
 
-  // Fallback demo recent applications matching mockup if empty
-  const recentApplications: Application[] = myApplications.length > 0
-    ? myApplications.slice(0, 5)
-    : [
-        {
-          id: 101,
-          application_no: 'APP20250032',
-          service_name: 'Income Certificate',
-          category: 'REVENUE',
-          applicant_name: customer?.head_of_family || 'Rajesh Patel',
-          customer_family_id: familyId,
-          status: 'PENDING',
-          created_at: '2025-08-22T10:30:00.000Z',
-          expected_date: '2025-08-28',
-          amount: 50,
-          payment_status: 'PAID',
-        },
-        {
-          id: 102,
-          application_no: 'APP20250028',
-          service_name: 'Caste Certificate',
-          category: 'REVENUE',
-          applicant_name: customer?.head_of_family || 'Rajesh Patel',
-          customer_family_id: familyId,
-          status: 'APPROVED',
-          created_at: '2025-08-18T11:00:00.000Z',
-          expected_date: '2025-08-24',
-          amount: 50,
-          payment_status: 'PAID',
-        },
-        {
-          id: 103,
-          application_no: 'APP20250024',
-          service_name: 'Ration Card Update',
-          category: 'FOOD_CIVIL',
-          applicant_name: customer?.head_of_family || 'Rajesh Patel',
-          customer_family_id: familyId,
-          status: 'GOVERNMENT_PROCESSING' as any,
-          created_at: '2025-08-12T09:15:00.000Z',
-          expected_date: '2025-08-20',
-          amount: 70,
-          payment_status: 'PAID',
-        },
-        {
-          id: 104,
-          application_no: 'APP20250020',
-          service_name: 'Residence Certificate',
-          category: 'REVENUE',
-          applicant_name: customer?.head_of_family || 'Rajesh Patel',
-          customer_family_id: familyId,
-          status: 'APPROVED',
-          created_at: '2025-08-05T14:45:00.000Z',
-          expected_date: '2025-08-11',
-          amount: 50,
-          payment_status: 'PAID',
-        },
-        {
-          id: 105,
-          application_no: 'APP20250016',
-          service_name: 'Birth Certificate',
-          category: 'HEALTH',
-          applicant_name: customer?.head_of_family || 'Rajesh Patel',
-          customer_family_id: familyId,
-          status: 'REJECTED',
-          created_at: '2025-07-28T16:00:00.000Z',
-          expected_date: '2025-08-02',
-          amount: 50,
-          payment_status: 'PAID',
-        },
-      ];
+  // Recent applications from live API
+  const recentApplications: Application[] = myApplications.slice(0, 5);
 
   const quickServices = [
     {
@@ -252,7 +184,7 @@ export default function UserDashboardPage() {
     }
   };
 
-  const displayName = customer?.head_of_family || 'Rajesh Patel';
+  const displayName = customer?.head_of_family || (user as any)?.full_name || 'Customer';
 
   return (
     <UserLayout familyId={customer?.family_id || familyId} headOfFamily={displayName}>
@@ -305,7 +237,7 @@ export default function UserDashboardPage() {
                     My Documents
                   </span>
                   <span className="text-2xl font-black text-slate-900 dark:text-white block mt-0.5">
-                    {documents.length || 5}
+                    {documents.length}
                   </span>
                 </div>
               </div>
@@ -329,7 +261,7 @@ export default function UserDashboardPage() {
                     Family Members
                   </span>
                   <span className="text-2xl font-black text-slate-900 dark:text-white block mt-0.5">
-                    {members.length || 4}
+                    {members.length}
                   </span>
                 </div>
               </div>
@@ -353,7 +285,7 @@ export default function UserDashboardPage() {
                     Wallet Points
                   </span>
                   <span className="text-2xl font-black text-slate-900 dark:text-white block mt-0.5">
-                    {customer?.current_points ?? 250}
+                    {customer?.current_points ?? 0}
                   </span>
                 </div>
               </div>
@@ -377,7 +309,7 @@ export default function UserDashboardPage() {
                     My Application
                   </span>
                   <span className="text-2xl font-black text-slate-900 dark:text-white block mt-0.5">
-                    {myApplications.length || 3}
+                    {myApplications.length}
                   </span>
                 </div>
               </div>
@@ -423,35 +355,43 @@ export default function UserDashboardPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {recentApplications.map((app) => (
-                    <tr key={app.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                      <td className="py-3.5 px-2 font-mono font-bold text-slate-900 dark:text-slate-100">
-                        {app.application_no}
-                      </td>
-                      <td className="py-3.5 px-2 font-semibold text-slate-800 dark:text-slate-200">
-                        {app.service_name}
-                      </td>
-                      <td className="py-3.5 px-2 text-slate-500 whitespace-nowrap">
-                        {new Date(app.created_at).toLocaleDateString('en-GB', {
-                          day: '2-digit',
-                          month: 'short',
-                          year: 'numeric',
-                        })}
-                      </td>
-                      <td className="py-3.5 px-2">
-                        {getStatusBadge(app.status)}
-                      </td>
-                      <td className="py-3.5 px-2 text-right">
-                        <button
-                          onClick={() => setSelectedApp(app)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-[11px] font-semibold transition-all cursor-pointer"
-                        >
-                          <Eye className="w-3 h-3" />
-                          <span>View</span>
-                        </button>
+                  {recentApplications.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="py-8 text-center text-slate-400">
+                        No recent applications found.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    recentApplications.map((app) => (
+                      <tr key={app.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                        <td className="py-3.5 px-2 font-mono font-bold text-slate-900 dark:text-slate-100">
+                          {app.application_no}
+                        </td>
+                        <td className="py-3.5 px-2 font-semibold text-slate-800 dark:text-slate-200">
+                          {app.service_name}
+                        </td>
+                        <td className="py-3.5 px-2 text-slate-500 whitespace-nowrap">
+                          {new Date(app.created_at).toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                          })}
+                        </td>
+                        <td className="py-3.5 px-2">
+                          {getStatusBadge(app.status)}
+                        </td>
+                        <td className="py-3.5 px-2 text-right">
+                          <button
+                            onClick={() => setSelectedApp(app)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-[11px] font-semibold transition-all cursor-pointer"
+                          >
+                            <Eye className="w-3 h-3" />
+                            <span>View</span>
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

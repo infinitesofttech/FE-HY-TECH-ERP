@@ -13,14 +13,14 @@ interface UserFamilyCardProps {
 export const UserFamilyCard: React.FC<UserFamilyCardProps> = ({ customer }) => {
   const [isEditOpen, setIsEditOpen] = useState(false);
 
-  const familyId = customer?.family_id || 'FAM2024001';
+  const familyId = customer?.family_id || '—';
   const familyName = customer?.head_of_family
     ? `${customer.head_of_family} Family`
-    : 'Patel Family';
-  const mobileNumber = customer?.mobile_number || '9876543210';
+    : '—';
+  const mobileNumber = customer?.mobile_number || '—';
   const address = customer?.village_city
     ? `${customer.village_city}, Gujarat`
-    : '123, Shanti Nagar, Ahmedabad, Gujarat - 380015';
+    : '—';
 
   return (
     <>

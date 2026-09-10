@@ -22,8 +22,8 @@ export const UserLayout: React.FC<UserLayoutProps> = ({
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const { user } = useAuth();
 
-  const currentFamilyId = (user as any)?.family_id || familyId || 'HTF-000002';
-  const currentHeadOfFamily = (user as any)?.head_of_family || headOfFamily || 'Rajesh Patel';
+  const currentFamilyId = (user as any)?.family_id || familyId || '';
+  const currentHeadOfFamily = (user as any)?.head_of_family || headOfFamily || (user as any)?.full_name || 'Customer';
 
   return (
     <RouteGuard allowedRoles={['customer']}>

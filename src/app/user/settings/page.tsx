@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { UserLayout } from '@/components/user/UserLayout';
@@ -43,11 +43,22 @@ export default function UserSettingsPage() {
 
   // Profile Form State
   const [profileForm, setProfileForm] = useState({
-    head_of_family: customer?.head_of_family || 'Rajesh Patel',
-    mobile_number: customer?.mobile_number || '9876543210',
-    whatsapp_number: customer?.whatsapp_number || '9876543210',
-    village_city: customer?.village_city || 'Ahmedabad',
+    head_of_family: '',
+    mobile_number: '',
+    whatsapp_number: '',
+    village_city: '',
   });
+
+  useEffect(() => {
+    if (customer) {
+      setProfileForm({
+        head_of_family: customer.head_of_family || '',
+        mobile_number: customer.mobile_number || '',
+        whatsapp_number: customer.whatsapp_number || customer.mobile_number || '',
+        village_city: customer.village_city || '',
+      });
+    }
+  }, [customer]);
 
   // Security Form State
   const [securityForm, setSecurityForm] = useState({

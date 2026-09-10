@@ -26,8 +26,8 @@ export default function LoginPage() {
   const [portalType, setPortalType] = useState<'admin' | 'employee' | 'customer'>('admin');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [familyId, setFamilyId] = useState('HTF-000002');
-  const [mobileNumber, setMobileNumber] = useState('9876543210');
+  const [familyId, setFamilyId] = useState('');
+  const [mobileNumber, setMobileNumber] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -39,19 +39,19 @@ export default function LoginPage() {
         const res = await loginCustomer({
           family_id: familyId,
           mobile_number: mobileNumber,
-          password: password || 'Patel@123',
+          password: password,
         });
         toast.success(`Welcome to Family Portal, ${res.customer?.head_of_family || 'Family Member'}!`);
       } else {
         const res = await loginStaff({
-          username: username || (portalType === 'admin' ? 'admin' : 'operator'),
-          password: password || (portalType === 'admin' ? 'admin@123' : 'operator@123'),
+          username: username,
+          password: password,
         });
         const displayName = (res.user as any)?.username || (res.employee as any)?.full_name || 'Staff';
         toast.success(`Signed in as ${displayName}`);
       }
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Login failed. Please check credentials.');
+      toast.error(err?.response?.data?.message || err?.response?.data?.error || 'Login failed. Please check credentials.');
     } finally {
       setLoading(false);
     }

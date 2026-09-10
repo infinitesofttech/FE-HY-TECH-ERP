@@ -51,86 +51,8 @@ export default function UserApplicationsPage() {
     (app) => app.customer_family_id === familyId
   );
 
-  // Default demo applications if empty to match ERP mockup standard
-  const displaySourceList: Application[] = myApplications.length > 0
-    ? myApplications
-    : [
-        {
-          id: 101,
-          application_no: 'APP20250032',
-          service_name: 'Income Certificate',
-          service_name_gu: 'આવકનો દાખલો',
-          category: 'REVENUE',
-          applicant_name: customer?.head_of_family || 'Rajesh Patel',
-          customer_family_id: familyId,
-          status: 'PENDING',
-          created_at: '2025-08-22T10:30:00.000Z',
-          updated_at: '2025-08-23T14:15:00.000Z',
-          expected_date: '2025-08-28',
-          amount: 50,
-          payment_status: 'PAID',
-        },
-        {
-          id: 102,
-          application_no: 'APP20250028',
-          service_name: 'Caste Certificate',
-          service_name_gu: 'જાતિનું પ્રમાણપત્ર',
-          category: 'REVENUE',
-          applicant_name: customer?.head_of_family || 'Rajesh Patel',
-          customer_family_id: familyId,
-          status: 'APPROVED',
-          created_at: '2025-08-18T11:00:00.000Z',
-          updated_at: '2025-08-20T09:00:00.000Z',
-          expected_date: '2025-08-24',
-          amount: 50,
-          payment_status: 'PAID',
-        },
-        {
-          id: 103,
-          application_no: 'APP20250024',
-          service_name: 'Ration Card Update',
-          service_name_gu: 'રેશન કાર્ડ નામ ઉમેરો / સુધારો',
-          category: 'FOOD_CIVIL',
-          applicant_name: customer?.head_of_family || 'Rajesh Patel',
-          customer_family_id: familyId,
-          status: 'IN_PROGRESS',
-          created_at: '2025-08-12T09:15:00.000Z',
-          updated_at: '2025-08-15T10:45:00.000Z',
-          expected_date: '2025-08-20',
-          amount: 70,
-          payment_status: 'PAID',
-        },
-        {
-          id: 104,
-          application_no: 'APP20250020',
-          service_name: 'Residence Certificate',
-          service_name_gu: 'રહેઠાણનો પુરાવો / પ્રમાણપત્ર',
-          category: 'REVENUE',
-          applicant_name: customer?.head_of_family || 'Rajesh Patel',
-          customer_family_id: familyId,
-          status: 'APPROVED',
-          created_at: '2025-08-05T14:45:00.000Z',
-          updated_at: '2025-08-09T16:20:00.000Z',
-          expected_date: '2025-08-11',
-          amount: 50,
-          payment_status: 'PAID',
-        },
-        {
-          id: 105,
-          application_no: 'APP20250016',
-          service_name: 'Birth Certificate',
-          service_name_gu: 'જન્મ પ્રમાણપત્ર',
-          category: 'HEALTH',
-          applicant_name: customer?.head_of_family || 'Rajesh Patel',
-          customer_family_id: familyId,
-          status: 'REJECTED',
-          created_at: '2025-07-28T16:00:00.000Z',
-          updated_at: '2025-08-01T11:30:00.000Z',
-          expected_date: '2025-08-02',
-          amount: 50,
-          payment_status: 'PAID',
-        },
-      ];
+  // Real live applications list
+  const displaySourceList: Application[] = myApplications;
 
   // Tab counts
   const tabCounts = useMemo(() => {
