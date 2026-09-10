@@ -39,7 +39,7 @@ type FamilyTab = 'card' | 'member' | 'wallet';
 
 export default function UserFamilyPage() {
   const { user } = useAuth();
-  const familyId = (user as any)?.family_id || 'HTF-000002';
+  const familyId = (user as any)?.family_id || '';
 
   const [activeTab, setActiveTab] = useState<FamilyTab>('card');
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
@@ -73,17 +73,19 @@ export default function UserFamilyPage() {
   const { data: customer } = useQuery({
     queryKey: ['customer', familyId],
     queryFn: () => customerService.getCustomerDetail(familyId),
+    enabled: !!familyId,
   });
 
   // Household Members
   const { data: members = [] } = useQuery({
     queryKey: ['family-members', familyId],
     queryFn: () => familyMemberService.getMembers(familyId),
+    enabled: !!familyId,
   });
 
   // Documents
   const { data: documents = [] } = useQuery({
-    queryKey: ['customer-documents', familyId],
+    queryKey: ['customer-documents', familyId, members],
     queryFn: async () => {
       if (members.length > 0) {
         const promises = members.map((m) =>
@@ -92,8 +94,9 @@ export default function UserFamilyPage() {
         const res = await Promise.all(promises);
         return res.flat();
       }
-      return documentService.getDocuments(familyId, 3).catch(() => []);
+      return [];
     },
+    enabled: !!familyId,
   });
 
   // Service Visits for Wallet/Activity history
@@ -103,6 +106,7 @@ export default function UserFamilyPage() {
       const all = await serviceVisitService.getVisits();
       return all.filter((v) => v.customer_family_id === familyId);
     },
+    enabled: !!familyId,
   });
 
   const getAge = (dobString?: string) => {

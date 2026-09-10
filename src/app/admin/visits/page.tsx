@@ -73,11 +73,11 @@ export default function ServiceVisitsPage() {
   const [uploadFile, setUploadFile] = useState<File | null>(null);
 
   // Wizard Form Fields
-  const [selectedCustomerId, setSelectedCustomerId] = useState<number>(1);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<number>(0);
   const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
-  const [selectedServiceId, setSelectedServiceId] = useState<number>(3);
-  const [selectedSubServiceId, setSelectedSubServiceId] = useState<number>(3);
-  const [remarks, setRemarks] = useState('Citizen intake verification visit');
+  const [selectedServiceId, setSelectedServiceId] = useState<number>(0);
+  const [selectedSubServiceId, setSelectedSubServiceId] = useState<number>(0);
+  const [remarks, setRemarks] = useState('');
   const [checklist, setChecklist] = useState<
     Array<{
       name: string;
@@ -103,24 +103,39 @@ export default function ServiceVisitsPage() {
     queryFn: () => baseServiceService.getServices(),
   });
 
+  // Sync default selections when data loads
+  useEffect(() => {
+    if (customers.length > 0 && !selectedCustomerId) {
+      setSelectedCustomerId(customers[0].id);
+    }
+  }, [customers, selectedCustomerId]);
+
+  useEffect(() => {
+    if (services.length > 0 && !selectedServiceId) {
+      setSelectedServiceId(services[0].id);
+      if (services[0].SubServices?.length > 0 && !selectedSubServiceId) {
+        setSelectedSubServiceId(services[0].SubServices[0].id);
+      }
+    }
+  }, [services, selectedServiceId, selectedSubServiceId]);
+
   const selectedCustomer =
     customers.find((c: any) => c.id === selectedCustomerId) || customers[0];
 
   const { data: members = [] } = useQuery({
     queryKey: ['family-members', selectedCustomer?.family_id],
-    queryFn: () => familyMemberService.getMembers(selectedCustomer?.family_id || 'HTF-000001'),
+    queryFn: () => familyMemberService.getMembers(selectedCustomer?.family_id || ''),
     enabled: !!selectedCustomer?.family_id,
   });
 
   // Query Vault documents for the selected citizen to automatically check requirements
   const { data: customerVaultDocs = [] } = useQuery({
     queryKey: ['vault-documents', selectedCustomer?.family_id, selectedMemberId],
-    queryFn: () =>
-      documentService.getDocuments(
-        selectedCustomer?.family_id || 'HTF-000001',
-        selectedMemberId || 1
-      ),
-    enabled: !!selectedCustomer?.family_id,
+    queryFn: () => {
+      if (!selectedCustomer?.family_id || !selectedMemberId) return [];
+      return documentService.getDocuments(selectedCustomer.family_id, selectedMemberId);
+    },
+    enabled: !!selectedCustomer?.family_id && !!selectedMemberId,
   });
 
   const currentService =

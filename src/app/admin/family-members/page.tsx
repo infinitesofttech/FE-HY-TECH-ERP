@@ -63,7 +63,7 @@ export default function FamilyMembersPage() {
 
   // Form State for Add
   const [addForm, setAddForm] = useState({
-    family_id: 'HTF-000002',
+    family_id: '',
     name: '',
     relationship: 'SON' as RelationshipType,
     mobile_number: '',
@@ -117,7 +117,7 @@ export default function FamilyMembersPage() {
       queryClient.invalidateQueries({ queryKey: ['family-members'] });
       setIsAddOpen(false);
       setAddForm({
-        family_id: customers[0]?.family_id || 'HTF-000002',
+        family_id: customers[0]?.family_id || '',
         name: '',
         relationship: 'SON',
         mobile_number: '',
@@ -307,7 +307,7 @@ export default function FamilyMembersPage() {
         <Button
           onClick={() => {
             setAddForm({
-              family_id: customers[0]?.family_id || 'HTF-000002',
+              family_id: customers[0]?.family_id || '',
               name: '',
               relationship: 'SON',
               mobile_number: '',

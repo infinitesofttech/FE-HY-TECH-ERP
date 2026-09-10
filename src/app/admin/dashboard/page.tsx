@@ -7,6 +7,7 @@ import { AppShell } from '@/components/layout/AppShell';
 import { StatCard, Badge, Button, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui';
 import { dashboardService } from '@/api/services/dashboardService';
 import { applicationService } from '@/api/services/applicationService';
+import { transactionService } from '@/api/services/transactionService';
 import { hrmsService } from '@/api/services/hrmsService';
 import { employeeService } from '@/api/services/employeeService';
 import { ServiceIntakeModal } from '@/components/applications/ServiceIntakeModal';
@@ -83,6 +84,12 @@ export default function AdminDashboardPage() {
   });
   const applications = Array.isArray(rawApps) ? rawApps : ((rawApps as any)?.results || []);
 
+  const { data: rawTxns = [] } = useQuery({
+    queryKey: ['transactions'],
+    queryFn: () => transactionService.getTransactions(),
+  });
+  const transactions = Array.isArray(rawTxns) ? rawTxns : ((rawTxns as any)?.results || []);
+
   const { data: rawLeaves = [], refetch: refetchLeaves } = useQuery({
     queryKey: ['admin-leaves'],
     queryFn: () => hrmsService.getAllLeaves(),
@@ -121,16 +128,30 @@ export default function AdminDashboardPage() {
 
   const chartData = React.useMemo(() => {
     if (timeframe === 'weekly') {
-      const daysGu = ['સોમ', 'મંગળ', 'બુધ', 'ગુરુ', 'શુક્ર', 'શનિ', 'રવિ'];
-      const daysHi = ['सोम', 'मंगल', 'बुध', 'गुरु', 'शुक्र', 'शनि', 'रवि'];
-      const daysEn = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      const daysGu = ['રવિ', 'સોમ', 'મંગળ', 'બુધ', 'ગુરુ', 'શુક્ર', 'શનિ'];
+      const daysHi = ['रवि', 'सोम', 'मंगल', 'बुध', 'गुरु', 'शुक्र', 'शनि'];
+      const daysEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       const labels = language === 'gu' ? daysGu : language === 'hi' ? daysHi : daysEn;
-      const values = [450, 780, 920, 650, 1150, 1400, 850];
 
-      return labels.map((label, idx) => ({
-        label,
-        revenue: values[idx],
-      }));
+      const now = new Date();
+      const result = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(now.getDate() - i);
+        const dStr = d.toISOString().split('T')[0];
+        const dayIdx = d.getDay();
+        const label = labels[dayIdx];
+
+        const dayRevenue = transactions
+          .filter((t: any) => t.transaction_date === dStr)
+          .reduce((sum: number, t: any) => sum + (parseFloat(t.paid_amount) || 0), 0);
+
+        result.push({
+          label: i === 0 ? (language === 'gu' ? 'આજે' : 'Today') : label,
+          revenue: Math.round(dayRevenue),
+        });
+      }
+      return result;
     }
 
     if (timeframe === 'monthly') {
@@ -138,34 +159,60 @@ export default function AdminDashboardPage() {
       const monthsHi = ['जन', 'फ़र', 'मार्च', 'अप्रैल', 'मई', 'जून', 'जुलाई', 'अगस्त', 'सितं', 'अक्टू', 'नव', 'दिस'];
       const monthsEn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       const labels = language === 'gu' ? monthsGu : language === 'hi' ? monthsHi : monthsEn;
-      const values = [14200, 16800, 19500, 22400, 21100, 25600, 28900, 31400, 34200, 38500, 42100, 45600];
+      const currentYear = new Date().getFullYear();
 
-      return labels.map((label, idx) => ({
-        label,
-        revenue: values[idx],
-      }));
+      return labels.map((label, idx) => {
+        const mStr = String(idx + 1).padStart(2, '0');
+        const monthPrefix = `${currentYear}-${mStr}`;
+        const monthRevenue = transactions
+          .filter((t: any) => t.transaction_date && t.transaction_date.startsWith(monthPrefix))
+          .reduce((sum: number, t: any) => sum + (parseFloat(t.paid_amount) || 0), 0);
+
+        return {
+          label,
+          revenue: Math.round(monthRevenue),
+        };
+      });
     }
 
     // Yearly
-    const years = ['2022', '2023', '2024', '2025', '2026'];
-    const values = [125000, 184000, 248000, 315000, 392000];
-    return years.map((label, idx) => ({
-      label,
-      revenue: values[idx],
-    }));
-  }, [timeframe, language]);
+    const currentYear = new Date().getFullYear();
+    const years = [currentYear - 4, currentYear - 3, currentYear - 2, currentYear - 1, currentYear].map(String);
+    return years.map((yr) => {
+      const yearRevenue = transactions
+        .filter((t: any) => t.transaction_date && t.transaction_date.startsWith(yr))
+        .reduce((sum: number, t: any) => sum + (parseFloat(t.paid_amount) || 0), 0);
+
+      return {
+        label: yr,
+        revenue: Math.round(yearRevenue),
+      };
+    });
+  }, [timeframe, language, transactions]);
 
   const totalPeriodRevenue = React.useMemo(() => {
     return chartData.reduce((acc, curr) => acc + curr.revenue, 0);
   }, [chartData]);
 
-  const categoryData = Array.isArray(dashboard?.category_distribution) ? dashboard.category_distribution : [
-    { name: 'Aadhaar Card', count: 42, percentage: 38 },
-    { name: 'Ayushman Card', count: 28, percentage: 25 },
-    { name: 'Election Card', count: 18, percentage: 16 },
-    { name: 'PAN Card', count: 14, percentage: 13 },
-    { name: 'Ration Card', count: 9, percentage: 8 },
-  ];
+  const categoryData = React.useMemo(() => {
+    if (Array.isArray(dashboard?.category_distribution) && dashboard.category_distribution.length > 0) {
+      return dashboard.category_distribution;
+    }
+    if (applications.length > 0) {
+      const counts: Record<string, number> = {};
+      applications.forEach((app: any) => {
+        const cat = app.category || app.service_name || 'General';
+        counts[cat] = (counts[cat] || 0) + 1;
+      });
+      const total = applications.length;
+      return Object.entries(counts).map(([name, count]) => ({
+        name,
+        count,
+        percentage: Math.round((count / total) * 100),
+      }));
+    }
+    return [];
+  }, [dashboard?.category_distribution, applications]);
 
   return (
     <AppShell allowedRoles={['admin']}>
@@ -189,16 +236,15 @@ export default function AdminDashboardPage() {
           />
           <StatCard
             title={t('month_revenue')}
-            value={`₹${dashboard?.financial_kpi?.month_revenue ?? '4,850.00'}`}
+            value={`₹${dashboard?.financial_kpi?.month_revenue ?? '0.00'}`}
             subtitle={t('dashboard_page.mtd_revenue')}
-            trend={{ value: '+22.4% MoM', isPositive: true }}
             icon={TrendingUp}
             colorScheme="brand"
             onClick={() => router.push('/admin/transactions')}
           />
           <StatCard
             title={t('all_time_billed')}
-            value={`₹${dashboard?.financial_kpi?.total_revenue ?? '18,400.00'}`}
+            value={`₹${dashboard?.financial_kpi?.total_revenue ?? '0.00'}`}
             subtitle={t('dashboard_page.all_time_gross')}
             icon={Receipt}
             colorScheme="purple"
@@ -206,7 +252,7 @@ export default function AdminDashboardPage() {
           />
           <StatCard
             title={t('points_issued')}
-            value={`${dashboard?.financial_kpi?.total_points_issued ?? 120} Pts`}
+            value={`${dashboard?.financial_kpi?.total_points_issued ?? 0} Pts`}
             subtitle={t('dashboard_page.circulating_credits')}
             icon={Coins}
             colorScheme="amber"
@@ -332,55 +378,69 @@ export default function AdminDashboardPage() {
           </CardHeader>
 
           <CardContent className="space-y-4">
-            <div className="h-48 w-full relative flex items-center justify-center">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={categoryData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={55}
-                    outerRadius={75}
-                    paddingAngle={5}
-                    dataKey="count"
-                  >
-                    {categoryData.map((entry: any, index: number) => (
-                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#0f172a',
-                      border: '1px solid #334155',
-                      borderRadius: '12px',
-                      color: '#fff',
-                      fontSize: '12px',
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="absolute flex flex-col items-center pointer-events-none">
-                <span className="text-xl font-black text-slate-900 dark:text-white">100%</span>
-                <span className="text-[10px] font-bold uppercase text-slate-400">{t('dashboard_page.total_share')}</span>
+            {categoryData.length === 0 ? (
+              <div className="h-48 w-full flex flex-col items-center justify-center text-center p-4">
+                <KanbanSquare className="w-8 h-8 text-slate-300 dark:text-slate-600 mb-2" />
+                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  {language === 'gu' ? 'હજી સુધી કોઈ સેવા ડેટા નથી' : 'No service data available'}
+                </p>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  {language === 'gu' ? 'નવી અરજીઓ ઉમેરાશે તેમ વિતરણ દેખાશે' : 'Distribution will appear as applications are logged'}
+                </p>
               </div>
-            </div>
-
-            <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
-              {categoryData.slice(0, 4).map((cat: any, idx: number) => (
-                <div key={idx} className="flex items-center justify-between text-xs font-semibold">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: PIE_COLORS[idx % PIE_COLORS.length] }}
-                    ></span>
-                    <span className="text-slate-700 dark:text-slate-300 truncate max-w-[140px]">
-                      {cat.name}
-                    </span>
+            ) : (
+              <>
+                <div className="h-48 w-full relative flex items-center justify-center">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={categoryData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={55}
+                        outerRadius={75}
+                        paddingAngle={5}
+                        dataKey="count"
+                      >
+                        {categoryData.map((entry: any, index: number) => (
+                          <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: '#0f172a',
+                          border: '1px solid #334155',
+                          borderRadius: '12px',
+                          color: '#fff',
+                          fontSize: '12px',
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="absolute flex flex-col items-center pointer-events-none">
+                    <span className="text-xl font-black text-slate-900 dark:text-white">100%</span>
+                    <span className="text-[10px] font-bold uppercase text-slate-400">{t('dashboard_page.total_share')}</span>
                   </div>
-                  <span className="font-mono text-slate-500 font-bold">{cat.percentage}%</span>
                 </div>
-              ))}
-            </div>
+
+                <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  {categoryData.slice(0, 4).map((cat: any, idx: number) => (
+                    <div key={idx} className="flex items-center justify-between text-xs font-semibold">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: PIE_COLORS[idx % PIE_COLORS.length] }}
+                        ></span>
+                        <span className="text-slate-700 dark:text-slate-300 truncate max-w-[140px]">
+                          {cat.name}
+                        </span>
+                      </div>
+                      <span className="font-mono text-slate-500 font-bold">{cat.percentage}%</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>

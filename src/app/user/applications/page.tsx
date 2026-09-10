@@ -27,7 +27,7 @@ type TabStatus = 'ALL' | 'PENDING' | 'APPROVED' | 'IN_PROGRESS' | 'REJECTED';
 
 export default function UserApplicationsPage() {
   const { user } = useAuth();
-  const familyId = (user as any)?.family_id || 'HTF-000002';
+  const familyId = (user as any)?.family_id || '';
 
   const [activeTab, setActiveTab] = useState<TabStatus>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
@@ -39,6 +39,7 @@ export default function UserApplicationsPage() {
   const { data: customer } = useQuery({
     queryKey: ['customer', familyId],
     queryFn: () => customerService.getCustomerDetail(familyId),
+    enabled: !!familyId,
   });
 
   // Fetch Applications

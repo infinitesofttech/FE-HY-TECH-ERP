@@ -10,7 +10,7 @@ import { CheckCircle2, XCircle, CalendarCheck, Sparkles } from 'lucide-react';
 
 export default function CustomerVisitsPage() {
   const { user } = useAuth();
-  const familyId = (user as any)?.family_id || 'HTF-000002';
+  const familyId = (user as any)?.family_id || '';
 
   const { data: visits = [], isLoading } = useQuery({
     queryKey: ['customer-visits', familyId],
@@ -18,6 +18,7 @@ export default function CustomerVisitsPage() {
       const all = await serviceVisitService.getVisits();
       return all.filter((v) => v.customer_family_id === familyId);
     },
+    enabled: !!familyId,
   });
 
   return (

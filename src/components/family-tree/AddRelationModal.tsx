@@ -35,8 +35,8 @@ const RELATION_OPTIONS: { labelEn: string; labelGu: string; value: RelationshipT
 export const AddRelationModal: React.FC<AddRelationModalProps> = ({
   isOpen,
   onClose,
-  familyId = 'HTF-000002',
-  headName = 'Dineshbhai Changani',
+  familyId = '',
+  headName = '',
   onAdd,
 }) => {
   const { language } = useLanguage();
@@ -45,7 +45,7 @@ export const AddRelationModal: React.FC<AddRelationModalProps> = ({
   const [name, setName] = useState('');
   const [relationship, setRelationship] = useState<RelationshipType>('SON');
   const [gender, setGender] = useState<'MALE' | 'FEMALE' | 'OTHER'>('MALE');
-  const [birthDate, setBirthDate] = useState('2004-03-15');
+  const [birthDate, setBirthDate] = useState('2005-01-01');
   const [mobile, setMobile] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -53,15 +53,6 @@ export const AddRelationModal: React.FC<AddRelationModalProps> = ({
     setRelationship(rel);
     const found = RELATION_OPTIONS.find((r) => r.value === rel);
     if (found) setGender(found.defaultGender);
-  };
-
-  const handleQuickDemoFill = () => {
-    setName('Mayur Changani');
-    setRelationship('SON');
-    setGender('MALE');
-    setBirthDate('2003-10-12');
-    setMobile('9876501234');
-    toast.success(isGu ? 'નમૂના સભ્યની વિગતો ઓટો-ફિલ થઈ ગઈ!' : 'Sample relation details auto-filled!');
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -79,7 +70,7 @@ export const AddRelationModal: React.FC<AddRelationModalProps> = ({
         relationship,
         gender,
         birth_date: birthDate,
-        mobile_number: mobile.trim() || '9876500000',
+        mobile_number: mobile.trim(),
       });
       toast.success(`${name} ${isGu ? 'ફેમિલી ટ્રીમાં ઉમેરાઈ ગયા!' : 'added to family tree!'}`);
       onClose();
@@ -91,24 +82,14 @@ export const AddRelationModal: React.FC<AddRelationModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={isGu ? 'ફેમિલી ટ્રીમાં સંબંધ ઉમેરો' : 'Add Family Relation to Tree'}
-      description={isGu ? `${headName} ના પરિવાર (${familyId}) માં નવી કડી ઉમેરી રહ્યા છો.` : `Adding new connected node to ${headName}'s family (${familyId}).`}
+      description={
+        headName && familyId
+          ? (isGu ? `${headName} ના પરિવાર (${familyId}) માં નવી કડી ઉમેરી રહ્યા છો.` : `Adding new member to ${headName}'s family (${familyId}).`)
+          : (isGu ? 'પરિવારમાં નવી કડી ઉમેરી રહ્યા છો.' : 'Adding new member to family.')
+      }
       maxWidth="md"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Quick Demo Fill Bar */}
-        <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-300">
-            <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-            <span>{isGu ? 'ઝડપી નમૂનો:' : 'Fast 1-Click Demo Fill:'}</span>
-          </div>
-          <button
-            type="button"
-            onClick={handleQuickDemoFill}
-            className="px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs transition-all cursor-pointer active:scale-95"
-          >
-            {isGu ? '⚡ ઓટો-ફિલ સભ્ય' : '⚡ Auto-Fill Member'}
-          </button>
-        </div>
 
         <Input
           label={isGu ? 'પૂરું નામ *' : 'Full Name *'}

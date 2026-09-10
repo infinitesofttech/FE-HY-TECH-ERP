@@ -30,7 +30,7 @@ export default function UserSettingsPage() {
   const { user, logout } = useAuth();
   const { language, setLanguage } = useLanguage();
   const queryClient = useQueryClient();
-  const familyId = (user as any)?.family_id || 'HTF-000002';
+  const familyId = (user as any)?.family_id || '';
 
   const [activeSection, setActiveSection] = useState<'profile' | 'security' | 'notifications' | 'preferences'>('profile');
   const [isSaving, setIsSaving] = useState(false);
@@ -39,6 +39,7 @@ export default function UserSettingsPage() {
   const { data: customer } = useQuery({
     queryKey: ['customer', familyId],
     queryFn: () => customerService.getCustomerDetail(familyId),
+    enabled: !!familyId,
   });
 
   // Profile Form State

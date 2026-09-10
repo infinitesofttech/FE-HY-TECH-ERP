@@ -15,6 +15,7 @@ import {
   StatCard,
 } from '@/components/ui';
 import { employeeService } from '@/api/services/employeeService';
+import { hrmsService } from '@/api/services/hrmsService';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
@@ -124,42 +125,53 @@ export default function EmployeesPage() {
   const [roleFilter, setRoleFilter] = useState<'ALL' | 'ADMIN' | 'STAFF'>('ALL');
   const [selectedSlipEmployee, setSelectedSlipEmployee] = useState<any | null>(null);
 
-  // Leave approval interactive state
-  const [pendingLeaves, setPendingLeaves] = useState([
-    {
-      id: 1,
-      empName: 'Hardikbhai Patel',
-      role: 'Digital Gujarat & Scholarship Specialist',
-      type: 'Casual Leave (CL)',
-      dates: '12 Sep 2026 - 13 Sep 2026 (2 Days)',
-      reason: 'Family religious ceremony in hometown village',
-      appliedOn: '08 Sep 2026',
-      status: 'PENDING',
+  // Today's attendance punches tracking
+  const [todayPunches, setTodayPunches] = useState<Record<number, { in_time: string; out_time: string; status: 'PRESENT' | 'LATE' }>>({});
+
+  const handleQuickPunch = (empId: number, status: 'PRESENT' | 'LATE' = 'PRESENT') => {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    setTodayPunches((prev) => ({
+      ...prev,
+      [empId]: {
+        in_time: prev[empId]?.in_time || timeStr,
+        out_time: '—',
+        status,
+      },
+    }));
+    toast.success(isGu ? 'હાજરી સફળતાપૂર્વક નોંધાઈ!' : `Attendance marked as ${status}!`);
+  };
+
+  // Real leaves from API
+  const { data: rawLeaves = [], refetch: refetchLeaves } = useQuery({
+    queryKey: ['admin-leaves'],
+    queryFn: () => hrmsService.getAllLeaves(),
+  });
+  const leavesList = Array.isArray(rawLeaves) ? rawLeaves : ((rawLeaves as any)?.results || []);
+
+  const updateLeaveMutation = useMutation({
+    mutationFn: ({ leaveId, status }: { leaveId: number; status: 'APPROVED' | 'REJECTED' }) =>
+      hrmsService.updateLeaveStatus(leaveId, status),
+    onSuccess: (res, vars) => {
+      refetchLeaves();
+      queryClient.invalidateQueries({ queryKey: ['admin-leaves'] });
+      toast.success(
+        isGu
+          ? `રજા ${vars.status === 'APPROVED' ? 'મંજૂર' : 'નામંજૂર'} કરવામાં આવી!`
+          : `Leave application marked as ${vars.status === 'APPROVED' ? 'Approved' : 'Rejected'}!`
+      );
     },
-    {
-      id: 2,
-      empName: 'Vinesh Sharma',
-      role: 'PAN & Voter ID Executive',
-      type: 'Sick Leave (SL)',
-      dates: '05 Sep 2026 (1 Day)',
-      reason: 'Viral fever and medical rest',
-      appliedOn: '04 Sep 2026',
-      status: 'APPROVED',
+    onError: (err: any) => {
+      toast.error(err?.message || 'Action failed');
     },
-  ]);
+  });
 
   const handleApproveLeave = (id: number) => {
-    setPendingLeaves((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, status: 'APPROVED' } : l))
-    );
-    toast.success('Leave application approved successfully!');
+    updateLeaveMutation.mutate({ leaveId: id, status: 'APPROVED' });
   };
 
   const handleRejectLeave = (id: number) => {
-    setPendingLeaves((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, status: 'REJECTED' } : l))
-    );
-    toast.error('Leave application marked as rejected.');
+    updateLeaveMutation.mutate({ leaveId: id, status: 'REJECTED' });
   };
 
   // Employee Form State
@@ -208,6 +220,42 @@ export default function EmployeesPage() {
 
   const adminCount = employees.filter((e) => e.role === 'ADMIN').length;
   const staffCount = employees.filter((e) => e.role === 'STAFF').length;
+
+  // Dynamic Attendance & Leave KPIs
+  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const onLeaveEmployees = useMemo(() => {
+    return employees.filter((emp) =>
+      leavesList.some(
+        (l: any) =>
+          (l.employee === emp.id || l.employee_name === emp.full_name) &&
+          l.status === 'APPROVED' &&
+          l.start_date <= todayStr &&
+          l.end_date >= todayStr
+      )
+    );
+  }, [employees, leavesList, todayStr]);
+
+  const presentEmployees = useMemo(() => {
+    return employees.filter((emp) => todayPunches[emp.id]?.status === 'PRESENT');
+  }, [employees, todayPunches]);
+
+  const lateEmployees = useMemo(() => {
+    return employees.filter((emp) => todayPunches[emp.id]?.status === 'LATE');
+  }, [employees, todayPunches]);
+
+  const absentEmployees = useMemo(() => {
+    return employees.filter(
+      (emp) =>
+        !todayPunches[emp.id] &&
+        !onLeaveEmployees.some((lEmp) => lEmp.id === emp.id)
+    );
+  }, [employees, todayPunches, onLeaveEmployees]);
+
+  const presentCount = presentEmployees.length;
+  const lateCount = lateEmployees.length;
+  const onLeaveCount = onLeaveEmployees.length;
+  const absentCount = absentEmployees.length;
+  const pendingLeavesCount = leavesList.filter((l: any) => l.status === 'PENDING').length;
 
   const filteredEmployees = useMemo(() => {
     return employees.filter((emp) => {
@@ -346,7 +394,7 @@ export default function EmployeesPage() {
             }`}
         >
           <Calendar className="w-4 h-4" />
-          <span>Attendance (8/8)</span>
+          <span>Attendance ({presentCount + lateCount}/{employees.length})</span>
         </button>
 
         <button
@@ -358,7 +406,7 @@ export default function EmployeesPage() {
             }`}
         >
           <CalendarDays className="w-4 h-4" />
-          <span>Leave (1 Pending)</span>
+          <span>Leave ({pendingLeavesCount} Pending)</span>
         </button>
 
         <button
@@ -675,29 +723,29 @@ export default function EmployeesPage() {
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <StatCard
               title="PRESENT TODAY"
-              value="7"
+              value={presentCount}
               subtitle="Logged in on desk"
               icon={CheckCircle}
               colorScheme="emerald"
             />
             <StatCard
               title="LATE ARRIVAL"
-              value="1"
+              value={lateCount}
               subtitle="Arrived past 09:30 AM"
               icon={Clock}
               colorScheme="amber"
             />
             <StatCard
               title="ON APPROVED LEAVE"
-              value="0"
+              value={onLeaveCount}
               subtitle="Authorized absence"
               icon={CalendarDays}
               colorScheme="brand"
             />
             <StatCard
-              title="UNEXCUSED ABSENT"
-              value="0"
-              subtitle="No punch record"
+              title="UNEXCUSED / NOT PUNCHED"
+              value={absentCount}
+              subtitle="Pending punch record"
               icon={AlertCircle}
               colorScheme="rose"
             />
@@ -710,7 +758,7 @@ export default function EmployeesPage() {
                   Today&apos;s Biometric &amp; Shift Punch Log
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Standard Shift: 09:30 AM - 06:30 PM (Grace period: 15 mins)
+                  Standard Shift: 09:30 AM - 06:30 PM (Grace period: 15 mins) &bull; {employees.length} Staff Registered
                 </p>
               </div>
 
@@ -735,47 +783,91 @@ export default function EmployeesPage() {
                 <thead className="border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase tracking-wider text-[10px]">
                   <tr>
                     <th className="py-3 px-4 font-black">Staff Member</th>
-                    <th className="py-3 px-4 font-black">Designation / Desk</th>
+                    <th className="py-3 px-4 font-black">Designation / Role</th>
                     <th className="py-3 px-4 font-black">Check-In</th>
                     <th className="py-3 px-4 font-black">Check-Out</th>
-                    <th className="py-3 px-4 font-black">Total Hours</th>
-                    <th className="py-3 px-4 font-black text-right">Status</th>
+                    <th className="py-3 px-4 font-black">Status</th>
+                    <th className="py-3 px-4 font-black text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
-                  {[
-                    { name: 'Jadav Durgesh', desig: 'Senior Aadhaar & Revenue Portal Operator', in: '09:15 AM', out: '06:30 PM', hrs: '9h 15m', status: 'PRESENT' },
-                    { name: 'Hardikbhai Patel', desig: 'Digital Gujarat & Scholarship Specialist', in: '09:28 AM', out: '06:30 PM', hrs: '9h 02m', status: 'PRESENT' },
-                    { name: 'Vinesh Sharma', desig: 'PAN Card, Passport & Voter ID Executive', in: '09:48 AM', out: '06:30 PM', hrs: '8h 42m', status: 'LATE' },
-                    { name: 'Mitali Changani', desig: 'Revenue & Certified Documents Desk', in: '09:20 AM', out: '06:30 PM', hrs: '9h 10m', status: 'PRESENT' },
-                    { name: 'Ronak Patel', desig: 'Computer Courses & Online Coaching Head', in: '09:12 AM', out: '06:30 PM', hrs: '9h 18m', status: 'PRESENT' },
-                    { name: 'Priyaben Dave', desig: 'Banking & Financial Inclusion Desk', in: '09:30 AM', out: '06:30 PM', hrs: '9h 00m', status: 'PRESENT' },
-                    { name: 'Bhavik Changani', desig: 'Printing, Legal Lamination & Delivery', in: '09:25 AM', out: '06:30 PM', hrs: '9h 05m', status: 'PRESENT' },
-                    { name: 'admin (Operator)', desig: 'Managing Director & System Administrator', in: '09:00 AM', out: '07:00 PM', hrs: '10h 00m', status: 'PRESENT' },
-                  ].map((row, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                      <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
-                        {row.name}
-                      </td>
-                      <td className="py-3.5 px-4 text-slate-500">
-                        {row.desig}
-                      </td>
-                      <td className="py-3.5 px-4 font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                        {row.in}
-                      </td>
-                      <td className="py-3.5 px-4 font-mono text-slate-500">
-                        {row.out}
-                      </td>
-                      <td className="py-3.5 px-4 font-mono font-bold">
-                        {row.hrs}
-                      </td>
-                      <td className="py-3.5 px-4 text-right">
-                        <Badge variant={row.status === 'PRESENT' ? 'success' : 'warning'}>
-                          {row.status}
-                        </Badge>
+                  {employees.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-slate-400">
+                        {isGu ? 'હજી સુધી કોઈ કર્મચારી ઉમેરાયા નથી' : 'No registered staff members found'}
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    employees.map((emp) => {
+                      const punch = todayPunches[emp.id];
+                      const isOnLeave = onLeaveEmployees.some((lEmp) => lEmp.id === emp.id);
+                      const status = punch?.status || (isOnLeave ? 'ON_LEAVE' : 'NOT_PUNCHED');
+
+                      return (
+                        <tr key={emp.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                          <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-400 font-bold flex items-center justify-center text-xs">
+                                {getEmpInitial(emp.full_name || emp.username, language, emp.username)}
+                              </div>
+                              <div>
+                                <div>{emp.full_name || emp.username}</div>
+                                <div className="text-[10px] text-slate-400 font-mono font-normal">@{emp.username}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3.5 px-4 text-slate-500">
+                            {emp.role === 'ADMIN' ? 'Center Head & System Administrator' : 'Intake & Document Operations Specialist'}
+                          </td>
+                          <td className="py-3.5 px-4 font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                            {punch?.in_time || '—'}
+                          </td>
+                          <td className="py-3.5 px-4 font-mono text-slate-500">
+                            {punch?.out_time || '—'}
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <Badge
+                              variant={
+                                status === 'PRESENT'
+                                  ? 'success'
+                                  : status === 'LATE'
+                                  ? 'warning'
+                                  : status === 'ON_LEAVE'
+                                  ? 'info'
+                                  : 'default'
+                              }
+                            >
+                              {status === 'NOT_PUNCHED' ? (isGu ? 'હાજરી બાકી' : 'NOT PUNCHED') : status}
+                            </Badge>
+                          </td>
+                          <td className="py-3.5 px-4 text-right">
+                            {!punch && !isOnLeave ? (
+                              <div className="inline-flex items-center gap-1.5 justify-end">
+                                <Button
+                                  size="xs"
+                                  variant="primary"
+                                  onClick={() => handleQuickPunch(emp.id, 'PRESENT')}
+                                  className="h-7 text-[10px] bg-emerald-600 hover:bg-emerald-500"
+                                >
+                                  {isGu ? 'હાજર પૂરો' : 'Punch Present'}
+                                </Button>
+                                <Button
+                                  size="xs"
+                                  variant="outline"
+                                  onClick={() => handleQuickPunch(emp.id, 'LATE')}
+                                  className="h-7 text-[10px] text-amber-600 border-amber-300 hover:bg-amber-50"
+                                >
+                                  {isGu ? 'મોડા' : 'Late'}
+                                </Button>
+                              </div>
+                            ) : (
+                              <span className="text-[11px] text-slate-400 font-medium font-mono">Recorded</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </div>
@@ -789,22 +881,22 @@ export default function EmployeesPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <StatCard
               title="PENDING APPROVALS"
-              value={pendingLeaves.filter((l) => l.status === 'PENDING').length}
+              value={pendingLeavesCount}
               subtitle="Awaiting administrative sign-off"
               icon={AlertCircle}
               colorScheme="amber"
             />
             <StatCard
               title="APPROVED THIS MONTH"
-              value="4 Days"
+              value={`${leavesList.filter((l: any) => l.status === 'APPROVED').length} Requests`}
               subtitle="Staff leaves granted"
               icon={CalendarCheck}
               colorScheme="emerald"
             />
             <StatCard
-              title="ANNUAL QUOTA REMAINING"
-              value="18 Days / Emp"
-              subtitle="Average quota balance"
+              title="TOTAL LEAVE REQUESTS"
+              value={`${leavesList.length} Total`}
+              subtitle="Logged records"
               icon={CalendarDays}
               colorScheme="brand"
             />
@@ -818,63 +910,77 @@ export default function EmployeesPage() {
                 <span>Leave Approval Queue</span>
               </h3>
 
-              {pendingLeaves.map((req) => (
-                <Card key={req.id} variant="elevated" className="p-5 space-y-3.5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h4 className="font-black text-sm text-slate-900 dark:text-white">
-                        {req.empName}
-                      </h4>
-                      <p className="text-xs text-slate-400">{req.role}</p>
-                    </div>
-                    <Badge
-                      variant={
-                        req.status === 'APPROVED'
-                          ? 'success'
-                          : req.status === 'REJECTED'
-                            ? 'danger'
-                            : 'warning'
-                      }
-                    >
-                      {req.status}
-                    </Badge>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 space-y-1.5 text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-slate-600 dark:text-slate-300">
-                        {req.type}
-                      </span>
-                      <span className="font-mono font-bold text-brand-600 dark:text-brand-400">
-                        {req.dates}
-                      </span>
-                    </div>
-                    <p className="text-slate-500 dark:text-slate-400 italic">
-                      &quot;{req.reason}&quot;
-                    </p>
-                  </div>
-
-                  {req.status === 'PENDING' && (
-                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                      <Button
-                        size="xs"
-                        variant="outline"
-                        onClick={() => handleRejectLeave(req.id)}
-                        className="text-rose-600 border-rose-200 hover:bg-rose-50"
-                      >
-                        <X className="w-3.5 h-3.5 mr-1" /> Reject
-                      </Button>
-                      <Button
-                        size="xs"
-                        onClick={() => handleApproveLeave(req.id)}
-                        className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold"
-                      >
-                        <Check className="w-3.5 h-3.5 mr-1" /> Approve Leave
-                      </Button>
-                    </div>
-                  )}
+              {leavesList.length === 0 ? (
+                <Card variant="elevated" className="p-8 text-center space-y-2">
+                  <CalendarCheck className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto" />
+                  <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                    {isGu ? 'હાલમાં કોઈ રજા અરજીઓ નથી' : 'No Leave Requests in Queue'}
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    {isGu ? 'સ્ટાફ રજા અરજી કરશે ત્યારે અહીં મંજૂરી માટે દેખાશે.' : 'When staff members apply for leave, requests will appear here for approval.'}
+                  </p>
                 </Card>
-              ))}
+              ) : (
+                leavesList.map((req: any) => (
+                  <Card key={req.id} variant="elevated" className="p-5 space-y-3.5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h4 className="font-black text-sm text-slate-900 dark:text-white">
+                          {req.employee_name || `Employee #${req.employee}`}
+                        </h4>
+                        <p className="text-xs text-slate-400">Applied on {req.created_at ? new Date(req.created_at).toLocaleDateString() : 'Recent'}</p>
+                      </div>
+                      <Badge
+                        variant={
+                          req.status === 'APPROVED'
+                            ? 'success'
+                            : req.status === 'REJECTED'
+                              ? 'danger'
+                              : 'warning'
+                        }
+                      >
+                        {req.status}
+                      </Badge>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 space-y-1.5 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-slate-600 dark:text-slate-300">
+                          {req.leave_type || 'Casual Leave'} ({req.days_count || 1} Days)
+                        </span>
+                        <span className="font-mono font-bold text-brand-600 dark:text-brand-400">
+                          {req.start_date} to {req.end_date}
+                        </span>
+                      </div>
+                      {req.reason && (
+                        <p className="text-slate-500 dark:text-slate-400 italic">
+                          &quot;{req.reason}&quot;
+                        </p>
+                      )}
+                    </div>
+
+                    {req.status === 'PENDING' && (
+                      <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                        <Button
+                          size="xs"
+                          variant="outline"
+                          onClick={() => handleRejectLeave(req.id)}
+                          className="text-rose-600 border-rose-200 hover:bg-rose-50"
+                        >
+                          <X className="w-3.5 h-3.5 mr-1" /> Reject
+                        </Button>
+                        <Button
+                          size="xs"
+                          onClick={() => handleApproveLeave(req.id)}
+                          className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold"
+                        >
+                          <Check className="w-3.5 h-3.5 mr-1" /> Approve Leave
+                        </Button>
+                      </div>
+                    )}
+                  </Card>
+                ))
+              )}
             </div>
 
             {/* Leave Policy Quota Matrix */}
@@ -952,26 +1058,36 @@ export default function EmployeesPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium font-mono">
-                    {[
-                      { role: 'Senior Aadhaar & Revenue Operator', basic: '₹16,800', hra: '₹5,600', allow: '₹3,600', pf: '₹2,000', net: '₹24,000' },
-                      { role: 'Digital Gujarat & Scholarship Specialist', basic: '₹14,400', hra: '₹4,800', allow: '₹3,000', pf: '₹1,800', net: '₹20,400' },
-                      { role: 'PAN Card, Passport & Voter ID Executive', basic: '₹13,200', hra: '₹4,400', allow: '₹2,800', pf: '₹1,600', net: '₹18,800' },
-                      { role: 'Computer Courses & Online Coaching Head', basic: '₹15,000', hra: '₹5,000', allow: '₹3,000', pf: '₹1,800', net: '₹21,200' },
-                      { role: 'Printing, Legal Lamination & Delivery', basic: '₹11,000', hra: '₹3,600', allow: '₹2,400', pf: '₹1,400', net: '₹15,600' },
-                    ].map((row, i) => (
-                      <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                        <td className="py-3 px-4 font-sans font-bold text-slate-900 dark:text-white">
-                          {row.role}
-                        </td>
-                        <td className="py-3 px-4">{row.basic}</td>
-                        <td className="py-3 px-4 text-slate-500">{row.hra}</td>
-                        <td className="py-3 px-4 text-slate-500">{row.allow}</td>
-                        <td className="py-3 px-4 text-rose-500">-{row.pf}</td>
-                        <td className="py-3 px-4 text-right font-black text-emerald-600 dark:text-emerald-400">
-                          {row.net}
+                    {employees.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-6 text-center text-slate-400">
+                          {isGu ? 'કોઈ કર્મચારી નોંધાયેલા નથી' : 'No employees registered'}
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      employees.map((emp) => {
+                        const basic = emp.role === 'ADMIN' ? 25000 : 18000;
+                        const hra = Math.round(basic * 0.2);
+                        const allow = Math.round(basic * 0.1);
+                        const pf = Math.round(basic * 0.08);
+                        const net = basic + hra + allow - pf;
+
+                        return (
+                          <tr key={emp.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                            <td className="py-3 px-4 font-sans font-bold text-slate-900 dark:text-white">
+                              {emp.full_name || emp.username} ({emp.role})
+                            </td>
+                            <td className="py-3 px-4">₹{basic.toLocaleString('en-IN')}</td>
+                            <td className="py-3 px-4 text-slate-500">₹{hra.toLocaleString('en-IN')}</td>
+                            <td className="py-3 px-4 text-slate-500">₹{allow.toLocaleString('en-IN')}</td>
+                            <td className="py-3 px-4 text-rose-500">-₹{pf.toLocaleString('en-IN')}</td>
+                            <td className="py-3 px-4 text-right font-black text-emerald-600 dark:text-emerald-400">
+                              ₹{net.toLocaleString('en-IN')}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -987,24 +1103,32 @@ export default function EmployeesPage() {
                     Monthly Payroll Disbursement Summary
                   </h3>
                   <p className="text-xs text-slate-400">
-                    Cycle: September 2026 &bull; Total Staff Payout: ₹1,88,000.00
+                    Cycle: Current Month &bull; Total Registered Staff: {employees.length}
                   </p>
                 </div>
-                <Badge variant="success">DISBURSEMENT COMPLETED</Badge>
+                <Badge variant={employees.length > 0 ? 'success' : 'default'}>
+                  {employees.length > 0 ? 'ACTIVE CYCLE' : 'NO EMPLOYEES'}
+                </Badge>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono">
                 <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800">
                   <span className="text-xs text-slate-400 font-sans">Gross Total Salary</span>
-                  <div className="text-xl font-black text-slate-900 dark:text-white mt-1">₹2,02,400.00</div>
+                  <div className="text-xl font-black text-slate-900 dark:text-white mt-1">
+                    ₹{employees.reduce((sum, e) => sum + (e.role === 'ADMIN' ? 32500 : 23400), 0).toLocaleString('en-IN')}.00
+                  </div>
                 </div>
                 <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800">
                   <span className="text-xs text-slate-400 font-sans">Total Statutory Deductions</span>
-                  <div className="text-xl font-black text-rose-500 mt-1">-₹14,400.00</div>
+                  <div className="text-xl font-black text-rose-500 mt-1">
+                    -₹{employees.reduce((sum, e) => sum + (e.role === 'ADMIN' ? 2000 : 1440), 0).toLocaleString('en-IN')}.00
+                  </div>
                 </div>
                 <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800">
                   <span className="text-xs text-slate-400 font-sans">Net Disbursed to Bank</span>
-                  <div className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-1">₹1,88,000.00</div>
+                  <div className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
+                    ₹{employees.reduce((sum, e) => sum + (e.role === 'ADMIN' ? 30500 : 21960), 0).toLocaleString('en-IN')}.00
+                  </div>
                 </div>
               </div>
             </Card>
@@ -1019,7 +1143,7 @@ export default function EmployeesPage() {
                     Staff Salary Slip Vault &amp; Generator
                   </h3>
                   <p className="text-xs text-slate-400">
-                    Official payslips with company stamp and breakdown
+                    Official payslips for active staff members
                   </p>
                 </div>
                 <Button
@@ -1032,37 +1156,43 @@ export default function EmployeesPage() {
                 </Button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[
-                  { name: 'Jadav Durgesh', role: 'Senior Aadhaar Operator', net: '₹24,000', month: 'Aug 2026', slipNo: 'SLIP-2026-0801' },
-                  { name: 'Hardikbhai Patel', role: 'Digital Gujarat Specialist', net: '₹20,400', month: 'Aug 2026', slipNo: 'SLIP-2026-0802' },
-                  { name: 'Vinesh Sharma', role: 'PAN Card & Voter ID Exec', net: '₹18,800', month: 'Aug 2026', slipNo: 'SLIP-2026-0803' },
-                  { name: 'Mitali Changani', role: 'Revenue Documents Desk', net: '₹21,200', month: 'Aug 2026', slipNo: 'SLIP-2026-0804' },
-                ].map((slip, i) => (
-                  <div
-                    key={i}
-                    className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 hover:border-brand-500/50 transition-all bg-white dark:bg-slate-900"
-                  >
-                    <div>
-                      <span className="font-mono text-[10px] text-brand-600 font-bold">{slip.slipNo}</span>
-                      <h4 className="font-black text-sm text-slate-900 dark:text-white">{slip.name}</h4>
-                      <p className="text-xs text-slate-400">{slip.role} &bull; {slip.month}</p>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-mono font-black text-sm text-emerald-600">{slip.net}</div>
-                      <Button
-                        size="xs"
-                        variant="glass"
-                        className="mt-1"
-                        onClick={() => toast.success(`Generated official slip PDF for ${slip.name}`)}
-                        leftIcon={<Eye className="w-3 h-3" />}
+              {employees.length === 0 ? (
+                <div className="py-8 text-center text-slate-400 text-xs">
+                  {isGu ? 'કોઈ કર્મચારી ખાતું મળ્યું નથી' : 'No staff profiles found to generate slips'}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {employees.map((emp) => {
+                    const net = emp.role === 'ADMIN' ? '₹30,500' : '₹21,960';
+                    const slipNo = `SLIP-${new Date().getFullYear()}-${String(emp.id).padStart(4, '0')}`;
+
+                    return (
+                      <div
+                        key={emp.id}
+                        className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 hover:border-brand-500/50 transition-all bg-white dark:bg-slate-900"
                       >
-                        View Slip
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                        <div>
+                          <span className="font-mono text-[10px] text-brand-600 font-bold">{slipNo}</span>
+                          <h4 className="font-black text-sm text-slate-900 dark:text-white">{emp.full_name || emp.username}</h4>
+                          <p className="text-xs text-slate-400">{emp.role} &bull; Current Month</p>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-mono font-black text-sm text-emerald-600">{net}</div>
+                          <Button
+                            size="xs"
+                            variant="glass"
+                            className="mt-1"
+                            onClick={() => setSelectedSlipEmployee(emp)}
+                            leftIcon={<Eye className="w-3 h-3" />}
+                          >
+                            View Slip
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </Card>
           )}
 
@@ -1070,18 +1200,18 @@ export default function EmployeesPage() {
           {currentTab === 'payroll-reports' && (
             <Card variant="elevated" className="p-5 space-y-4">
               <h3 className="text-base font-black text-slate-900 dark:text-white">
-                Yearly &amp; Monthly Payroll Expenditure Analytics
+                Workforce Payroll Expenditure Analytics
               </h3>
               <p className="text-xs text-slate-400">
-                Total center workforce expenditure trend (Jan 2026 - Sep 2026)
+                Staff count and monthly budget distribution
               </p>
               <div className="p-8 text-center rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800">
                 <BarChart3 className="w-12 h-12 text-brand-500 mx-auto mb-2" />
                 <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                  Annual Budget Allocated: ₹24,00,000.00 &bull; Disbursed to Date: ₹16,92,000.00 (70.5%)
+                  Total Active Staff: {employees.length} &bull; Monthly Net Payroll: ₹{employees.reduce((sum, e) => sum + (e.role === 'ADMIN' ? 30500 : 21960), 0).toLocaleString('en-IN')}.00
                 </p>
                 <p className="text-xs text-slate-400 mt-1">
-                  100% compliance with PF &amp; professional tax filing.
+                  100% compliance with PF &amp; professional tax standards.
                 </p>
               </div>
             </Card>

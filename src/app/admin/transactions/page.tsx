@@ -66,10 +66,17 @@ export default function TransactionsPage() {
   const [remarks, setRemarks] = useState('Service processing payment');
 
   // Expense State
-  const [expenses, setExpenses] = useState<Array<{ id: number; title: string; category: string; amount: number; date: string; notes?: string; paymentMode?: string }>>([
-    { id: 1, title: 'Portal Wallet Top-up', category: 'PORTAL_FEE', amount: 50, date: new Date().toISOString().split('T')[0], notes: 'Digital Gujarat portal wallet recharge', paymentMode: 'ONLINE' },
-    { id: 2, title: 'Office Supplies & Refreshment', category: 'OFFICE_SUPPLIES', amount: 50, date: new Date().toISOString().split('T')[0], notes: 'Center daily operations', paymentMode: 'CASH' },
-  ]);
+  const [expenses, setExpenses] = useState<Array<{ id: number; title: string; category: string; amount: number; date: string; notes?: string; paymentMode?: string }>>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('hytech_expenses');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch {}
+      }
+    }
+    return [];
+  });
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [expenseTitle, setExpenseTitle] = useState('');
   const [expenseCategory, setExpenseCategory] = useState('OFFICE_SUPPLIES');

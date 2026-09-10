@@ -39,8 +39,8 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
   isOpen,
   onClose,
   member,
-  familyHeadName = 'Dineshbhai Changani',
-  villageName = 'Bota',
+  familyHeadName = '',
+  villageName = '',
   onUploadDocClick,
   onPreviewDoc,
 }) => {
@@ -309,7 +309,11 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
                     Village & Jurisdiction
                   </h4>
                   <p className="text-slate-600 dark:text-slate-300">
-                    Registered under <strong>{villageName} Village</strong>, Botad Taluka. Covered under Government Digital Citizen Registry.
+                    {villageName ? (
+                      <>Registered under <strong>{villageName} Village</strong>. Covered under Government Digital Citizen Registry.</>
+                    ) : (
+                      <>Covered under Government Digital Citizen Registry.</>
+                    )}
                   </p>
                 </div>
               </div>
@@ -323,11 +327,13 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
                     Lineage & Household Affiliation
                   </h4>
                   <div className="space-y-2 text-slate-600 dark:text-slate-300">
+                    {familyHeadName && (
+                      <p>
+                        Head of Family: <strong>{familyHeadName}</strong>
+                      </p>
+                    )}
                     <p>
-                      Head of Family: <strong>{familyHeadName}</strong>
-                    </p>
-                    <p>
-                      Family Unit: <strong>HTF-000002 ({villageName})</strong>
+                      Family Unit: <strong>{member.family_id}{villageName ? ` (${villageName})` : ''}</strong>
                     </p>
                     <p>
                       Hierarchy Level: <strong>Generation {member.generation}</strong>
@@ -344,9 +350,21 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
                   <h4 className="font-black text-slate-900 dark:text-white uppercase tracking-wider text-[11px]">
                     Recent Services & Verifications
                   </h4>
-                  <p className="text-slate-500 dark:text-slate-400">
-                    Aadhaar card biometrics verified on 14 Aug 2026. Ration card inquiry logged at desk.
-                  </p>
+                  {member.documents?.filter((d) => d.status === 'VERIFIED' && d.uploaded_date).length ? (
+                    <div className="space-y-1.5">
+                      {member.documents
+                        .filter((d) => d.status === 'VERIFIED' && d.uploaded_date)
+                        .map((d) => (
+                          <p key={d.id} className="text-slate-600 dark:text-slate-300">
+                            <strong>{d.title}</strong> verified on {d.uploaded_date}.
+                          </p>
+                        ))}
+                    </div>
+                  ) : (
+                    <p className="text-slate-400 dark:text-slate-500 italic">
+                      No recent service records logged for this member.
+                    </p>
+                  )}
                 </div>
               </div>
             )}

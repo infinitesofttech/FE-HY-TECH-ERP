@@ -23,7 +23,7 @@ import {
 export default function CustomerApplicationsPage() {
   const { user } = useAuth();
   const { language } = useLanguage();
-  const familyId = (user as any)?.family_id || 'HTF-000002';
+  const familyId = (user as any)?.family_id || '';
 
   const [selectedAppForReceipt, setSelectedAppForReceipt] = useState<Application | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'pending'>('all');

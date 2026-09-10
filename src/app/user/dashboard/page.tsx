@@ -38,13 +38,25 @@ import {
 export default function UserDashboardPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const familyId = (user as any)?.family_id || 'HTF-000002';
+  const familyId = (user as any)?.family_id || '';
 
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [selectedAppForReceipt, setSelectedAppForReceipt] = useState<Application | null>(null);
-  const [currentDateTime, setCurrentDateTime] = useState({
-    date: 'Monday, 25 Aug 2025',
-    time: '04:32 PM',
+  const [currentDateTime, setCurrentDateTime] = useState(() => {
+    const now = new Date();
+    return {
+      date: now.toLocaleDateString('en-GB', {
+        weekday: 'long',
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      }),
+      time: now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      }),
+    };
   });
 
   useEffect(() => {
@@ -73,18 +85,21 @@ export default function UserDashboardPage() {
   const { data: customer } = useQuery({
     queryKey: ['customer', familyId],
     queryFn: () => customerService.getCustomerDetail(familyId),
+    enabled: !!familyId,
   });
 
   // Fetch Family Members
   const { data: members = [] } = useQuery({
     queryKey: ['family-members', familyId],
     queryFn: () => familyMemberService.getMembers(familyId),
+    enabled: !!familyId,
   });
 
   // Fetch Documents
   const { data: documents = [] } = useQuery({
     queryKey: ['customer-documents', familyId],
     queryFn: async () => {
+      if (!familyId) return [];
       if (members.length > 0) {
         const promises = members.map((m) =>
           documentService.getDocuments(familyId, m.id).catch(() => [])
@@ -92,8 +107,9 @@ export default function UserDashboardPage() {
         const res = await Promise.all(promises);
         return res.flat();
       }
-      return documentService.getDocuments(familyId, 3).catch(() => []);
+      return [];
     },
+    enabled: !!familyId,
   });
 
   // Fetch Applications

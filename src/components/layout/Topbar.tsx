@@ -2,6 +2,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+import apiClient from '@/api/client';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -56,29 +58,21 @@ export const Topbar: React.FC<TopbarProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const notifications = [
-    {
-      id: 1,
-      title: 'Aadhaar Ready for Pickup',
-      desc: 'Bipinbhai Patel (HTF-000002) - SMS dispatched in Gujarati.',
-      time: '10m ago',
-      type: 'ready',
+  const { data: rawNotifs = [] } = useQuery({
+    queryKey: ['topbar-notifications'],
+    queryFn: async () => {
+      try {
+        const res = await apiClient.get<any>('/notifications/');
+        if (Array.isArray(res.data)) return res.data;
+        if (res.data?.results && Array.isArray(res.data.results)) return res.data.results;
+        return [];
+      } catch {
+        return [];
+      }
     },
-    {
-      id: 2,
-      title: 'Pending Govt Verification',
-      desc: 'Ration card member addition pending UIDAI sync.',
-      time: '45m ago',
-      type: 'alert',
-    },
-    {
-      id: 3,
-      title: 'Daily Summary Ready',
-      desc: '3 new visits completed today. Loyalty ledger updated.',
-      time: '2h ago',
-      type: 'info',
-    },
-  ];
+  });
+  const notifications = Array.isArray(rawNotifs) ? rawNotifs : [];
+  const unreadNotifs = notifications.filter((n: any) => !n.is_read);
 
   const handleQuickAction = () => {
     if (userRole === 'customer') {
@@ -169,7 +163,9 @@ export const Topbar: React.FC<TopbarProps> = ({
             className="p-1.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors relative shadow-xs"
           >
             <Bell className="w-4 h-4" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-slate-900 animate-pulse"></span>
+            {unreadNotifs.length > 0 && (
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-slate-900 animate-pulse"></span>
+            )}
           </button>
 
           {showNotifications && (
@@ -180,7 +176,7 @@ export const Topbar: React.FC<TopbarProps> = ({
                     Notifications
                   </span>
                   <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300">
-                    3 New
+                    {unreadNotifs.length} {language === 'gu' ? 'નવા' : 'New'}
                   </span>
                 </div>
 
@@ -193,26 +189,34 @@ export const Topbar: React.FC<TopbarProps> = ({
               </div>
 
               <div className="space-y-2 max-h-72 overflow-y-auto">
-                {notifications.map((n) => (
-                  <div
-                    key={n.id}
-                    className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-100 dark:border-slate-700/50 transition-colors space-y-1 cursor-pointer"
-                    onClick={() => {
-                      setShowNotifications(false);
-                      router.push(userRole === 'customer' ? '/customer/reminders' : '/admin/reminders');
-                    }}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                        {n.title}
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-medium">{n.time}</span>
-                    </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                      {n.desc}
-                    </p>
+                {notifications.length === 0 ? (
+                  <div className="py-8 text-center text-slate-400 text-xs">
+                    {language === 'gu' ? 'કોઈ નવા નોટિફિકેશન નથી' : 'No new notifications'}
                   </div>
-                ))}
+                ) : (
+                  notifications.map((n: any) => (
+                    <div
+                      key={n.id}
+                      className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-100 dark:border-slate-700/50 transition-colors space-y-1 cursor-pointer"
+                      onClick={() => {
+                        setShowNotifications(false);
+                        router.push(userRole === 'customer' ? '/customer/reminders' : '/admin/reminders');
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                          {n.subject || n.title || 'System Notification'}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-medium">
+                          {n.created_at ? new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recent'}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                        {n.message || n.desc || '—'}
+                      </p>
+                    </div>
+                  ))
+                )}
               </div>
 
               <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-center">

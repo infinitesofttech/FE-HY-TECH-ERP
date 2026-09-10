@@ -31,7 +31,7 @@ import {
 
 export default function UserServicesPage() {
   const { user } = useAuth();
-  const familyId = (user as any)?.family_id || 'HTF-000002';
+  const familyId = (user as any)?.family_id || '';
   const headOfFamily = (user as any)?.head_of_family || (user as any)?.full_name || 'Customer';
 
   const [searchQuery, setSearchQuery] = useState('');

@@ -67,8 +67,8 @@ export default function DocumentsVaultPage() {
 
   // Upload Form State
   const [uploadForm, setUploadForm] = useState({
-    family_id: 'HTF-000002',
-    member_id: 3,
+    family_id: '',
+    member_id: 0,
     document_type: 'AADHAR' as DocumentType,
     document_name: '',
     description: '',
@@ -103,9 +103,10 @@ export default function DocumentsVaultPage() {
       if (!customers.length) return [];
       const docPromises = customers.map(async (c) => {
         const members = await familyMemberService.getMembers(c.family_id);
-        const memberIds = members.length ? members.map((m) => m.id) : [1, 2, 3];
+        const memberIds = members.map((m) => m.id);
+        if (memberIds.length === 0) return [];
         const docsPerMember = await Promise.all(
-          memberIds.map((mId) => documentService.getDocuments(c.family_id, mId))
+          memberIds.map((mId) => documentService.getDocuments(c.family_id, mId).catch(() => []))
         );
         return docsPerMember.flat();
       });
@@ -130,8 +131,8 @@ export default function DocumentsVaultPage() {
       queryClient.invalidateQueries({ queryKey: ['all-customer-documents'] });
       setIsUploadOpen(false);
       setUploadForm({
-        family_id: customers[0]?.family_id || 'HTF-000002',
-        member_id: 3,
+        family_id: customers[0]?.family_id || '',
+        member_id: 0,
         document_type: 'AADHAR',
         document_name: '',
         description: '',
@@ -378,8 +379,8 @@ export default function DocumentsVaultPage() {
         <Button
           onClick={() => {
             setUploadForm({
-              family_id: customers[0]?.family_id || 'HTF-000002',
-              member_id: 3,
+              family_id: customers[0]?.family_id || '',
+              member_id: 0,
               document_type: 'AADHAR',
               document_name: '',
               description: '',

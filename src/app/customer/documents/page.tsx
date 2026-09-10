@@ -6,17 +6,32 @@ import { AppShell } from '@/components/layout/AppShell';
 import { Badge, Card, Button, DocumentViewerModal, EmptyState } from '@/components/ui';
 import { useAuth } from '@/context/AuthContext';
 import { documentService } from '@/api/services/documentService';
+import { familyMemberService } from '@/api/services/familyMemberService';
 import { CustomerDocument } from '@/types';
 import { FileCheck2, Eye, FileText, Download, Sparkles, ShieldCheck } from 'lucide-react';
 
 export default function CustomerDocumentsPage() {
   const { user } = useAuth();
-  const familyId = (user as any)?.family_id || 'HTF-000002';
+  const familyId = (user as any)?.family_id || '';
   const [viewingDoc, setViewingDoc] = useState<CustomerDocument | null>(null);
 
+  const { data: members = [] } = useQuery({
+    queryKey: ['family-members', familyId],
+    queryFn: () => familyMemberService.getMembers(familyId),
+    enabled: !!familyId,
+  });
+
   const { data: documents = [], isLoading } = useQuery({
-    queryKey: ['customer-documents', familyId],
-    queryFn: () => documentService.getDocuments(familyId, 3),
+    queryKey: ['customer-documents', familyId, members],
+    queryFn: async () => {
+      if (!members.length) return [];
+      const promises = members.map((m) =>
+        documentService.getDocuments(familyId, m.id).catch(() => [])
+      );
+      const res = await Promise.all(promises);
+      return res.flat();
+    },
+    enabled: !!familyId,
   });
 
   return (

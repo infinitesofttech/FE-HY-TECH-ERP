@@ -10,7 +10,7 @@ import { BellRing, Calendar, MessageSquare, Sparkles } from 'lucide-react';
 
 export default function CustomerRemindersPage() {
   const { user } = useAuth();
-  const familyId = (user as any)?.family_id || 'HTF-000002';
+  const familyId = (user as any)?.family_id || '';
 
   const { data: reminders = [], isLoading } = useQuery({
     queryKey: ['customer-reminders', familyId],
@@ -18,6 +18,7 @@ export default function CustomerRemindersPage() {
       const all = await reminderService.getReminders();
       return all.filter((r) => r.customer_family_id === familyId);
     },
+    enabled: !!familyId,
   });
 
   return (

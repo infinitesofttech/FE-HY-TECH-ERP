@@ -82,13 +82,13 @@ export default function PendingWorkPage() {
     pending_since: new Date().toISOString().split('T')[0],
     expected_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     priority: 'HIGH' as 'HIGH' | 'MEDIUM' | 'LOW',
-    pending_reason: 'Biometric verification queue with UIDAI server',
-    documents_pending: 'Signed parental consent form & hospital birth slip',
+    pending_reason: '',
+    documents_pending: '',
     assigned_staff: 1,
-    next_action: 'Verify status on UIDAI portal and notify citizen via SMS',
+    next_action: '',
     work_status: 'PENDING' as WorkStatus,
     follow_up_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    notes: 'Citizen visited front desk in urgent need for school admission',
+    notes: '',
   });
 
   // Edit Form State

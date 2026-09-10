@@ -160,8 +160,8 @@ export const OfficeDashboardView: React.FC = () => {
 
   const displayedModalCustomers = customers;
 
-  // Selected customer (fallback to HTF-000003 or first)
-  const effectiveCustomerId = txnCustomerId || (displayedModalCustomers[0]?.id ?? 4);
+  // Selected customer (fallback to first customer)
+  const effectiveCustomerId = txnCustomerId || (displayedModalCustomers[0]?.id ?? 0);
   const selectedCustomer = useMemo(() => {
     return customers.find((c) => c.id === effectiveCustomerId) || customers[0];
   }, [customers, effectiveCustomerId]);
