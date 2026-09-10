@@ -26,8 +26,8 @@ export default function LoginPage() {
   const [portalType, setPortalType] = useState<'admin' | 'employee' | 'customer'>('admin');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [familyId, setFamilyId] = useState('HTF-001');
-  const [mobileNumber, setMobileNumber] = useState('7600512333');
+  const [familyId, setFamilyId] = useState('HTF-000002');
+  const [mobileNumber, setMobileNumber] = useState('9876543210');
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -37,22 +37,21 @@ export default function LoginPage() {
     try {
       if (portalType === 'customer') {
         const res = await loginCustomer({
-          family_id: familyId || 'HTF-001',
-          mobile_number: mobileNumber || '7600512333',
-          password: password || 'jadav@123',
+          family_id: familyId,
+          mobile_number: mobileNumber,
+          password: password || 'Patel@123',
         });
         toast.success(`Welcome to Family Portal, ${res.customer?.head_of_family || 'Family Member'}!`);
       } else {
         const res = await loginStaff({
-          username: username || (portalType === 'admin' ? 'admin' : 'staff'),
-          password: password || (portalType === 'admin' ? 'Admin@123' : 'Staff@123'),
-          portal_type: portalType,
+          username: username || (portalType === 'admin' ? 'admin' : 'operator'),
+          password: password || (portalType === 'admin' ? 'admin@123' : 'operator@123'),
         });
         const displayName = (res.user as any)?.username || (res.employee as any)?.full_name || 'Staff';
         toast.success(`Signed in as ${displayName}`);
       }
     } catch (err: any) {
-      toast.error(err?.response?.data?.error || err?.response?.data?.message || 'Login failed. Please check credentials.');
+      toast.error(err?.response?.data?.message || 'Login failed. Please check credentials.');
     } finally {
       setLoading(false);
     }
@@ -67,9 +66,9 @@ export default function LoginPage() {
       setUsername('staff');
       setPassword('Staff@123');
     } else {
-      setFamilyId('HTF-001');
-      setMobileNumber('7600512333');
-      setPassword('jadav@123');
+      setFamilyId('HTF-000001');
+      setMobileNumber('6789012345');
+      setPassword('Patel@123');
     }
     toast.info(`Pre-filled ${role.toUpperCase()} test credentials`);
   };
@@ -161,7 +160,7 @@ export default function LoginPage() {
                     required
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    placeholder={portalType === 'admin' ? 'admin' : 'staff'}
+                    placeholder={portalType === 'admin' ? 'admin' : 'operator'}
                     className="w-full pl-4 pr-4 py-2.5 text-sm bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/30 text-slate-900 dark:text-white font-medium placeholder:text-slate-400 transition-all"
                   />
                 </div>
@@ -177,7 +176,7 @@ export default function LoginPage() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder={portalType === 'admin' ? 'Admin@123' : 'Staff@123'}
+                    placeholder="••••••••"
                     className="w-full pl-4 pr-4 py-2.5 text-sm bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/30 text-slate-900 dark:text-white font-medium placeholder:text-slate-400 transition-all"
                   />
                 </div>
@@ -194,7 +193,7 @@ export default function LoginPage() {
                   required
                   value={familyId}
                   onChange={(e) => setFamilyId(e.target.value)}
-                  placeholder="HTF-001"
+                  placeholder="HTF-000002"
                   className="w-full px-4 py-2.5 text-sm bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/30 text-slate-900 dark:text-white font-mono font-bold"
                 />
               </div>
@@ -208,7 +207,7 @@ export default function LoginPage() {
                   required
                   value={mobileNumber}
                   onChange={(e) => setMobileNumber(e.target.value)}
-                  placeholder="7600512333"
+                  placeholder="9876543210"
                   className="w-full px-4 py-2.5 text-sm bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/30 text-slate-900 dark:text-white font-mono font-bold"
                 />
               </div>
@@ -222,7 +221,7 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="jadav@123"
+                  placeholder="Patel@123"
                   className="w-full px-4 py-2.5 text-sm bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/30 text-slate-900 dark:text-white font-medium"
                 />
               </div>
