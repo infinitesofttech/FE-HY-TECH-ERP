@@ -143,6 +143,13 @@ export const ENDPOINTS = {
     LEAVES: '/hrms/leaves/',
     LEAVE_BALANCE: (id: number | string) => `/hrms/leave-balance/${id}/`,
     HOLIDAYS: '/hrms/holidays/',
+    SETTINGS: '/hrms/settings/',
+    SETTINGS_COMPANY: '/hrms/settings/company/',
+    SETTINGS_ATTENDANCE: '/hrms/settings/attendance/',
+    SETTINGS_LEAVE: '/hrms/settings/leave/',
+    SETTINGS_NOTIFICATIONS: '/hrms/settings/notifications/',
+    SETTINGS_ROLES: '/hrms/settings/roles-permissions/',
+    SETTINGS_ROLE_DETAIL: (id: number | string) => `/hrms/settings/roles-permissions/${id}/`,
   },
 
   // Villages & Demographics

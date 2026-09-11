@@ -7,6 +7,8 @@ import {
   LeaveBalance,
   AttendanceStatus,
   LeaveType,
+  HRSettingsResponse,
+  HRRolePermission,
 } from '@/types';
 
 export const hrmsService = {
@@ -103,4 +105,23 @@ export const hrmsService = {
     });
     return response.data;
   },
+
+  // Get all HR Settings (Company, Attendance, Leave, Notifications, Roles & Permissions)
+  async getHRSettings(): Promise<HRSettingsResponse> {
+    const response = await apiClient.get<HRSettingsResponse>(ENDPOINTS.HRMS.SETTINGS);
+    return response.data;
+  },
+
+  // Update HR Settings (bulk or individual sections)
+  async updateHRSettings(payload: Partial<HRSettingsResponse> | any): Promise<HRSettingsResponse> {
+    const response = await apiClient.patch<HRSettingsResponse>(ENDPOINTS.HRMS.SETTINGS, payload);
+    return response.data;
+  },
+
+  // Update specific role permissions
+  async updateRolePermission(id: number, payload: Partial<HRRolePermission>): Promise<HRRolePermission> {
+    const response = await apiClient.patch<HRRolePermission>(ENDPOINTS.HRMS.SETTINGS_ROLE_DETAIL(id), payload);
+    return response.data;
+  },
 };
+

@@ -610,3 +610,69 @@ export interface FamilyTreeNodeData {
   children?: FamilyTreeNodeData[];
 }
 
+export interface HRCompanySetting {
+  id?: number;
+  organization_name: string;
+  opening_time: string;
+  closing_time: string;
+  contact_email?: string;
+  contact_phone?: string;
+  address?: string;
+  updated_at?: string;
+}
+
+export interface HRAttendanceSetting {
+  id?: number;
+  grace_period_minutes: number;
+  grace_period_label: string;
+  half_day_cutoff_time: string;
+  shift_start_time: string;
+  shift_end_time: string;
+  standard_work_hours: number;
+  updated_at?: string;
+}
+
+export interface HRLeaveSetting {
+  id?: number;
+  annual_casual_leave: number;
+  annual_sick_leave: number;
+  annual_paid_leave: number;
+  updated_at?: string;
+}
+
+export interface HRNotificationSetting {
+  id?: number;
+  whatsapp_daily_punch_summary: boolean;
+  sms_leave_approval: boolean;
+  email_leave_notifications: boolean;
+  admin_whatsapp_number?: string;
+  updated_at?: string;
+}
+
+export interface HRRolePermission {
+  id: number;
+  role: string;
+  display_name: string;
+  description?: string;
+  can_manage_employees: boolean;
+  can_view_attendance: boolean;
+  can_mark_attendance: boolean;
+  can_approve_leaves: boolean;
+  can_manage_payroll: boolean;
+  can_view_reports: boolean;
+  can_manage_settings: boolean;
+  can_process_services: boolean;
+  updated_at?: string;
+}
+
+export interface HRSettingsResponse {
+  success?: boolean;
+  message?: string;
+  company: HRCompanySetting;
+  attendance: HRAttendanceSetting;
+  leave: HRLeaveSetting;
+  notifications: HRNotificationSetting;
+  roles: HRRolePermission[];
+}
+
+

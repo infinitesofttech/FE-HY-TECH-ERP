@@ -19,7 +19,7 @@ import { hrmsService } from '@/api/services/hrmsService';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
-import { EmployeeUser } from '@/types';
+import { EmployeeUser, HRRolePermission } from '@/types';
 import { formatEmpName, getEmpInitial } from '@/i18n';
 import { HRReportsView } from '@/components/office/HRReportsView';
 import { toast } from 'sonner';
@@ -217,6 +217,114 @@ export default function EmployeesPage() {
       setEmpToDelete(null);
     },
   });
+
+  // HR Settings Query, State & Mutation
+  const { data: hrSettings, isLoading: isLoadingSettings, refetch: refetchSettings } = useQuery({
+    queryKey: ['hr-settings'],
+    queryFn: () => hrmsService.getHRSettings(),
+  });
+
+  const [settingsForm, setSettingsForm] = useState({
+    organization_name: 'HY-TECH CITIZEN SERVICES & COMPUTER HUB',
+    opening_time: '09:00 AM',
+    closing_time: '07:00 PM',
+    contact_phone: '+91 98765 43210',
+    contact_email: 'contact@hytech.com',
+    address: 'Opp. Bus Station, Main Road, Gujarat',
+    grace_period_label: '15 Minutes',
+    grace_period_minutes: 15,
+    half_day_cutoff_time: '01:30 PM',
+    shift_start_time: '09:30 AM',
+    shift_end_time: '06:30 PM',
+    standard_work_hours: 8.0,
+    annual_casual_leave: 12,
+    annual_sick_leave: 6,
+    annual_paid_leave: 18,
+    whatsapp_daily_punch_summary: true,
+    sms_leave_approval: true,
+    email_leave_notifications: false,
+    roles: [] as HRRolePermission[],
+  });
+
+  useEffect(() => {
+    if (hrSettings) {
+      setSettingsForm({
+        organization_name: hrSettings.company?.organization_name || 'HY-TECH CITIZEN SERVICES & COMPUTER HUB',
+        opening_time: hrSettings.company?.opening_time || '09:00 AM',
+        closing_time: hrSettings.company?.closing_time || '07:00 PM',
+        contact_phone: hrSettings.company?.contact_phone || '+91 98765 43210',
+        contact_email: hrSettings.company?.contact_email || 'contact@hytech.com',
+        address: hrSettings.company?.address || 'Opp. Bus Station, Main Road, Gujarat',
+        grace_period_label: hrSettings.attendance?.grace_period_label || '15 Minutes',
+        grace_period_minutes: hrSettings.attendance?.grace_period_minutes ?? 15,
+        half_day_cutoff_time: hrSettings.attendance?.half_day_cutoff_time || '01:30 PM',
+        shift_start_time: hrSettings.attendance?.shift_start_time || '09:30 AM',
+        shift_end_time: hrSettings.attendance?.shift_end_time || '06:30 PM',
+        standard_work_hours: hrSettings.attendance?.standard_work_hours ?? 8.0,
+        annual_casual_leave: hrSettings.leave?.annual_casual_leave ?? 12,
+        annual_sick_leave: hrSettings.leave?.annual_sick_leave ?? 6,
+        annual_paid_leave: hrSettings.leave?.annual_paid_leave ?? 18,
+        whatsapp_daily_punch_summary: hrSettings.notifications?.whatsapp_daily_punch_summary ?? true,
+        sms_leave_approval: hrSettings.notifications?.sms_leave_approval ?? true,
+        email_leave_notifications: hrSettings.notifications?.email_leave_notifications ?? false,
+        roles: hrSettings.roles || [],
+      });
+    }
+  }, [hrSettings]);
+
+  const updateSettingsMutation = useMutation({
+    mutationFn: () => {
+      const payload = {
+        company: {
+          organization_name: settingsForm.organization_name,
+          opening_time: settingsForm.opening_time,
+          closing_time: settingsForm.closing_time,
+          contact_phone: settingsForm.contact_phone,
+          contact_email: settingsForm.contact_email,
+          address: settingsForm.address,
+        },
+        attendance: {
+          grace_period_label: settingsForm.grace_period_label,
+          grace_period_minutes: Number(settingsForm.grace_period_minutes) || 15,
+          half_day_cutoff_time: settingsForm.half_day_cutoff_time,
+          shift_start_time: settingsForm.shift_start_time,
+          shift_end_time: settingsForm.shift_end_time,
+          standard_work_hours: Number(settingsForm.standard_work_hours) || 8.0,
+        },
+        leave: {
+          annual_casual_leave: Number(settingsForm.annual_casual_leave) || 12,
+          annual_sick_leave: Number(settingsForm.annual_sick_leave) || 6,
+          annual_paid_leave: Number(settingsForm.annual_paid_leave) || 18,
+        },
+        notifications: {
+          whatsapp_daily_punch_summary: settingsForm.whatsapp_daily_punch_summary,
+          sms_leave_approval: settingsForm.sms_leave_approval,
+          email_leave_notifications: settingsForm.email_leave_notifications,
+        },
+        roles: settingsForm.roles,
+      };
+      return hrmsService.updateHRSettings(payload);
+    },
+    onSuccess: () => {
+      refetchSettings();
+      queryClient.invalidateQueries({ queryKey: ['hr-settings'] });
+      toast.success(isGu ? 'HR સેટિંગ્સ સફળતાપૂર્વક સાચવવામાં આવી!' : 'HR configuration settings saved successfully!');
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || (isGu ? 'સેટિંગ્સ સેવ કરવામાં ભૂલ આવી' : 'Failed to save HR settings'));
+    },
+  });
+
+  const handleRolePermissionToggle = (roleIndex: number, permKey: keyof HRRolePermission) => {
+    setSettingsForm((prev) => {
+      const newRoles = [...prev.roles];
+      const target = { ...newRoles[roleIndex] };
+      (target as any)[permKey] = !(target as any)[permKey];
+      newRoles[roleIndex] = target;
+      return { ...prev, roles: newRoles };
+    });
+  };
+
 
   const adminCount = employees.filter((e) => e.role === 'ADMIN').length;
   const staffCount = employees.filter((e) => e.role === 'STAFF').length;
@@ -1227,32 +1335,55 @@ export default function EmployeesPage() {
       {/* VIEW F: HR SETTINGS */}
       {activeGroup === 'settings' && (
         <div className="space-y-6 animate-fade-in">
-          <Card variant="elevated" className="p-6 max-w-3xl space-y-4">
-            <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">
-              {currentTab.replace('-', ' ')}
-            </h3>
+          <Card variant="elevated" className="p-6 max-w-4xl space-y-6">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div>
+                <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                  {currentTab.replace('-', ' ')}
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {currentTab === 'company-settings' && (isGu ? 'કેન્દ્ર સંસ્થાનું નામ, કાર્યકારી કલાકો અને સંપર્ક માહિતી.' : 'Center identity, standard business hours, and official contact details.')}
+                  {currentTab === 'attendance-settings' && (isGu ? 'બાયોમેટ્રિક ગ્રેસ પિરિયડ, હાફ-ડે કટોફ અને શિફ્ટ ટાઇમિંગ્સ.' : 'Biometric grace buffer, half-day cutoff limits, and standard shift windows.')}
+                  {currentTab === 'leave-settings' && (isGu ? 'વાર્ષિક રજા નીતિ, CL/SL/PL ક્વોટા ફાળવણી.' : 'Annual leave entitlements, standard CL/SL/PL quotas per staff member.')}
+                  {currentTab === 'notification-settings' && (isGu ? 'વોટ્સએપ, એસએમએસ અને ઇમેઇલ નોટિફિકેશન સેટિંગ્સ.' : 'Automated WhatsApp alerts, SMS status updates, and email dispatch.')}
+                  {currentTab === 'roles-permissions' && (isGu ? 'ઓપરેટર અધિકાર મેટ્રિક્સ અને મોડ્યુલ એક્સેસ કંટ્રોલ.' : 'Operator permission matrix, role authorizations, and module access controls.')}
+                </p>
+              </div>
 
+              {isLoadingSettings && (
+                <div className="flex items-center gap-2 text-xs text-brand-600 dark:text-brand-400 font-semibold">
+                  <div className="w-3.5 h-3.5 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+                  <span>Loading settings...</span>
+                </div>
+              )}
+            </div>
+
+            {/* TAB 1: COMPANY SETTINGS */}
             {currentTab === 'company-settings' && (
-              <div className="space-y-3 text-xs">
+              <div className="space-y-4 text-xs">
                 <div>
                   <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Center Organization Name
                   </label>
                   <input
                     type="text"
-                    defaultValue="HY-TECH CITIZEN SERVICES & COMPUTER HUB"
-                    className="w-full py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800"
+                    value={settingsForm.organization_name}
+                    onChange={(e) => setSettingsForm({ ...settingsForm, organization_name: e.target.value })}
+                    className="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-brand-500"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
                       Center Opening Time
                     </label>
                     <input
                       type="text"
-                      defaultValue="09:00 AM"
-                      className="w-full py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono"
+                      value={settingsForm.opening_time}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, opening_time: e.target.value })}
+                      placeholder="09:00 AM"
+                      className="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500"
                     />
                   </div>
                   <div>
@@ -1261,26 +1392,71 @@ export default function EmployeesPage() {
                     </label>
                     <input
                       type="text"
-                      defaultValue="07:00 PM"
-                      className="w-full py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono"
+                      value={settingsForm.closing_time}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, closing_time: e.target.value })}
+                      placeholder="07:00 PM"
+                      className="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500"
                     />
                   </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Official Contact Phone
+                    </label>
+                    <input
+                      type="text"
+                      value={settingsForm.contact_phone}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, contact_phone: e.target.value })}
+                      placeholder="+91 98765 43210"
+                      className="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Official Contact Email
+                    </label>
+                    <input
+                      type="email"
+                      value={settingsForm.contact_email}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, contact_email: e.target.value })}
+                      placeholder="contact@hytech.com"
+                      className="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Center Physical Address
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={settingsForm.address}
+                    onChange={(e) => setSettingsForm({ ...settingsForm, address: e.target.value })}
+                    className="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-brand-500"
+                  />
                 </div>
               </div>
             )}
 
+            {/* TAB 2: ATTENDANCE SETTINGS */}
             {currentTab === 'attendance-settings' && (
-              <div className="space-y-3 text-xs">
-                <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-4 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
                       Grace Period for Punch-In
                     </label>
                     <input
                       type="text"
-                      defaultValue="15 Minutes"
-                      className="w-full py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono"
+                      value={settingsForm.grace_period_label}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, grace_period_label: e.target.value })}
+                      placeholder="15 Minutes"
+                      className="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500"
                     />
+                    <span className="text-[10px] text-slate-400 mt-1 block">Staff arriving within grace window are marked on-time</span>
                   </div>
                   <div>
                     <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
@@ -1288,84 +1464,286 @@ export default function EmployeesPage() {
                     </label>
                     <input
                       type="text"
-                      defaultValue="01:30 PM"
-                      className="w-full py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono"
+                      value={settingsForm.half_day_cutoff_time}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, half_day_cutoff_time: e.target.value })}
+                      placeholder="01:30 PM"
+                      className="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500"
+                    />
+                    <span className="text-[10px] text-slate-400 mt-1 block">Arrivals after cutoff are logged as Half-Day</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Standard Shift Start Time
+                    </label>
+                    <input
+                      type="text"
+                      value={settingsForm.shift_start_time}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, shift_start_time: e.target.value })}
+                      placeholder="09:30 AM"
+                      className="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Standard Shift End Time
+                    </label>
+                    <input
+                      type="text"
+                      value={settingsForm.shift_end_time}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, shift_end_time: e.target.value })}
+                      placeholder="06:30 PM"
+                      className="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Daily Expected Work Hours
+                    </label>
+                    <input
+                      type="number"
+                      step="0.5"
+                      value={settingsForm.standard_work_hours}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, standard_work_hours: parseFloat(e.target.value) || 8.0 })}
+                      className="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500"
                     />
                   </div>
                 </div>
               </div>
             )}
 
+            {/* TAB 3: LEAVE SETTINGS */}
             {currentTab === 'leave-settings' && (
-              <div className="space-y-3 text-xs">
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+              <div className="space-y-4 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
+                    <label className="block font-bold text-slate-800 dark:text-slate-200">
                       Annual Casual Leave (CL)
                     </label>
                     <input
                       type="number"
-                      defaultValue="12"
-                      className="w-full py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono"
+                      min="0"
+                      max="365"
+                      value={settingsForm.annual_casual_leave}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, annual_casual_leave: parseInt(e.target.value) || 0 })}
+                      className="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500"
                     />
+                    <p className="text-[11px] text-slate-400">For short urgent personal matters (Default: 12 days)</p>
                   </div>
-                  <div>
-                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
+                    <label className="block font-bold text-slate-800 dark:text-slate-200">
                       Annual Sick Leave (SL)
                     </label>
                     <input
                       type="number"
-                      defaultValue="6"
-                      className="w-full py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono"
+                      min="0"
+                      max="365"
+                      value={settingsForm.annual_sick_leave}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, annual_sick_leave: parseInt(e.target.value) || 0 })}
+                      className="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500"
                     />
+                    <p className="text-[11px] text-slate-400">Medical reasons &amp; recovery (Default: 6 days)</p>
                   </div>
-                  <div>
-                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
+                    <label className="block font-bold text-slate-800 dark:text-slate-200">
                       Annual Paid Leave (PL)
                     </label>
                     <input
                       type="number"
-                      defaultValue="18"
-                      className="w-full py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono"
+                      min="0"
+                      max="365"
+                      value={settingsForm.annual_paid_leave}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, annual_paid_leave: parseInt(e.target.value) || 0 })}
+                      className="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500"
                     />
+                    <p className="text-[11px] text-slate-400">Planned vacation with manager approval (Default: 18 days)</p>
                   </div>
                 </div>
               </div>
             )}
 
+            {/* TAB 4: NOTIFICATION SETTINGS */}
             {currentTab === 'notification-settings' && (
-              <div className="space-y-2 text-xs">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" defaultChecked className="rounded text-brand-600" />
-                  <span className="font-bold">Send daily WhatsApp punch-in summary to Admin</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" defaultChecked className="rounded text-brand-600" />
-                  <span className="font-bold">Notify staff via SMS when leave request is approved</span>
-                </label>
+              <div className="space-y-4 text-xs">
+                <div className="space-y-3">
+                  <label className="flex items-start gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={settingsForm.whatsapp_daily_punch_summary}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, whatsapp_daily_punch_summary: e.target.checked })}
+                      className="mt-0.5 rounded text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer"
+                    />
+                    <div>
+                      <span className="font-bold text-slate-900 dark:text-white block">
+                        Send daily WhatsApp punch-in summary to Admin
+                      </span>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Dispatches automated daily attendance &amp; tardiness digest directly to administrator WhatsApp at 10:00 AM.
+                      </p>
+                    </div>
+                  </label>
+
+                  <label className="flex items-start gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={settingsForm.sms_leave_approval}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, sms_leave_approval: e.target.checked })}
+                      className="mt-0.5 rounded text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer"
+                    />
+                    <div>
+                      <span className="font-bold text-slate-900 dark:text-white block">
+                        Notify staff via SMS when leave request is approved
+                      </span>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Sends instant SMS to staff member&apos;s registered phone number once leave application status is changed.
+                      </p>
+                    </div>
+                  </label>
+
+                  <label className="flex items-start gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={settingsForm.email_leave_notifications}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, email_leave_notifications: e.target.checked })}
+                      className="mt-0.5 rounded text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer"
+                    />
+                    <div>
+                      <span className="font-bold text-slate-900 dark:text-white block">
+                        Email Notifications for Pending Leave Applications
+                      </span>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Alerts management email inbox immediately whenever an operator submits a new leave request.
+                      </p>
+                    </div>
+                  </label>
+                </div>
               </div>
             )}
 
+            {/* TAB 5: ROLES & PERMISSIONS MATRIX */}
             {currentTab === 'roles-permissions' && (
-              <div className="space-y-2 text-xs">
-                <p className="text-slate-500">
-                  Role matrix: Administrator has full access to financial ledgers, salary structure, and employee credentials. Staff operators are limited to citizen service processing and attendance punch-in.
-                </p>
+              <div className="space-y-4 text-xs">
+                <div className="p-3.5 rounded-2xl bg-brand-50 dark:bg-brand-950/20 border border-brand-200 dark:border-brand-800 text-brand-900 dark:text-brand-300">
+                  <p className="font-medium text-xs leading-relaxed">
+                    <strong>Role Permission Matrix:</strong> Configure access privileges for each organizational role. Administrator has elevated authority, while Staff Operators are tailored for front-desk citizen service processing.
+                  </p>
+                </div>
+
+                <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-2xl">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 uppercase tracking-wider text-[10px]">
+                      <tr>
+                        <th className="py-3 px-4 font-black">Role</th>
+                        <th className="py-3 px-2 font-black text-center">Manage Staff</th>
+                        <th className="py-3 px-2 font-black text-center">Mark Attendance</th>
+                        <th className="py-3 px-2 font-black text-center">Approve Leaves</th>
+                        <th className="py-3 px-2 font-black text-center">Manage Payroll</th>
+                        <th className="py-3 px-2 font-black text-center">View Reports</th>
+                        <th className="py-3 px-2 font-black text-center">Services</th>
+                        <th className="py-3 px-2 font-black text-center">Settings</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+                      {settingsForm.roles.map((roleItem, rIdx) => (
+                        <tr key={roleItem.id || roleItem.role} className="hover:bg-slate-50/60 dark:hover:bg-slate-850/40">
+                          <td className="py-3 px-4">
+                            <div className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                              <span>{roleItem.display_name || roleItem.role}</span>
+                              <Badge variant={roleItem.role === 'ADMIN' ? 'purple' : roleItem.role === 'HR' ? 'success' : 'info'}>
+                                {roleItem.role}
+                              </Badge>
+                            </div>
+                            <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">
+                              {roleItem.description}
+                            </p>
+                          </td>
+
+                          <td className="py-3 px-2 text-center">
+                            <input
+                              type="checkbox"
+                              checked={roleItem.can_manage_employees}
+                              onChange={() => handleRolePermissionToggle(rIdx, 'can_manage_employees')}
+                              className="rounded text-brand-600 focus:ring-brand-500 cursor-pointer"
+                            />
+                          </td>
+                          <td className="py-3 px-2 text-center">
+                            <input
+                              type="checkbox"
+                              checked={roleItem.can_mark_attendance}
+                              onChange={() => handleRolePermissionToggle(rIdx, 'can_mark_attendance')}
+                              className="rounded text-brand-600 focus:ring-brand-500 cursor-pointer"
+                            />
+                          </td>
+                          <td className="py-3 px-2 text-center">
+                            <input
+                              type="checkbox"
+                              checked={roleItem.can_approve_leaves}
+                              onChange={() => handleRolePermissionToggle(rIdx, 'can_approve_leaves')}
+                              className="rounded text-brand-600 focus:ring-brand-500 cursor-pointer"
+                            />
+                          </td>
+                          <td className="py-3 px-2 text-center">
+                            <input
+                              type="checkbox"
+                              checked={roleItem.can_manage_payroll}
+                              onChange={() => handleRolePermissionToggle(rIdx, 'can_manage_payroll')}
+                              className="rounded text-brand-600 focus:ring-brand-500 cursor-pointer"
+                            />
+                          </td>
+                          <td className="py-3 px-2 text-center">
+                            <input
+                              type="checkbox"
+                              checked={roleItem.can_view_reports}
+                              onChange={() => handleRolePermissionToggle(rIdx, 'can_view_reports')}
+                              className="rounded text-brand-600 focus:ring-brand-500 cursor-pointer"
+                            />
+                          </td>
+                          <td className="py-3 px-2 text-center">
+                            <input
+                              type="checkbox"
+                              checked={roleItem.can_process_services}
+                              onChange={() => handleRolePermissionToggle(rIdx, 'can_process_services')}
+                              className="rounded text-brand-600 focus:ring-brand-500 cursor-pointer"
+                            />
+                          </td>
+                          <td className="py-3 px-2 text-center">
+                            <input
+                              type="checkbox"
+                              checked={roleItem.can_manage_settings}
+                              onChange={() => handleRolePermissionToggle(rIdx, 'can_manage_settings')}
+                              className="rounded text-brand-600 focus:ring-brand-500 cursor-pointer"
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
 
-            <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
+            {/* SAVE BUTTON */}
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <span className="text-[11px] text-slate-400">
+                Changes saved here take effect immediately across all operator portals.
+              </span>
               <Button
                 size="sm"
-                onClick={() => toast.success('HR configuration settings saved successfully!')}
-                className="bg-brand-600 text-white font-bold"
+                isLoading={updateSettingsMutation.isPending}
+                onClick={() => updateSettingsMutation.mutate()}
+                className="bg-brand-600 hover:bg-brand-500 text-white font-bold"
               >
-                Save HR Settings
+                {isGu ? 'HR સેટિંગ્સ સાચવો' : 'Save HR Settings'}
               </Button>
             </div>
           </Card>
         </div>
       )}
+
 
       {/* Modal: Add Employee */}
       <Modal
